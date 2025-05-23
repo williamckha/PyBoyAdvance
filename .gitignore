@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+*.lib
+*.exp
+*.dll
+
+# Distribution / packaging
+.Python
+.python-version
+env/
+venv/
+.venv/
+build/
+cython_debug/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IntelliJ IDEA files
+.idea/
+*.iml
