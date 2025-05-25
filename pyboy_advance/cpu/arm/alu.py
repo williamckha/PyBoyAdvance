@@ -1,7 +1,5 @@
 from enum import Enum
 
-import cython
-
 from pyboy_advance.cpu.cpu import CPU
 
 
@@ -24,5 +22,5 @@ class ALUOpcode(Enum):
     MVN = 0xF
 
 
-def arm_alu(cpu: CPU, instr: cython.uint):
+def arm_alu(cpu: CPU, instr: int):
     return

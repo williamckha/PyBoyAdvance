@@ -1,7 +1,5 @@
 from typing import Callable
 
-import cython
-
 from pyboy_advance.cpu.arm.alu import ALUOpcode, arm_alu
 from pyboy_advance.cpu.arm.bdt import arm_block_data_transfer
 from pyboy_advance.cpu.arm.branch import arm_branch_exchange, arm_branch
@@ -14,7 +12,7 @@ from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.utils import get_bits, get_bit
 
 
-def arm_decode(instr: cython.uint) -> Callable[[CPU, cython.uint], None]:
+def arm_decode(instr: int) -> Callable[[CPU, int], None]:
     top_bits = get_bits(instr, 26, 27)
 
     if top_bits == 0b00:
