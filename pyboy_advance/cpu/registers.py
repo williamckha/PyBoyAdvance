@@ -107,6 +107,10 @@ class BankIndex(IntEnum):
 
 
 class Registers:
+    SP = 13
+    LR = 14
+    PC = 15
+
     # General purpose registers R8 to R12 are "banked"
     BANKED_GPR_RANGE_START = 8
     BANKED_GPR_RANGE_END = 12
@@ -137,27 +141,27 @@ class Registers:
 
     @property
     def sp(self):
-        return self.regs[13]
+        return self.regs[Registers.SP]
 
     @sp.setter
     def sp(self, value: int):
-        self.regs[13] = value
+        self.regs[Registers.SP] = value
 
     @property
     def lr(self):
-        return self.regs[14]
+        return self.regs[Registers.LR]
 
     @lr.setter
     def lr(self, value: int):
-        self.regs[14] = value
+        self.regs[Registers.LR] = value
 
     @property
     def pc(self):
-        return self.regs[15]
+        return self.regs[Registers.PC]
 
     @pc.setter
     def pc(self, value: int):
-        self.regs[15] = value
+        self.regs[Registers.PC] = value
 
     def switch_mode(self, new_mode: CPUMode):
         """
@@ -177,11 +181,11 @@ class Registers:
 
         self.banked_sp[old_bank_index] = self.sp
         self.banked_lr[old_bank_index] = self.lr
-        self.banked_spsr[old_bank_index] = self.spsr
+        self.banked_spsr[old_bank_index].reg = self.spsr.reg
 
         self.sp = self.banked_sp[new_bank_index]
         self.lr = self.banked_lr[new_bank_index]
-        self.spsr = self.banked_spsr[new_bank_index]
+        self.spsr.reg = self.banked_spsr[new_bank_index].reg
 
         if new_mode == CPUMode.FIQ:
             for i in range(Registers.BANKED_GPR_RANGE_LEN):
