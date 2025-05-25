@@ -1,12 +1,12 @@
-from enum import Enum
+from enum import IntEnum
 
 
-class CPUState(Enum):
+class CPUState(IntEnum):
     ARM = 0
     THUMB = 1
 
 
-class CPUMode(Enum):
+class CPUMode(IntEnum):
     USER = 0b10000
     FIQ = 0b10001
     IRQ = 0b10010

@@ -36,10 +36,10 @@ def arm_decode(instr: int) -> Callable[[CPU, int], None]:
         set_conditions = get_bit(instr, 20)
         alu_opcode = get_bits(instr, 21, 24)
         if not set_conditions and (
-                alu_opcode == ALUOpcode.TST.value or
-                alu_opcode == ALUOpcode.TEQ.value or
-                alu_opcode == ALUOpcode.CMP.value or
-                alu_opcode == ALUOpcode.CMN.value
+                alu_opcode == ALUOpcode.TST or
+                alu_opcode == ALUOpcode.TEQ or
+                alu_opcode == ALUOpcode.CMP or
+                alu_opcode == ALUOpcode.CMN
         ):
             if get_bit(instr, 21):
                 return arm_msr

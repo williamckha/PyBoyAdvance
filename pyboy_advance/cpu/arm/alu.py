@@ -1,9 +1,9 @@
-from enum import Enum
+from enum import IntEnum
 
 from pyboy_advance.cpu.cpu import CPU
 
 
-class ALUOpcode(Enum):
+class ALUOpcode(IntEnum):
     AND = 0x0
     EOR = 0x1
     SUB = 0x2
