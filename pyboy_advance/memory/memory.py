@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 from array import array
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.memory.constants import MemoryRegion
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.utils import get_bit, array_read_16, array_read_32
+
+if TYPE_CHECKING:
+    from pyboy_advance.cpu.cpu import CPU
 
 
 class MemoryAccess(Enum):

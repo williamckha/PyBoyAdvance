@@ -92,7 +92,3 @@ class CPU:
                 raise ValueError("Condition NV (never) is reserved")
             case _:
                 raise ValueError
-
-    def skip_bios(self):
-        self.regs.skip_bios()
-        self.flush_pipeline()

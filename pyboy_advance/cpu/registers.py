@@ -195,13 +195,3 @@ class Registers:
             for i in range(Registers.BANKED_GPR_RANGE_LEN):
                 self.banked_fiq_gpr[i] = self.regs[i + Registers.BANKED_GPR_RANGE_START]
                 self.regs[i + Registers.BANKED_GPR_RANGE_START] = self.banked_old_gpr[i]
-
-    def skip_bios(self):
-        self.banked_sp[BankIndex.SYSTEM_USER] = 0x03007f00
-        self.banked_sp[BankIndex.FIQ] = 0x03007f00
-        self.banked_sp[BankIndex.IRQ] = 0x03007fa0
-        self.banked_sp[BankIndex.SWI] = 0x03007fe0
-        self.banked_sp[BankIndex.ABORT] = 0x03007f00
-        self.banked_sp[BankIndex.UNDEFINED] = 0x03007f00
-        self.sp = 0x03007f00
-        self.pc = 0x08000000

@@ -1,8 +1,13 @@
-from enum import IntEnum
+from __future__ import annotations
 
-from pyboy_advance.cpu.cpu import CPU
+from enum import IntEnum
+from typing import TYPE_CHECKING
+
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.utils import get_bits, get_bit, ror_32, compute_shift, sign_32
+
+if TYPE_CHECKING:
+    from pyboy_advance.cpu.cpu import CPU
 
 
 class ALUOpcode(IntEnum):
