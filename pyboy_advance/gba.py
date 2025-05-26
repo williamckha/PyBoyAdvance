@@ -4,7 +4,7 @@ import os
 from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.cpu.registers import BankIndex
 from pyboy_advance.memory.gamepak import GamePak
-from pyboy_advance.memory.memory import Memory
+from pyboy_advance.memory.memory import Memory, MemoryAccess
 
 
 class GBA:
@@ -41,5 +41,8 @@ if __name__ == "__main__":
 
     gba = GBA(args.rom, skip_bios=True)
 
-    for i in range(1000):
+    for i in range(4500):
         gba.step()
+
+    print(gba.memory.read_32(gba.cpu.regs.pc - 8, MemoryAccess.SEQUENTIAL))
+    print(gba.cpu.regs[12])

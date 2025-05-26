@@ -35,5 +35,12 @@ class ARMCondition(IntEnum):
     NV = 0xF
 
 
+class ARMShiftType(IntEnum):
+    LSL = 0
+    LSR = 1
+    ASR = 2
+    ROR = 3
+
+
 ARM_PC_INCREMENT = 4
 THUMB_PC_INCREMENT = 2

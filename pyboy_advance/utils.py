@@ -30,11 +30,6 @@ def ror_32(num: int, amount: int) -> int:
     return ((num >> amount) | (num << (32 - amount))) & 0xFFFFFFFF
 
 
-def compute_shift(num: int, shift: int, shift_carry: bool) -> (int, bool):
-    # TODO: implement
-    return num
-
-
 def array_read_32(arr: array, address: int) -> int:
     """Read a little-endian 32-bit value from an array of bytes"""
     b0 = arr[address]

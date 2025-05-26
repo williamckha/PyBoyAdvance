@@ -4,7 +4,7 @@ from enum import IntEnum
 from typing import TYPE_CHECKING
 
 from pyboy_advance.cpu.registers import Registers
-from pyboy_advance.utils import get_bits, get_bit, ror_32, compute_shift, sign_32
+from pyboy_advance.utils import get_bits, get_bit, ror_32, sign_32
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -52,13 +52,13 @@ def arm_alu(cpu: CPU, instr: int):
         op2 = get_bits(instr, 0, 7)
         ror_amount = get_bits(instr, 8, 11)
         if ror_amount > 0:
-            shift_carry = bool((op2 >> (ror_amount - 1)) & 0b1)
+            shift_carry = get_bit(op2 >> (ror_amount - 1), 0)
             op2 = ror_32(op2, ror_amount)
     else:
         # Register value as 2nd operand
         rm = get_bits(instr, 0, 3)
         shift = get_bits(instr, 4, 11)
-        op2, shift_carry = compute_shift(cpu.regs[rm], shift, shift_carry)
+        op2, shift_carry = cpu.compute_shift(cpu.regs[rm], shift)
 
     opcode = ALUOpcode(get_bits(instr, 21, 24))
     match opcode:
