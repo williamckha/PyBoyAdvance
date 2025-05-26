@@ -1,7 +1,7 @@
 from pyboy_advance.cpu.arm.decode import arm_decode
 from pyboy_advance.cpu.constants import CPUMode, CPUState, ARMCondition, ARM_PC_INCREMENT, THUMB_PC_INCREMENT
-from pyboy_advance.cpu.memory import MemoryAccess, Memory
 from pyboy_advance.cpu.registers import Registers
+from pyboy_advance.memory.memory import MemoryAccess, Memory
 from pyboy_advance.utils import get_bits
 
 
@@ -10,11 +10,10 @@ class CPU:
         self.regs = Registers()
         self.regs.cpsr.mode = CPUMode.SYSTEM
 
-        self.memory = Memory()
+        self.memory = Memory(self)
 
         self.pipeline = [0xF0000000, 0xF0000000]
         self.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
-        self.flush_pipeline()
 
     def step(self):
         if self.regs.cpsr.state == CPUState.ARM:
@@ -92,3 +91,7 @@ class CPU:
                 raise ValueError("Condition NV (never) is reserved")
             case _:
                 raise ValueError
+
+    def skip_bios(self):
+        self.regs.skip_bios()
+        self.flush_pipeline()
