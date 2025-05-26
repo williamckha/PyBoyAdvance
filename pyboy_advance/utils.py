@@ -1,3 +1,6 @@
+from array import array
+
+
 def get_bit(num: int, i: int) -> bool:
     return bool((num >> i) & 1)
 
@@ -30,3 +33,19 @@ def ror_32(num: int, amount: int) -> int:
 def compute_shift(num: int, shift: int, shift_carry: bool) -> (int, bool):
     # TODO: implement
     return num
+
+
+def array_read_32(arr: array, address: int) -> int:
+    """Read a little-endian 32-bit value from an array of bytes"""
+    b0 = arr[address]
+    b1 = arr[address + 1]
+    b2 = arr[address + 2]
+    b3 = arr[address + 3]
+    return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24)
+
+
+def array_read_16(arr: array, address: int) -> int:
+    """Read a little-endian 16-bit value from an array of bytes"""
+    b0 = arr[address]
+    b1 = arr[address + 1]
+    return b0 | (b1 << 8)

@@ -6,11 +6,12 @@ from pyboy_advance.utils import get_bits
 
 
 class CPU:
-    def __init__(self):
+    def __init__(self, memory: Memory):
         self.regs = Registers()
         self.regs.cpsr.mode = CPUMode.SYSTEM
 
-        self.memory = Memory(self)
+        self.memory = memory
+        self.memory.connect_cpu(self)
 
         self.pipeline = [0xF0000000, 0xF0000000]
         self.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
