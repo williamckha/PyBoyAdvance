@@ -92,11 +92,18 @@ def arm_alu(cpu: CPU, instr: int):
 
     # When S bit = 1 (set_cond) and Rd = PC, the result of operation is stored in PC
     # and SPSR of the current mode is moved to CPSR
-    if set_cond and rd == Registers.PC:
-        new_cpsr_reg = cpu.regs.spsr.reg
-        new_cpsr_mode = cpu.regs.spsr.mode
-        cpu.switch_mode(new_cpsr_mode)
-        cpu.regs.cpsr.reg = new_cpsr_reg
+    if rd == Registers.PC:
+        if set_cond:
+            new_cpsr_reg = cpu.regs.spsr.reg
+            new_cpsr_mode = cpu.regs.spsr.mode
+            cpu.switch_mode(new_cpsr_mode)
+            cpu.regs.cpsr.reg = new_cpsr_reg
+
+        # Read only operations do not flush the pipeline
+        if opcode not in [ALUOpcode.TST, ALUOpcode.TEQ, ALUOpcode.CMP, ALUOpcode.CMN]:
+            cpu.flush_pipeline()
+    else:
+        cpu.arm_advance_pc()
 
 
 def arm_alu_and(cpu: CPU, op1: int, op2: int, rd: int, set_cond: bool, shift_carry: bool):
