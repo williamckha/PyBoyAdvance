@@ -67,7 +67,6 @@ def arm_decode(instr: int) -> Callable[[CPU, int], None]:
         if get_bits(instr, 24, 25) == 0b11:
             return arm_software_interrupt
         else:
-            # Coprocessor Instruction (not implemented)
-            raise ValueError
+            raise NotImplementedError(f"Coprocessor instruction not implemented: {instr:032b}")
 
-    raise ValueError
+    raise ValueError(f"Unknown ARM instruction: {instr:032b}")

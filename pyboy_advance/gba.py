@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     gba = GBA(args.rom, skip_bios=True)
 
-    for i in range(4500):
+    for i in range(1000):
         gba.step()
 
     print(gba.memory.read_32(gba.cpu.regs.pc - 8, MemoryAccess.SEQUENTIAL))

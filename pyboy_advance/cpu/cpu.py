@@ -23,12 +23,23 @@ class CPU:
             self.pipeline[0] = self.pipeline[1]
             self.pipeline[1] = self.memory.read_32(self.regs.pc, self.next_fetch_access)
 
+            instruction_func = arm_decode(instruction)
+
             cond = ARMCondition(get_bits(instruction, 28, 31))
             if self.check_condition(cond):
-                instruction_func = arm_decode(instruction)
+                print("Executing <{0:#010x}> {1:032b} {2}".format(
+                    (self.regs.pc - 8),
+                    instruction,
+                    instruction_func.__name__,
+                ))
                 instruction_func(self, instruction)
             else:
                 # Skip instruction since condition was not met
+                print("Skipping  <{0:#010x}> {1:032b} {2}".format(
+                    (self.regs.pc - 8),
+                    instruction,
+                    instruction_func.__name__,
+                ))
                 self.arm_advance_pc()
                 self.next_fetch_access = MemoryAccess.SEQUENTIAL
         else:

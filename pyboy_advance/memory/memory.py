@@ -63,7 +63,7 @@ class Memory:
                         self.bios_last_opcode = array_read_32(self.bios, address & MemoryRegion.BIOS_MASK)
                     return self.bios_last_opcode
                 else:
-                    raise ValueError(f"Invalid BIOS read_32 at {bin(address)}")
+                    raise ValueError(f"Invalid BIOS read_32 at address {address:#010x}")
             case MemoryRegion.EWRAM_REGION:
                 return array_read_32(self.ewram, address & MemoryRegion.EWRAM_MASK)
             case MemoryRegion.IWRAM_REGION:
@@ -92,7 +92,7 @@ class Memory:
                         return array_read_16(self.bios, address & MemoryRegion.BIOS_MASK)
                     return (self.bios_last_opcode >> ((address & 2) << 3)) & 0xFFFF
                 else:
-                    raise ValueError(f"Invalid BIOS read_16 at {bin(address)}")
+                    raise ValueError(f"Invalid BIOS read_16 at address {address:#010x}")
             case MemoryRegion.EWRAM_REGION:
                 return array_read_16(self.ewram, address & MemoryRegion.EWRAM_MASK)
             case MemoryRegion.IWRAM_REGION:
@@ -121,7 +121,7 @@ class Memory:
                         return self.bios[address & MemoryRegion.BIOS_MASK]
                     return (self.bios_last_opcode >> ((address & 3) << 3)) & 0xFF
                 else:
-                    raise ValueError(f"Invalid BIOS read_8 at {bin(address)}")
+                    raise ValueError(f"Invalid BIOS read_8 at address {address:#010x}")
             case MemoryRegion.EWRAM_REGION:
                 return self.ewram[address & MemoryRegion.EWRAM_MASK]
             case MemoryRegion.IWRAM_REGION:
