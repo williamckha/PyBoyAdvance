@@ -30,12 +30,7 @@ class ALUOpcode(IntEnum):
 
 
 def arm_alu(cpu: CPU, instr: int):
-    """
-    Execute a Data Processing (ALU) instruction (AND, EOR, ADD, SUB, MOV, etc.)
-
-    :param cpu: the CPU to execute the instruction on
-    :param instr: the instruction to execute
-    """
+    """Execute a Data Processing (ALU) instruction (AND, EOR, ADD, SUB, MOV, etc.)"""
 
     rn = get_bits(instr, 16, 19)
     rd = get_bits(instr, 12, 15)

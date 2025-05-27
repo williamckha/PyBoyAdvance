@@ -19,6 +19,10 @@ def sign_32(num: int) -> bool:
     return get_bit(num, 31)
 
 
+def interpret_signed_24(num: int) -> int:
+    return (num - (1 << 24)) if get_bit(num, 23) else num
+
+
 def ror_32(num: int, amount: int) -> int:
     """
     Rotate right (ROR)
