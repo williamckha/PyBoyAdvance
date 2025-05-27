@@ -48,3 +48,17 @@ def array_read_16(arr: array, address: int) -> int:
     b0 = arr[address]
     b1 = arr[address + 1]
     return b0 | (b1 << 8)
+
+
+def array_write_32(arr: array, address: int, value: int):
+    """Write a 32-bit value to the given array of bytes in little-endian format"""
+    arr[address] = value & 0xFF
+    arr[address + 1] = (value >> 8) & 0xFF
+    arr[address + 2] = (value >> 16) & 0xFF
+    arr[address + 3] = (value >> 24) & 0xFF
+
+
+def array_write_16(arr: array, address: int, value: int):
+    """Write a 16-bit value to the given array of bytes in little-endian format"""
+    arr[address] = value & 0xFF
+    arr[address + 1] = (value >> 8) & 0xFF

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from pyboy_advance.memory.constants import MemoryRegion
 from pyboy_advance.memory.gamepak import GamePak
-from pyboy_advance.utils import get_bit, array_read_16, array_read_32
+from pyboy_advance.utils import get_bit, array_read_16, array_read_32, array_write_32, array_write_16
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -54,6 +54,18 @@ class Memory:
     def read_8(self, address: int, access_type: MemoryAccess) -> int:
         self._add_cycles(address, access_type)
         return self._read_8_internal(address)
+
+    def write_32(self, address: int, value: int, access_type: MemoryAccess):
+        self._add_cycles(address, access_type)
+        self._write_32_internal(address, value)
+
+    def write_16(self, address: int, value: int, access_type: MemoryAccess):
+        self._add_cycles(address, access_type)
+        self._write_16_internal(address, value)
+
+    def write_8(self, address: int, value: int, access_type: MemoryAccess):
+        self._add_cycles(address, access_type)
+        self._write_8_internal(address, value)
 
     def _read_32_internal(self, address: int) -> int:
         match address >> 24:
@@ -139,6 +151,81 @@ class Memory:
                 return self.gamepak.read_8(address)
             case MemoryRegion.SRAM_REGION:
                 return self.gamepak.read_8(address)
+            case _:
+                raise ValueError
+
+    def _write_32_internal(self, address: int, value: int):
+        match address >> 24:
+            case MemoryRegion.BIOS_REGION:
+                # Ignore attempts to write to BIOS region
+                pass
+            case MemoryRegion.EWRAM_REGION:
+                array_write_32(self.ewram, address & MemoryRegion.EWRAM_MASK, value)
+            case MemoryRegion.IWRAM_REGION:
+                array_write_32(self.iwram, address & MemoryRegion.IWRAM_MASK, value)
+            case MemoryRegion.IO_REGION:
+                raise NotImplementedError
+            case MemoryRegion.PALRAM_REGION:
+                array_write_32(self.palram, address & MemoryRegion.PALRAM_MASK, value)
+            case MemoryRegion.VRAM_REGION:
+                mask = (MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2)
+                array_write_32(self.vram, address & mask, value)
+            case MemoryRegion.OAM_REGION:
+                array_write_32(self.oam, address & MemoryRegion.OAM_MASK, value)
+            case region if MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+                raise NotImplementedError
+            case MemoryRegion.SRAM_REGION:
+                raise NotImplementedError
+            case _:
+                raise ValueError
+
+    def _write_16_internal(self, address: int, value: int):
+        match address >> 24:
+            case MemoryRegion.BIOS_REGION:
+                # Ignore attempts to write to BIOS region
+                pass
+            case MemoryRegion.EWRAM_REGION:
+                array_write_16(self.ewram, address & MemoryRegion.EWRAM_MASK, value)
+            case MemoryRegion.IWRAM_REGION:
+                array_write_16(self.iwram, address & MemoryRegion.IWRAM_MASK, value)
+            case MemoryRegion.IO_REGION:
+                raise NotImplementedError
+            case MemoryRegion.PALRAM_REGION:
+                array_write_16(self.palram, address & MemoryRegion.PALRAM_MASK, value)
+            case MemoryRegion.VRAM_REGION:
+                mask = (MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2)
+                array_write_16(self.vram, address & mask, value)
+            case MemoryRegion.OAM_REGION:
+                array_write_16(self.oam, address & MemoryRegion.OAM_MASK, value)
+            case region if MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+                raise NotImplementedError
+            case MemoryRegion.SRAM_REGION:
+                raise NotImplementedError
+            case _:
+                raise ValueError
+
+    def _write_8_internal(self, address: int, value: int):
+        match address >> 24:
+            case MemoryRegion.BIOS_REGION:
+                # Ignore attempts to write to BIOS region
+                pass
+            case MemoryRegion.EWRAM_REGION:
+                self.ewram[address & MemoryRegion.EWRAM_MASK] = value
+            case MemoryRegion.IWRAM_REGION:
+                self.iwram[address & MemoryRegion.IWRAM_MASK] = value
+            case MemoryRegion.IO_REGION:
+                raise NotImplementedError
+            case MemoryRegion.PALRAM_REGION:
+                self.palram[address & MemoryRegion.PALRAM_MASK] = value
+            case MemoryRegion.VRAM_REGION:
+                mask = (MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2)
+                self.vram[address & mask] = value
+            case MemoryRegion.OAM_REGION:
+                self.oam[address & MemoryRegion.OAM_MASK] = value
+            case region if MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+                raise NotImplementedError
+            case MemoryRegion.SRAM_REGION:
+                raise NotImplementedError
             case _:
                 raise ValueError
 
