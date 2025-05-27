@@ -3,7 +3,7 @@ from pyboy_advance.cpu.constants import CPUMode, CPUState, ARMCondition, ARM_PC_
     ARMShiftType
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.memory.memory import MemoryAccess, Memory
-from pyboy_advance.utils import get_bits, get_bit, ror_32
+from pyboy_advance.utils import get_bits, get_bit, ror_32, add_uint_to_uint
 
 
 class CPU:
@@ -59,10 +59,10 @@ class CPU:
         self.next_fetch_access = MemoryAccess.SEQUENTIAL
 
     def arm_advance_pc(self):
-        self.regs.pc = (self.regs.pc + ARM_PC_INCREMENT) & 0xFFFFFFFF
+        self.regs.pc = add_uint_to_uint(self.regs.pc, ARM_PC_INCREMENT)
 
     def thumb_advance_pc(self):
-        self.regs.pc = (self.regs.pc + THUMB_PC_INCREMENT) & 0xFFFFFFFF
+        self.regs.pc = add_uint_to_uint(self.regs.pc, THUMB_PC_INCREMENT)
 
     def switch_mode(self, new_mode: CPUMode):
         self.regs.switch_mode(new_mode)

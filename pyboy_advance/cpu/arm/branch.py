@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pyboy_advance.cpu.constants import CPUState
-from pyboy_advance.utils import interpret_signed_24, get_bit
+from pyboy_advance.utils import interpret_signed_24, get_bit, add_int_to_uint
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -16,9 +16,9 @@ def arm_branch(cpu: CPU, instr: int):
     link_flag = get_bit(instr, 24)
 
     if link_flag:
-        cpu.regs.lr = (cpu.regs.pc - 4) % (0xFFFFFFFF + 1)
+        cpu.regs.lr = add_int_to_uint(cpu.regs.pc, -4)
 
-    cpu.regs.pc = (cpu.regs.pc + offset) % (0xFFFFFFFF + 1)
+    cpu.regs.pc = add_int_to_uint(cpu.regs.pc, offset)
     cpu.flush_pipeline()
 
 
