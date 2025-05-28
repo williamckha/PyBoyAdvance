@@ -93,7 +93,8 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 return array_read_32(self.iwram, address & MemoryRegion.IWRAM_MASK)
             case MemoryRegion.IO_REGION:
-                raise NotImplementedError
+                # Not implemented, ignore instead of error
+                return 0
             case MemoryRegion.PALRAM_REGION:
                 return array_read_32(self.palram, address & MemoryRegion.PALRAM_MASK)
             case MemoryRegion.VRAM_REGION:
@@ -106,7 +107,7 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 return self.gamepak.read_32(address)
             case _:
-                raise ValueError
+                raise NotImplementedError(f"Attempt to read from unused memory: {address:#010x}")
 
     def _read_16_internal(self, address: int) -> int:
         match address >> 24:
@@ -122,7 +123,8 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 return array_read_16(self.iwram, address & MemoryRegion.IWRAM_MASK)
             case MemoryRegion.IO_REGION:
-                raise NotImplementedError
+                # Not implemented, ignore instead of error
+                return 0
             case MemoryRegion.PALRAM_REGION:
                 return array_read_16(self.palram, address & MemoryRegion.PALRAM_MASK)
             case MemoryRegion.VRAM_REGION:
@@ -135,7 +137,7 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 return self.gamepak.read_16(address)
             case _:
-                raise ValueError
+                raise NotImplementedError(f"Attempt to read from unused memory: {address:#010x}")
 
     def _read_8_internal(self, address: int) -> int:
         match address >> 24:
@@ -151,7 +153,8 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 return self.iwram[address & MemoryRegion.IWRAM_MASK]
             case MemoryRegion.IO_REGION:
-                raise NotImplementedError
+                # Not implemented, ignore instead of error
+                return 0
             case MemoryRegion.PALRAM_REGION:
                 return self.palram[address & MemoryRegion.PALRAM_MASK]
             case MemoryRegion.VRAM_REGION:
@@ -164,7 +167,7 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 return self.gamepak.read_8(address)
             case _:
-                raise ValueError
+                raise NotImplementedError(f"Attempt to read from unused memory: {address:#010x}")
 
     def _write_32_internal(self, address: int, value: int):
         match address >> 24:
@@ -176,7 +179,8 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 array_write_32(self.iwram, address & MemoryRegion.IWRAM_MASK, value)
             case MemoryRegion.IO_REGION:
-                raise NotImplementedError
+                # Not implemented, ignore instead of error
+                pass
             case MemoryRegion.PALRAM_REGION:
                 array_write_32(self.palram, address & MemoryRegion.PALRAM_MASK, value)
             case MemoryRegion.VRAM_REGION:
@@ -189,7 +193,7 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 raise NotImplementedError
             case _:
-                raise ValueError
+                raise NotImplementedError(f"Attempt to write to unused memory: {address:#010x}")
 
     def _write_16_internal(self, address: int, value: int):
         match address >> 24:
@@ -201,7 +205,8 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 array_write_16(self.iwram, address & MemoryRegion.IWRAM_MASK, value)
             case MemoryRegion.IO_REGION:
-                raise NotImplementedError
+                # Not implemented, ignore instead of error
+                pass
             case MemoryRegion.PALRAM_REGION:
                 array_write_16(self.palram, address & MemoryRegion.PALRAM_MASK, value)
             case MemoryRegion.VRAM_REGION:
@@ -214,7 +219,7 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 raise NotImplementedError
             case _:
-                raise ValueError
+                raise NotImplementedError(f"Attempt to write to unused memory: {address:#010x}")
 
     def _write_8_internal(self, address: int, value: int):
         match address >> 24:
@@ -226,7 +231,8 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 self.iwram[address & MemoryRegion.IWRAM_MASK] = value
             case MemoryRegion.IO_REGION:
-                raise NotImplementedError
+                # Not implemented, ignore instead of error
+                pass
             case MemoryRegion.PALRAM_REGION:
                 self.palram[address & MemoryRegion.PALRAM_MASK] = value
             case MemoryRegion.VRAM_REGION:
@@ -239,7 +245,7 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 raise NotImplementedError
             case _:
-                raise ValueError
+                raise NotImplementedError(f"Attempt to write to unused memory: {address:#010x}")
 
     def _add_cycles(self, address: int, access_type: MemoryAccess):
         pass
