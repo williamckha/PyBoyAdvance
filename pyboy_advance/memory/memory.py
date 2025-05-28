@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from pyboy_advance.memory.constants import MemoryRegion
 from pyboy_advance.memory.gamepak import GamePak
-from pyboy_advance.utils import get_bit, array_read_16, array_read_32, array_write_32, array_write_16
+from pyboy_advance.utils import get_bit, array_read_16, array_read_32, array_write_32, array_write_16, ror_32
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -46,6 +46,12 @@ class Memory:
     def read_32(self, address: int, access_type: MemoryAccess) -> int:
         self._add_cycles(address, access_type)
         return self._read_32_internal(address)
+
+    def read_32_ror(self, address: int, access_type: MemoryAccess) -> int:
+        self._add_cycles(address, access_type)
+        rotate = (address % 4) << 3
+        value = self._read_32_internal(address)
+        return ror_32(value, rotate)
 
     def read_16(self, address: int, access_type: MemoryAccess) -> int:
         self._add_cycles(address, access_type)

@@ -105,7 +105,7 @@ class CPU:
             case _:
                 raise ValueError
 
-    def compute_shift(self, value: int, shift: int) -> (int, bool):
+    def compute_shift(self, value: int, shift: int) -> tuple[int, bool]:
         carry_out = 0
 
         immediate = get_bit(shift, 0)
