@@ -17,7 +17,7 @@ class GamePak:
             return GamePak(rom_bytes)
 
     def __init__(self, rom: bytes | bytearray | Iterable[int]):
-        self.rom = array("B", rom)
+        self.rom = array("B", rom.ljust(MemoryRegion.GAMEPAK_SIZE))
 
     def read_32(self, address: int) -> int:
         return array_read_32(self.rom, address & MemoryRegion.GAMEPAK_MASK)

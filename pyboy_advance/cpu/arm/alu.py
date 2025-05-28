@@ -42,6 +42,8 @@ def arm_alu(cpu: CPU, instr: int):
     set_cond = get_bit(instr, 20)
     immediate = get_bit(instr, 25)
 
+    early_advance_pc = False
+
     if immediate:
         # Immediate value as 2nd operand
         op2 = get_bits(instr, 0, 7)
@@ -53,6 +55,11 @@ def arm_alu(cpu: CPU, instr: int):
         # Register value as 2nd operand
         rm = get_bits(instr, 0, 3)
         shift = get_bits(instr, 4, 11)
+
+        if get_bit(shift, 0):
+            cpu.arm_advance_pc()
+            early_advance_pc = True
+
         op2, shift_carry = cpu.compute_shift(cpu.regs[rm], shift)
 
     opcode = ALUOpcode(get_bits(instr, 21, 24))
@@ -102,7 +109,8 @@ def arm_alu(cpu: CPU, instr: int):
         # Read only operations do not flush the pipeline
         if opcode not in [ALUOpcode.TST, ALUOpcode.TEQ, ALUOpcode.CMP, ALUOpcode.CMN]:
             cpu.flush_pipeline()
-    else:
+
+    elif not early_advance_pc:
         cpu.arm_advance_pc()
 
 

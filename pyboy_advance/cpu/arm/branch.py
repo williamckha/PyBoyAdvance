@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 def arm_branch(cpu: CPU, instr: int):
     """Execute a Branch or Branch and Link instruction"""
 
-    offset = interpret_signed_24((instr & 0xFFFFFF) << 2)
+    offset = interpret_signed_24((instr & 0xFFFFFF)) * 4
     link_flag = get_bit(instr, 24)
 
     if link_flag:

@@ -41,8 +41,9 @@ if __name__ == "__main__":
 
     gba = GBA(args.rom, skip_bios=True)
 
-    for i in range(1000):
+    for i in range(300):
         gba.step()
 
-    print(gba.memory.read_32(gba.cpu.regs.pc - 8, MemoryAccess.SEQUENTIAL))
-    print(gba.cpu.regs[12])
+    assert gba.cpu.regs[12] == 0, f"R12 is {gba.cpu.regs[12]}"
+    instruction = gba.memory.read_32(gba.cpu.regs.pc - 8, MemoryAccess.SEQUENTIAL)
+    assert instruction == 0xeafffffe, f"Instruction is {instruction:#010x}"
