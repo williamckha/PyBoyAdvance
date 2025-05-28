@@ -57,6 +57,12 @@ class Memory:
         self._add_cycles(address, access_type)
         return self._read_16_internal(address)
 
+    def read_16_ror(self, address: int, access_type: MemoryAccess) -> int:
+        self._add_cycles(address, access_type)
+        rotate = (address & 1) << 3
+        value = self._read_16_internal(address)
+        return ror_32(value, rotate)
+
     def read_8(self, address: int, access_type: MemoryAccess) -> int:
         self._add_cycles(address, access_type)
         return self._read_8_internal(address)

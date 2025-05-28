@@ -5,9 +5,10 @@ from typing import TYPE_CHECKING, Callable
 from pyboy_advance.cpu.arm.alu import ALUOpcode, arm_alu
 from pyboy_advance.cpu.arm.bdt import arm_block_data_transfer
 from pyboy_advance.cpu.arm.branch import arm_branch_exchange, arm_branch
+from pyboy_advance.cpu.arm.hwdt import arm_halfword_data_transfer
 from pyboy_advance.cpu.arm.mul import arm_multiply, arm_multiply_long
 from pyboy_advance.cpu.arm.psr import arm_msr, arm_mrs
-from pyboy_advance.cpu.arm.sdt import arm_halfword_data_transfer, arm_single_data_transfer
+from pyboy_advance.cpu.arm.sdt import arm_single_data_transfer
 from pyboy_advance.cpu.arm.swi import arm_software_interrupt
 from pyboy_advance.cpu.arm.swp import arm_single_data_swap
 from pyboy_advance.utils import get_bits, get_bit

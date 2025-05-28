@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 
 
 def arm_single_data_transfer(cpu: CPU, instr: int):
-    rn = get_bits(instr, 16, 19)
-    rd = get_bits(instr, 12, 15)
+    rn = get_bits(instr, 16, 19)  # Base reg
+    rd = get_bits(instr, 12, 15)  # Source/dest reg
 
     immediate = not get_bit(instr, 25)
     if immediate:
