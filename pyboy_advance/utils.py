@@ -19,6 +19,14 @@ def sign_32(num: int) -> bool:
     return get_bit(num, 31)
 
 
+def extend_sign_8(num: int) -> int:
+    return num | 0xFFFFFF00 if get_bit(num, 7) else num
+
+
+def extend_sign_16(num: int) -> int:
+    return num | 0xFFFF0000 if get_bit(num, 15) else num
+
+
 def interpret_signed_24(num: int) -> int:
     return (num - (1 << 24)) if get_bit(num, 23) else num
 

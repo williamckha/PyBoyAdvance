@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING
 
 from pyboy_advance.memory.constants import MemoryRegion
 from pyboy_advance.memory.gamepak import GamePak
-from pyboy_advance.utils import get_bit, array_read_16, array_read_32, array_write_32, array_write_16, ror_32
+from pyboy_advance.utils import get_bit, array_read_16, array_read_32, array_write_32, array_write_16, ror_32, \
+    extend_sign_16, extend_sign_8
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -48,24 +49,30 @@ class Memory:
         return self._read_32_internal(address)
 
     def read_32_ror(self, address: int, access_type: MemoryAccess) -> int:
-        self._add_cycles(address, access_type)
+        value = self.read_32(address, access_type)
         rotate = (address & 0b11) * 8
-        value = self._read_32_internal(address)
         return ror_32(value, rotate)
 
     def read_16(self, address: int, access_type: MemoryAccess) -> int:
         self._add_cycles(address, access_type)
         return self._read_16_internal(address)
 
+    def read_16_signed(self, address: int, access_type: MemoryAccess) -> int:
+        value = self.read_16(address, access_type)
+        return extend_sign_8(value) if get_bit(address, 0) else extend_sign_16(value)
+
     def read_16_ror(self, address: int, access_type: MemoryAccess) -> int:
-        self._add_cycles(address, access_type)
+        value = self.read_16(address, access_type)
         rotate = (address & 0b1) * 8
-        value = self._read_16_internal(address)
         return ror_32(value, rotate)
 
     def read_8(self, address: int, access_type: MemoryAccess) -> int:
         self._add_cycles(address, access_type)
         return self._read_8_internal(address)
+
+    def read_8_signed(self, address: int, access_type: MemoryAccess) -> int:
+        value = self.read_8(address, access_type)
+        return extend_sign_8(value)
 
     def write_32(self, address: int, value: int, access_type: MemoryAccess):
         self._add_cycles(address, access_type)
