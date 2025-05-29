@@ -31,11 +31,11 @@ def interpret_signed_24(num: int) -> int:
     return (num - (1 << 24)) if get_bit(num, 23) else num
 
 
-def add_uint_to_uint(op1_uint: int, op2_uint: int) -> int:
+def add_uint32_to_uint32(op1_uint: int, op2_uint: int) -> int:
     return (op1_uint + op2_uint) & 0xFFFFFFFF
 
 
-def add_int_to_uint(op_uint: int, op_int: int) -> int:
+def add_int32_to_uint32(op_uint: int, op_int: int) -> int:
     return (op_uint + op_int) % 0x100000000
 
 

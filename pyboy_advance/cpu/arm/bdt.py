@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pyboy_advance.cpu.constants import CPUMode
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.memory.memory import MemoryAccess
-from pyboy_advance.utils import get_bit, get_bits, add_int_to_uint, set_bit, add_uint_to_uint
+from pyboy_advance.utils import get_bit, get_bits, add_int32_to_uint32, set_bit, add_uint32_to_uint32
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -38,10 +38,10 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
     # Find the final address
     if up_down_bit:
         # Up: add offset to base
-        final_address = add_int_to_uint(base, reg_list_count * 4)
+        final_address = add_int32_to_uint32(base, reg_list_count * 4)
     else:
         # Down; subtract offset from base
-        final_address = add_int_to_uint(base, reg_list_count * -4)
+        final_address = add_int32_to_uint32(base, reg_list_count * -4)
 
         # Move base to the final address and increment from there,
         # instead of decrementing from original base
@@ -64,7 +64,7 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
     for reg in range(16):
         if get_bit(reg_list, reg):
             if pre_post_bit:  # Pre: add offset before transfer
-                base = add_uint_to_uint(base, 4)
+                base = add_uint32_to_uint32(base, 4)
 
             if load_store_bit:  # Load
                 # Write back before read
@@ -82,7 +82,7 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
                     cpu.regs[base_reg] = final_address
 
             if not pre_post_bit:  # Post: add offset after transfer
-                base = add_uint_to_uint(base, 4)
+                base = add_uint32_to_uint32(base, 4)
 
             access_type = MemoryAccess.SEQUENTIAL
 
