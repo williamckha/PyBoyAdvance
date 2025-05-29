@@ -106,8 +106,6 @@ class CPU:
                 raise ValueError
 
     def compute_shift(self, value: int, shift: int) -> tuple[int, bool]:
-        carry_out = 0
-
         immediate = get_bit(shift, 0)
         if immediate:
             shift_amount = get_bits(shift, 3, 7)
@@ -117,65 +115,68 @@ class CPU:
             if shift_amount == 0:
                 return value, self.regs.cpsr.carry_flag
 
+        result = value
+        carry_out = False
+
         match ARMShiftType(get_bits(shift, 1, 2)):
 
             case ARMShiftType.LSL:
-                # LSL#0 and Immediate: No shift performed, i.e. directly Op2=Rm, the C flag is NOT affected.
-                # LSL#32 has result zero, carry out equal to bit 0 of Rm.
+                # LSL#0 and Immediate: No shift performed, the C flag is NOT affected.
+                # LSL#32 has result zero, carry out equal to bit 0 of value.
                 # LSL by more than 32 has result zero, carry out zero.
                 if shift_amount == 0:
                     carry_out = self.regs.cpsr.carry_flag
                 elif shift_amount < 32:
-                    carry_out = get_bit(value >> (32 - shift_amount), 0)
-                    value = (value << shift_amount) & 0xFFFFFFFF
+                    carry_out = get_bit(value, 32 - shift_amount)
+                    result = (value << shift_amount) & 0xFFFFFFFF
                 elif shift_amount == 32:
                     carry_out = get_bit(value, 0)
-                    value = 0
+                    result = 0
                 else:
                     carry_out = False
-                    value = 0
+                    result = 0
 
             case ARMShiftType.LSR:
-                # LSR#0 and Immediate: Interpreted as LSR#32, i.e. Op2 becomes zero, C becomes Bit 31 of Rm.
-                # LSR#32 has result zero, carry out equal to bit 31 of Rm.
+                # LSR#0 and Immediate: Interpreted as LSR#32, i.e. result is zero, C becomes bit 31 of value.
+                # LSR#32 has result zero, carry out equal to bit 31 of value.
                 # LSR by more than 32 has result zero, carry out zero.
                 if shift_amount == 0:
                     carry_out = get_bit(value, 31)
-                    value = 0
+                    result = 0
                 elif shift_amount < 32:
-                    carry_out = get_bit(value >> (shift_amount - 1), 0)
-                    value = value >> shift_amount
+                    carry_out = get_bit(value, shift_amount - 1)
+                    result = value >> shift_amount
                 elif shift_amount == 32:
                     carry_out = get_bit(value, 31)
-                    value = 0
+                    result = 0
                 else:
                     carry_out = False
-                    value = 0
+                    result = 0
 
             case ARMShiftType.ASR:
-                # ASR#0 and Immediate = 0: Interpreted as ASR#32, i.e. Op2 and C are filled by Bit 31 of Rm.
-                # ASR by 32 or more has result filled with and carry out equal to bit 31 of Rm.
+                # ASR#0 and Immediate = 0: Interpreted as ASR#32, i.e. result and C are filled by bit 31 of value.
+                # ASR by 32 or more has result filled with and carry out equal to bit 31 of value.
                 if shift_amount == 0 or shift_amount >= 32:
                     carry_out = get_bit(value, 31)
-                    value = 0xFFFFFFFF if carry_out else 0
+                    result = 0xFFFFFFFF if carry_out else 0
                 else:
-                    carry_out = get_bit(value >> (shift_amount - 1), 0)
-                    value = value >> shift_amount
+                    carry_out = get_bit(value, shift_amount - 1)
+                    result = value >> shift_amount
 
             case ARMShiftType.ROR:
-                # ROR#0 and Immediate = 0: Interpreted as RRX#1 (RCR), like ROR#1, but Op2 Bit 31 set to old C.
-                # ROR#32 has result equal to Rm, carry out equal to bit 31 of Rm.
                 # ROR by n where n is greater than 32 will give the same result and carry out
                 # as ROR by n-32; therefore repeatedly subtract 32 from n until the amount is
-                # in the range 1 to 32 and see above.
+                # in the range 1 to 32.
                 if shift_amount > 32:
                     shift_amount = ((shift_amount - 1) % 32) + 1
 
+                # ROR#0 and Immediate = 0: Interpreted as RRX#1 (RCR), like ROR#1, but bit 31 of result set to old C.
+                # ROR#32 has result equal to value, carry out equal to bit 31 of value.
                 if shift_amount == 0:
                     carry_out = get_bit(value, 0)
-                    value = (value >> 1) | (self.regs.cpsr.carry_flag << 31)
+                    result = (value >> 1) | (self.regs.cpsr.carry_flag << 31)
                 else:
-                    carry_out = get_bit(value >> (shift_amount - 1), 0)
-                    value = ror_32(value, get_bits(shift_amount, 0, 4))
+                    carry_out = get_bit(value, shift_amount - 1)
+                    result = ror_32(value, get_bits(shift_amount, 0, 4))
 
-        return value, carry_out
+        return result, carry_out

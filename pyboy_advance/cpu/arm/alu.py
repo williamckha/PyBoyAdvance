@@ -49,7 +49,7 @@ def arm_alu(cpu: CPU, instr: int):
         op2 = get_bits(instr, 0, 7)
         ror_amount = get_bits(instr, 8, 11) * 2
         if ror_amount > 0:
-            shift_carry = get_bit(op2 >> (ror_amount - 1), 0)
+            shift_carry = get_bit(op2, ror_amount - 1)
             op2 = ror_32(op2, ror_amount)
     else:
         # Register value as 2nd operand
