@@ -28,7 +28,7 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
     # If the reg list is empty, PC is loaded/stored and base is
     # incremented as if all regs were transferred
     if reg_list_count == 0:
-        set_bit(reg_list, Registers.PC, True)
+        reg_list = set_bit(reg_list, Registers.PC, True)
         reg_list_count = 16
 
     pc_in_reg_list = get_bit(reg_list, Registers.PC)
@@ -55,6 +55,9 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
     original_mode = cpu.regs.cpsr.mode
     if psr_and_force_user_bit and not (pc_in_reg_list and load_store_bit):
         cpu.switch_mode(CPUMode.USER)
+
+    cpu.arm_advance_pc()
+    cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
     first = True
     access_type = MemoryAccess.NON_SEQUENTIAL
@@ -100,6 +103,3 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
     # into the mode we were in before the transfer.
     elif psr_and_force_user_bit:
         cpu.switch_mode(original_mode)
-
-    cpu.arm_advance_pc()
-    cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
