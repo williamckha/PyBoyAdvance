@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     gba = GBA(args.rom, skip_bios=True)
 
-    for i in range(300):
+    for i in range(3000):
         gba.step()
 
     assert gba.cpu.regs[12] == 0, f"R12 is {gba.cpu.regs[12]}"

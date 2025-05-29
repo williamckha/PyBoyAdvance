@@ -49,7 +49,7 @@ class Memory:
 
     def read_32_ror(self, address: int, access_type: MemoryAccess) -> int:
         self._add_cycles(address, access_type)
-        rotate = (address % 4) << 3
+        rotate = (address & 0b11) * 8
         value = self._read_32_internal(address)
         return ror_32(value, rotate)
 
@@ -59,7 +59,7 @@ class Memory:
 
     def read_16_ror(self, address: int, access_type: MemoryAccess) -> int:
         self._add_cycles(address, access_type)
-        rotate = (address & 1) << 3
+        rotate = (address & 0b1) * 8
         value = self._read_16_internal(address)
         return ror_32(value, rotate)
 
@@ -196,6 +196,7 @@ class Memory:
                 raise NotImplementedError(f"Attempt to write to unused memory: {address:#010x}")
 
     def _write_16_internal(self, address: int, value: int):
+        value = value & 0xFFFF
         match address >> 24:
             case MemoryRegion.BIOS_REGION:
                 # Ignore attempts to write to BIOS region
@@ -222,6 +223,7 @@ class Memory:
                 raise NotImplementedError(f"Attempt to write to unused memory: {address:#010x}")
 
     def _write_8_internal(self, address: int, value: int):
+        value = value & 0xFF
         match address >> 24:
             case MemoryRegion.BIOS_REGION:
                 # Ignore attempts to write to BIOS region
