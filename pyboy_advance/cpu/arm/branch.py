@@ -28,6 +28,6 @@ def arm_branch_exchange(cpu: CPU, instr: int):
     address = cpu.regs[instr & 0xF]
 
     # Mask out the last bit indicating whether to switch to THUMB mode
-    cpu.regs.pc = address & 0xFFFFFFFE
+    cpu.regs.pc = address & ~1
     cpu.regs.cpsr.state = CPUState(get_bit(address, 0))
     cpu.flush_pipeline()

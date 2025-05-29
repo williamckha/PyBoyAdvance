@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from pyboy_advance.memory.constants import MemoryRegion
 from pyboy_advance.memory.gamepak import GamePak
+from pyboy_advance.memory.io import IO
 from pyboy_advance.utils import get_bit, array_read_16, array_read_32, array_write_32, array_write_16, ror_32, \
     extend_sign_16, extend_sign_8
 
@@ -20,8 +21,9 @@ class MemoryAccess(Enum):
 
 class Memory:
 
-    def __init__(self, gamepak: GamePak):
+    def __init__(self, io: IO, gamepak: GamePak):
         self.cpu: CPU | None = None
+        self.io = io
 
         # General Internal Memory
         self.bios = array("B", [0] * MemoryRegion.BIOS_SIZE)
@@ -87,6 +89,7 @@ class Memory:
         self._write_8_internal(address, value)
 
     def _read_32_internal(self, address: int) -> int:
+        address = address & ~0b11  # Align address to 4-byte boundary
         match address >> 24:
             case MemoryRegion.BIOS_REGION:
                 if address <= MemoryRegion.BIOS_END:
@@ -100,8 +103,7 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 return array_read_32(self.iwram, address & MemoryRegion.IWRAM_MASK)
             case MemoryRegion.IO_REGION:
-                # Not implemented, ignore instead of error
-                return 0
+                return self.io.read_32(address)
             case MemoryRegion.PALRAM_REGION:
                 return array_read_32(self.palram, address & MemoryRegion.PALRAM_MASK)
             case MemoryRegion.VRAM_REGION:
@@ -117,6 +119,7 @@ class Memory:
                 raise NotImplementedError(f"Attempt to read from unused memory: {address:#010x}")
 
     def _read_16_internal(self, address: int) -> int:
+        address = address & ~0b1  # Align address to 2-byte boundary
         match address >> 24:
             case MemoryRegion.BIOS_REGION:
                 if address <= MemoryRegion.BIOS_END:
@@ -130,8 +133,7 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 return array_read_16(self.iwram, address & MemoryRegion.IWRAM_MASK)
             case MemoryRegion.IO_REGION:
-                # Not implemented, ignore instead of error
-                return 0
+                return self.io.read_16(address)
             case MemoryRegion.PALRAM_REGION:
                 return array_read_16(self.palram, address & MemoryRegion.PALRAM_MASK)
             case MemoryRegion.VRAM_REGION:
@@ -160,8 +162,7 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 return self.iwram[address & MemoryRegion.IWRAM_MASK]
             case MemoryRegion.IO_REGION:
-                # Not implemented, ignore instead of error
-                return 0
+                return self.io.read_8(address)
             case MemoryRegion.PALRAM_REGION:
                 return self.palram[address & MemoryRegion.PALRAM_MASK]
             case MemoryRegion.VRAM_REGION:
@@ -177,6 +178,7 @@ class Memory:
                 raise NotImplementedError(f"Attempt to read from unused memory: {address:#010x}")
 
     def _write_32_internal(self, address: int, value: int):
+        address = address & ~0b11  # Align address to 4-byte boundary
         match address >> 24:
             case MemoryRegion.BIOS_REGION:
                 # Ignore attempts to write to BIOS region
@@ -186,8 +188,7 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 array_write_32(self.iwram, address & MemoryRegion.IWRAM_MASK, value)
             case MemoryRegion.IO_REGION:
-                # Not implemented, ignore instead of error
-                pass
+                self.io.write_32(address, value)
             case MemoryRegion.PALRAM_REGION:
                 array_write_32(self.palram, address & MemoryRegion.PALRAM_MASK, value)
             case MemoryRegion.VRAM_REGION:
@@ -203,6 +204,7 @@ class Memory:
                 raise NotImplementedError(f"Attempt to write to unused memory: {address:#010x}")
 
     def _write_16_internal(self, address: int, value: int):
+        address = address & ~0b1  # Align address to 2-byte boundary
         value = value & 0xFFFF
         match address >> 24:
             case MemoryRegion.BIOS_REGION:
@@ -213,8 +215,7 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 array_write_16(self.iwram, address & MemoryRegion.IWRAM_MASK, value)
             case MemoryRegion.IO_REGION:
-                # Not implemented, ignore instead of error
-                pass
+                self.io.write_16(address, value)
             case MemoryRegion.PALRAM_REGION:
                 array_write_16(self.palram, address & MemoryRegion.PALRAM_MASK, value)
             case MemoryRegion.VRAM_REGION:
@@ -240,8 +241,7 @@ class Memory:
             case MemoryRegion.IWRAM_REGION:
                 self.iwram[address & MemoryRegion.IWRAM_MASK] = value
             case MemoryRegion.IO_REGION:
-                # Not implemented, ignore instead of error
-                pass
+                self.io.write_8(address, value)
             case MemoryRegion.PALRAM_REGION:
                 self.palram[address & MemoryRegion.PALRAM_MASK] = value
             case MemoryRegion.VRAM_REGION:

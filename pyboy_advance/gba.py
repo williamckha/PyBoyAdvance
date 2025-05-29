@@ -4,7 +4,9 @@ import os
 from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.cpu.registers import BankIndex
 from pyboy_advance.memory.gamepak import GamePak
+from pyboy_advance.memory.io import IO
 from pyboy_advance.memory.memory import Memory, MemoryAccess
+from pyboy_advance.ppu.ppu import PPU
 
 
 class GBA:
@@ -16,7 +18,9 @@ class GBA:
             gamepak
         )
 
-        self.memory = Memory(self.gamepak)
+        self.ppu = PPU()
+        self.io = IO(self.ppu)
+        self.memory = Memory(self.io, self.gamepak)
         self.cpu = CPU(self.memory)
 
         if skip_bios:
@@ -32,6 +36,7 @@ class GBA:
 
     def step(self):
         self.cpu.step()
+        self.ppu.draw()
 
 
 if __name__ == "__main__":
@@ -41,9 +46,9 @@ if __name__ == "__main__":
 
     gba = GBA(args.rom, skip_bios=True)
 
-    for i in range(150):
+    instruction = 0
+    while instruction != 0b11101010111111111111111111111110:
+        instruction = gba.memory.read_32(gba.cpu.regs.pc - 8, MemoryAccess.SEQUENTIAL)
         gba.step()
 
     assert gba.cpu.regs[12] == 0, f"R12 is {gba.cpu.regs[12]}"
-    instruction = gba.memory.read_32(gba.cpu.regs.pc - 8, MemoryAccess.SEQUENTIAL)
-    assert instruction == 0xeafffffe, f"Instruction is {instruction:#010x}"

@@ -1,3 +1,6 @@
+from enum import IntEnum
+
+
 class MemoryRegion:
     BIOS_START = 0x00000000
     BIOS_END = 0x00003FFF
@@ -67,3 +70,9 @@ class MemoryRegion:
     SRAM_REGION = SRAM_START >> 24
     SRAM_MASK = SRAM_END - SRAM_START
     SRAM_SIZE = SRAM_END - SRAM_START + 1
+
+
+class IOAddress(IntEnum):
+    REG_DISPCNT = 0x04000000
+    REG_DISPSTAT = 0x04000004
+    REG_VCOUNT = 0x04000006
