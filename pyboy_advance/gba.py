@@ -51,4 +51,4 @@ if __name__ == "__main__":
         instruction = gba.memory.read_32(gba.cpu.regs.pc - 8, MemoryAccess.SEQUENTIAL)
         gba.step()
 
-    assert gba.cpu.regs[12] == 0, f"R12 is {gba.cpu.regs[12]}"
+    assert gba.cpu.regs[12] == 0, f"Failed test {gba.cpu.regs[12]:03}"
