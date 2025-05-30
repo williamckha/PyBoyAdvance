@@ -1,12 +1,11 @@
 import argparse
 import os
-import traceback
 
 from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.cpu.registers import BankIndex
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
-from pyboy_advance.memory.memory import Memory, MemoryAccess
+from pyboy_advance.memory.memory import Memory
 from pyboy_advance.ppu.ppu import PPU
 
 
@@ -46,20 +45,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     gba = GBA(args.rom, skip_bios=True)
-
-    instruction_count = 0
-
-    try:
-        instruction = 0
-        while instruction != 0b11101010111111111111111111111110:
-            instruction = gba.memory.read_32(gba.cpu.regs.pc - 8, MemoryAccess.SEQUENTIAL)
-            instruction_count += 1
-            gba.step()
-    except Exception as e:
-        print(traceback.format_exc())
-
-    print("Instruction count: ", instruction_count)
-
-    assert gba.cpu.regs[12] == 0, f"Failed test {gba.cpu.regs[12]:03}"
-
-    print("Success! All tests passed")
+    while True:
+        gba.step()
