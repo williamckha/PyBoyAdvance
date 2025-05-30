@@ -241,7 +241,7 @@ def arm_alu_bic(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bool, shi
 
 
 def arm_alu_mvn(cpu: CPU, op2: int, rd: int, set_cond_codes: bool, shift_carry: bool):
-    cpu.regs[rd] = ~op2
+    cpu.regs[rd] = ~op2 & 0xFFFFFFFF
     if set_cond_codes and rd != Registers.PC:
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd])
         cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
