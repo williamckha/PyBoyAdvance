@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
 
 
-class MultiplyOpcode(IntEnum):
+class MultiplyLongOpcode(IntEnum):
     UMULL = 0b00
     UMLAL = 0b01
     SMULL = 0b10
@@ -42,23 +42,25 @@ def arm_multiply(cpu: CPU, instr: int):
 
 
 def arm_multiply_long(cpu: CPU, instr: int):
-    rd_hi = get_bits(instr, 16, 19)
-    rd_lo = get_bits(instr, 12, 15)
-    rs = get_bits(instr, 8, 11)
-    rm = get_bits(instr, 0, 3)
+    """Execute a Multiply Long instruction"""
 
-    set_cond_codes = get_bit(instr, 20)
+    rd_hi = get_bits(instr, 16, 19)  # Upper bits of destination reg
+    rd_lo = get_bits(instr, 12, 15)  # Lower bits of destination reg
+    rs = get_bits(instr, 8, 11)  # Operand reg
+    rm = get_bits(instr, 0, 3)  # Operand reg
 
     opcode = get_bits(instr, 21, 22)
+    set_cond_codes = get_bit(instr, 20)
+
     match opcode:
-        case MultiplyOpcode.UMULL:
+        case MultiplyLongOpcode.UMULL:
             result = cpu.regs[rm] * cpu.regs[rs]
-        case MultiplyOpcode.UMLAL:
+        case MultiplyLongOpcode.UMLAL:
             result = (cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo]
             result += cpu.regs[rm] * cpu.regs[rs]
-        case MultiplyOpcode.SMULL:
+        case MultiplyLongOpcode.SMULL:
             result = interpret_signed_32(cpu.regs[rm]) * interpret_signed_32(cpu.regs[rs])
-        case MultiplyOpcode.SMLAL:
+        case MultiplyLongOpcode.SMLAL:
             result = interpret_signed_32((cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo])
             result += interpret_signed_32(cpu.regs[rm]) * interpret_signed_32(cpu.regs[rs])
         case _:
