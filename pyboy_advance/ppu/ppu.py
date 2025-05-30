@@ -14,11 +14,11 @@ class PPU:
 
     def draw(self):
         self.vcount += 1
-        if self.vcount >= DISPLAY_HEIGHT:
-            self.display_status.vblank_status = True
-        elif self.vcount >= DISPLAY_HEIGHT + VBLANK_LINES:
+        if self.vcount >= DISPLAY_HEIGHT + VBLANK_LINES:
             self.vcount = 0
             self.display_status.vblank_status = False
+        elif self.vcount >= DISPLAY_HEIGHT:
+            self.display_status.vblank_status = True
 
 
 class DisplayControlRegister:
