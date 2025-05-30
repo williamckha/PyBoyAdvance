@@ -19,16 +19,24 @@ def sign_32(num: int) -> bool:
     return get_bit(num, 31)
 
 
-def extend_sign_8(num: int) -> int:
-    return num | 0xFFFFFF00 if get_bit(num, 7) else num
+def sign_24(num: int) -> bool:
+    return get_bit(num, 23)
 
 
 def extend_sign_16(num: int) -> int:
     return num | 0xFFFF0000 if get_bit(num, 15) else num
 
 
+def extend_sign_8(num: int) -> int:
+    return num | 0xFFFFFF00 if get_bit(num, 7) else num
+
+
+def interpret_signed_32(num: int) -> int:
+    return (num - (1 << 32)) if sign_32(num) else num
+
+
 def interpret_signed_24(num: int) -> int:
-    return (num - (1 << 24)) if get_bit(num, 23) else num
+    return (num - (1 << 24)) if sign_24(num) else num
 
 
 def add_uint32_to_uint32(op1_uint: int, op2_uint: int) -> int:

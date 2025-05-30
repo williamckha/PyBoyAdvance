@@ -4,13 +4,14 @@ from pyboy_advance.cpu.constants import CPUMode, CPUState, ARMCondition, ARM_PC_
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.cpu.thumb.decode import thumb_decode
 from pyboy_advance.memory.memory import MemoryAccess, Memory
-from pyboy_advance.utils import get_bits, get_bit, ror_32, add_uint32_to_uint32, sign_32
+from pyboy_advance.utils import get_bits, get_bit, ror_32, add_uint32_to_uint32, interpret_signed_32
 
 
 class CPU:
     def __init__(self, memory: Memory):
         self.regs = Registers()
         self.regs.cpsr.mode = CPUMode.SYSTEM
+        self.regs.spsr.mode = CPUMode.SYSTEM
 
         self.memory = memory
         self.memory.connect_cpu(self)
@@ -173,13 +174,8 @@ class CPU:
                     carry_out = get_bit(value, 31)
                     result = 0xFFFFFFFF if carry_out else 0
                 else:
-                    # If the value is meant to be negative, subtract (1 << 32) from it so that
-                    # we get an infinite number of sign bits (1s to the left)
-                    if sign_32(value):
-                        value -= 0x100000000
-
                     carry_out = get_bit(value, shift_amount - 1)
-                    result = (value >> shift_amount) & 0xFFFFFFFF
+                    result = (interpret_signed_32(value) >> shift_amount) & 0xFFFFFFFF
 
             case ARMShiftType.ROR:
                 # ROR by n where n is greater than 32 will give the same result and carry out

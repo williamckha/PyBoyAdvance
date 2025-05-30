@@ -35,8 +35,6 @@ def arm_alu(cpu: CPU, instr: int):
     rn = get_bits(instr, 16, 19)
     rd = get_bits(instr, 12, 15)
 
-    op1 = cpu.regs[rn]
-    op2: int
     shift_carry = cpu.regs.cpsr.carry_flag
 
     set_cond_codes = get_bit(instr, 20)
@@ -44,22 +42,34 @@ def arm_alu(cpu: CPU, instr: int):
 
     early_advance_pc = False
 
-    if immediate:
-        # Immediate value as 2nd operand
+    if immediate:  # Immediate value as 2nd operand
+
+        op1 = cpu.regs[rn]
         op2 = get_bits(instr, 0, 7)
         ror_amount = get_bits(instr, 8, 11) * 2
+
         if ror_amount > 0:
             shift_carry = get_bit(op2, ror_amount - 1)
             op2 = ror_32(op2, ror_amount)
-    else:
-        # Register value as 2nd operand
+
+    else:  # Register value as 2nd operand
+
         rm = get_bits(instr, 0, 3)
         shift = get_bits(instr, 4, 11)
 
+        # When using PC as an operand, the returned value depends on the instruction.
+        # If shifting by register (shift[0] = 1) and using a register value as op2,
+        # then the operand should be PC + 12.
         if get_bit(shift, 0):
+            # Advance PC by 4 so that cpu.regs.pc returns PC + 12
             cpu.arm_advance_pc()
             early_advance_pc = True
+        else:
+            # Otherwise, the operand should be PC + 8
+            # (which is what cpu.regs.pc returns normally).
+            pass
 
+        op1 = cpu.regs[rn]
         op2, shift_carry = cpu.compute_shift(cpu.regs[rm], shift)
 
     opcode = ALUOpcode(get_bits(instr, 21, 24))

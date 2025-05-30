@@ -60,8 +60,9 @@ class Memory:
         return self._read_16_internal(address)
 
     def read_16_signed(self, address: int, access_type: MemoryAccess) -> int:
-        value = self.read_16(address, access_type)
-        return extend_sign_8(value) if get_bit(address, 0) else extend_sign_16(value)
+        if get_bit(address, 0):
+            return self.read_8_signed(address, access_type)
+        return extend_sign_16(self.read_16(address, access_type))
 
     def read_16_ror(self, address: int, access_type: MemoryAccess) -> int:
         value = self.read_16(address, access_type)
@@ -116,7 +117,8 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 return self.gamepak.read_32(address)
             case _:
-                raise NotImplementedError(f"Attempt to read from unused memory: {address:#010x}")
+                print(f"Attempt to read from unused memory: {address:#010x}")
+                return 0
 
     def _read_16_internal(self, address: int) -> int:
         address = address & ~0b1  # Align address to 2-byte boundary
@@ -146,7 +148,8 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 return self.gamepak.read_16(address)
             case _:
-                raise NotImplementedError(f"Attempt to read from unused memory: {address:#010x}")
+                print(f"Attempt to read from unused memory: {address:#010x}")
+                return 0
 
     def _read_8_internal(self, address: int) -> int:
         match address >> 24:
@@ -175,7 +178,8 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 return self.gamepak.read_8(address)
             case _:
-                raise NotImplementedError(f"Attempt to read from unused memory: {address:#010x}")
+                print(f"Attempt to read from unused memory: {address:#010x}")
+                return 0
 
     def _write_32_internal(self, address: int, value: int):
         address = address & ~0b11  # Align address to 4-byte boundary
@@ -201,7 +205,7 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 raise NotImplementedError
             case _:
-                raise NotImplementedError(f"Attempt to write to unused memory: {address:#010x}")
+                print(f"Attempt to write to unused memory: {address:#010x}")
 
     def _write_16_internal(self, address: int, value: int):
         address = address & ~0b1  # Align address to 2-byte boundary
@@ -228,7 +232,7 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 raise NotImplementedError
             case _:
-                raise NotImplementedError(f"Attempt to write to unused memory: {address:#010x}")
+                print(f"Attempt to write to unused memory: {address:#010x}")
 
     def _write_8_internal(self, address: int, value: int):
         value = value & 0xFF
@@ -254,7 +258,7 @@ class Memory:
             case MemoryRegion.SRAM_REGION:
                 raise NotImplementedError
             case _:
-                raise NotImplementedError(f"Attempt to write to unused memory: {address:#010x}")
+                print(f"Attempt to write to unused memory: {address:#010x}")
 
     def _add_cycles(self, address: int, access_type: MemoryAccess):
         pass

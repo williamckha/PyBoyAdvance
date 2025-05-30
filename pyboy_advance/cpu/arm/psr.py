@@ -48,10 +48,10 @@ def arm_msr(cpu: CPU, instr: int):
     write_to_control_field = get_bit(instr, 16)
 
     mask = 0
-    mask |= 0xFF000000 * write_to_flags_field
-    mask |= 0x00FF0000 * write_to_status_field
-    mask |= 0x0000FF00 * write_to_extension_field
-    mask |= 0x000000FF * write_to_control_field
+    mask |= 0xFF000000 if write_to_flags_field else 0
+    mask |= 0x00FF0000 if write_to_status_field else 0
+    mask |= 0x0000FF00 if write_to_extension_field else 0
+    mask |= 0x000000FF if write_to_control_field else 0
 
     # Destination PSR; 0 = CPSR, 1 = SPSR_<current_mode>
     psr = get_bit(instr, 22)

@@ -47,12 +47,19 @@ if __name__ == "__main__":
 
     gba = GBA(args.rom, skip_bios=True)
 
+    instruction_count = 0
+
     try:
         instruction = 0
         while instruction != 0b11101010111111111111111111111110:
             instruction = gba.memory.read_32(gba.cpu.regs.pc - 8, MemoryAccess.SEQUENTIAL)
+            instruction_count += 1
             gba.step()
     except Exception as e:
         print(traceback.format_exc())
 
+    print("Instruction count: ", instruction_count)
+
     assert gba.cpu.regs[12] == 0, f"Failed test {gba.cpu.regs[12]:03}"
+
+    print("Success! All tests passed")
