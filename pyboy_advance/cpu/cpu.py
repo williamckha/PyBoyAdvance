@@ -2,6 +2,7 @@ from pyboy_advance.cpu.arm.decode import arm_decode
 from pyboy_advance.cpu.constants import CPUMode, CPUState, ARMCondition, ARM_PC_INCREMENT, THUMB_PC_INCREMENT, \
     ARMShiftType
 from pyboy_advance.cpu.registers import Registers
+from pyboy_advance.cpu.thumb.decode import thumb_decode
 from pyboy_advance.memory.memory import MemoryAccess, Memory
 from pyboy_advance.utils import get_bits, get_bit, ror_32, add_uint32_to_uint32
 
@@ -43,7 +44,19 @@ class CPU:
                 self.arm_advance_pc()
                 self.next_fetch_access = MemoryAccess.SEQUENTIAL
         else:
-            raise NotImplementedError("Thumb mode not implemented")
+            instruction = self.pipeline[0]
+            self.pipeline[0] = self.pipeline[1]
+            self.pipeline[1] = self.memory.read_16(self.regs.pc, self.next_fetch_access)
+
+            instruction_func = thumb_decode(instruction)
+
+            print("Executing <{0:#010x}> {1:032b} {2}".format(
+                (self.regs.pc - 8),
+                instruction,
+                instruction_func.__name__,
+            ))
+
+            instruction_func(self, instruction)
 
     def flush_pipeline(self):
         if self.regs.cpsr.state == CPUState.ARM:
