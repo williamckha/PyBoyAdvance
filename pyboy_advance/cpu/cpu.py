@@ -121,12 +121,12 @@ class CPU:
     def compute_shift(self, value: int, shift: int) -> tuple[int, bool]:
         immediate = get_bit(shift, 0)
         if immediate:
-            shift_amount = get_bits(shift, 3, 7)
-        else:
             shift_reg = get_bits(shift, 4, 7)
             shift_amount = self.regs[shift_reg] & 0xFF
             if shift_amount == 0:
                 return value, self.regs.cpsr.carry_flag
+        else:
+            shift_amount = get_bits(shift, 3, 7)
 
         result = value
         carry_out = False
