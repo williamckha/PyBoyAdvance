@@ -6,8 +6,8 @@ from pyboy_advance.utils import get_bit, set_bit
 
 class ProgramStatusRegister:
 
-    def __init__(self):
-        self.reg = 0
+    def __init__(self, value=0):
+        self.reg = value
 
     @property
     def mode(self) -> CPUMode:
