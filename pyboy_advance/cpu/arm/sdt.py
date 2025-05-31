@@ -26,7 +26,7 @@ def arm_single_data_transfer(cpu: CPU, instr: int):
     if immediate_bit:
         rm = get_bits(instr, 0, 3)
         shift = get_bits(instr, 4, 11)
-        offset, _ = cpu.compute_shift(cpu.regs[rm], shift)
+        offset, _ = cpu.decode_and_compute_shift(cpu.regs[rm], shift)
     else:
         offset = get_bits(instr, 0, 11)
 

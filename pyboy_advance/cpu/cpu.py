@@ -52,7 +52,7 @@ class CPU:
             instruction_func = thumb_decode(instruction)
 
             print("Executing <{0:#010x}> {1:032b} {2}".format(
-                (self.regs.pc - 8),
+                (self.regs.pc - 4),
                 instruction,
                 instruction_func.__name__,
             ))
@@ -119,20 +119,31 @@ class CPU:
             case _:
                 raise ValueError
 
-    def compute_shift(self, value: int, shift: int) -> tuple[int, bool]:
-        immediate = get_bit(shift, 0)
+    def decode_and_compute_shift(self, value: int, shift: int) -> tuple[int, bool]:
+        immediate = not get_bit(shift, 0)
         if immediate:
+            shift_amount = get_bits(shift, 3, 7)
+        else:
             shift_reg = get_bits(shift, 4, 7)
             shift_amount = self.regs[shift_reg] & 0xFF
-            if shift_amount == 0:
-                return value, self.regs.cpsr.carry_flag
-        else:
-            shift_amount = get_bits(shift, 3, 7)
+
+        shift_type = ARMShiftType(get_bits(shift, 1, 2))
+
+        return self.compute_shift(value, shift_type, shift_amount, immediate)
+
+    def compute_shift(self,
+                      value: int,
+                      shift_type: ARMShiftType,
+                      shift_amount: int,
+                      immediate: bool) -> tuple[int, bool]:
+
+        if not immediate and shift_amount == 0:
+            return value, self.regs.cpsr.carry_flag
 
         result = value
         carry_out = False
 
-        match ARMShiftType(get_bits(shift, 1, 2)):
+        match shift_type:
 
             case ARMShiftType.LSL:
                 # LSL#0 and Immediate: No shift performed, the C flag is NOT affected.

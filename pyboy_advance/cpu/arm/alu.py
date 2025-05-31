@@ -70,7 +70,7 @@ def arm_alu(cpu: CPU, instr: int):
             pass
 
         op1 = cpu.regs[rn]
-        op2, shift_carry = cpu.compute_shift(cpu.regs[rm], shift)
+        op2, shift_carry = cpu.decode_and_compute_shift(cpu.regs[rm], shift)
 
     opcode = ALUOpcode(get_bits(instr, 21, 24))
     match opcode:
