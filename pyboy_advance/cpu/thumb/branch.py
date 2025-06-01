@@ -19,7 +19,7 @@ def thumb_unconditional_branch(cpu: CPU, instr: int):
 
 def thumb_conditional_branch(cpu: CPU, instr: int):
     condition = ARMCondition(get_bits(instr, 8, 11))
-    offset = interpret_signed_8(get_bits(instr, 0, 7) << 1)
+    offset = interpret_signed_8(get_bits(instr, 0, 7)) * 2
 
     if cpu.check_condition(condition):
         cpu.regs.pc = add_int32_to_uint32(cpu.regs.pc, offset)
