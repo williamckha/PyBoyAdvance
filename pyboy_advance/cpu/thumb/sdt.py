@@ -10,10 +10,10 @@ if TYPE_CHECKING:
 
 
 def thumb_pc_relative_load(cpu: CPU, instr: int):
-    rd = get_bits(instr, 8, 11)  # Source/destination reg
+    rd = get_bits(instr, 8, 10)  # Source/destination reg
 
     offset = get_bits(instr, 0, 7) << 2
-    address = add_uint32_to_uint32(cpu.regs.pc & 0xFFFFFFFC, offset)
+    address = add_uint32_to_uint32(cpu.regs.pc & ~2, offset)
 
     cpu.regs[rd] = cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL)
 
@@ -55,9 +55,9 @@ def thumb_load_store_sign_extended(cpu: CPU, instr: int):
         case 0:  # STRH
             cpu.memory.write_16(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
         case 1:  # LDSB
-            cpu.regs[rd] = cpu.memory.read_16_ror(address, MemoryAccess.NON_SEQUENTIAL)
-        case 2:  # LDRH
             cpu.regs[rd] = cpu.memory.read_8_signed(address, MemoryAccess.NON_SEQUENTIAL)
+        case 2:  # LDRH
+            cpu.regs[rd] = cpu.memory.read_16_ror(address, MemoryAccess.NON_SEQUENTIAL)
         case 3:  # LDSH
             cpu.regs[rd] = cpu.memory.read_16_signed(address, MemoryAccess.NON_SEQUENTIAL)
 
@@ -88,8 +88,8 @@ def thumb_load_store_immediate_offset(cpu: CPU, instr: int):
 
 
 def thumb_load_store_halfword(cpu: CPU, instr: int):
-    rd = get_bits(instr, 0, 2)  # Source/destination reg
     rb = get_bits(instr, 3, 5)  # Base reg
+    rd = get_bits(instr, 0, 2)  # Source/destination reg
 
     offset = get_bits(instr, 6, 10) << 1
     address = add_uint32_to_uint32(cpu.regs[rb], offset)

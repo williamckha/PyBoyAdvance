@@ -198,7 +198,7 @@ def thumb_load_address(cpu: CPU, instr: int):
         cpu.regs[rd] = add_uint32_to_uint32(cpu.regs.sp, offset)
     else:
         # Load from PC
-        cpu.regs[rd] = add_uint32_to_uint32(cpu.regs.pc & 0xFFFFFFFC, offset)
+        cpu.regs[rd] = add_uint32_to_uint32(cpu.regs.pc & ~2, offset)
 
     cpu.thumb_advance_pc()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
