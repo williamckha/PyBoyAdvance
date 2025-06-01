@@ -23,43 +23,57 @@ class CPU:
 
     def step(self):
         if self.regs.cpsr.state == CPUState.ARM:
-            instruction = self.pipeline[0]
-            self.pipeline[0] = self.pipeline[1]
-            self.pipeline[1] = self.memory.read_32(self.regs.pc, self.next_fetch_access)
-
-            instruction_func = arm_decode(instruction)
-
-            cond = Condition(get_bits(instruction, 28, 31))
-            if self.check_condition(cond):
-                print("Executing <{0:#010x}> {1:032b} {2}".format(
-                    (self.regs.pc - 8),
-                    instruction,
-                    instruction_func.__name__,
-                ))
-                instruction_func(self, instruction)
-            else:
-                # Skip instruction since condition was not met
-                print("Skipping  <{0:#010x}> {1:032b} {2}".format(
-                    (self.regs.pc - 8),
-                    instruction,
-                    instruction_func.__name__,
-                ))
-                self.arm_advance_pc()
-                self.next_fetch_access = MemoryAccess.SEQUENTIAL
+            self.arm_step()
         else:
-            instruction = self.pipeline[0]
-            self.pipeline[0] = self.pipeline[1]
-            self.pipeline[1] = self.memory.read_16(self.regs.pc, self.next_fetch_access)
+            self.thumb_step()
 
-            instruction_func = thumb_decode(instruction)
+    def arm_step(self):
+        instruction = self.pipeline[0]
+        self.pipeline[0] = self.pipeline[1]
+        self.pipeline[1] = self.memory.read_32(self.regs.pc, self.next_fetch_access)
 
+        instruction_handler = arm_decode(instruction)
+
+        cond = Condition(get_bits(instruction, 28, 31))
+        if self.check_condition(cond):
             print("Executing <{0:#010x}> {1:032b} {2}".format(
-                (self.regs.pc - 4),
+                (self.regs.pc - 8),
                 instruction,
-                instruction_func.__name__,
+                instruction_handler.__name__,
             ))
 
-            instruction_func(self, instruction)
+            instruction_handler(self, instruction)
+        else:
+            # Skip instruction since condition was not met
+            print("Skipping  <{0:#010x}> {1:032b} {2}".format(
+                (self.regs.pc - 8),
+                instruction,
+                instruction_handler.__name__,
+            ))
+
+            self.arm_advance_pc()
+            self.next_fetch_access = MemoryAccess.SEQUENTIAL
+
+    def thumb_step(self):
+        instruction = self.pipeline[0]
+        self.pipeline[0] = self.pipeline[1]
+        self.pipeline[1] = self.memory.read_16(self.regs.pc, self.next_fetch_access)
+
+        instruction_handler = thumb_decode(instruction)
+
+        print("Executing <{0:#010x}> {1:032b} {2}".format(
+            (self.regs.pc - 4),
+            instruction,
+            instruction_handler.__name__,
+        ))
+
+        instruction_handler(self, instruction)
+
+    def arm_advance_pc(self):
+        self.regs.pc = add_uint32_to_uint32(self.regs.pc, ARM_PC_INCREMENT)
+
+    def thumb_advance_pc(self):
+        self.regs.pc = add_uint32_to_uint32(self.regs.pc, THUMB_PC_INCREMENT)
 
     def flush_pipeline(self):
         if self.regs.cpsr.state == CPUState.ARM:
@@ -75,12 +89,6 @@ class CPU:
             self.pipeline[1] = self.memory.read_16(self.regs.pc, MemoryAccess.SEQUENTIAL)
             self.thumb_advance_pc()
         self.next_fetch_access = MemoryAccess.SEQUENTIAL
-
-    def arm_advance_pc(self):
-        self.regs.pc = add_uint32_to_uint32(self.regs.pc, ARM_PC_INCREMENT)
-
-    def thumb_advance_pc(self):
-        self.regs.pc = add_uint32_to_uint32(self.regs.pc, THUMB_PC_INCREMENT)
 
     def switch_mode(self, new_mode: CPUMode):
         self.regs.switch_mode(new_mode)
