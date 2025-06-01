@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from pyboy_advance.cpu.arm.alu import arm_alu_sub, arm_alu_add, arm_alu_mov, arm_alu_adc, arm_alu_sbc, \
     arm_alu_tst, arm_alu_cmp, arm_alu_cmn, arm_alu_orr, arm_alu_bic, \
     arm_alu_mvn, arm_alu_and, arm_alu_eor
-from pyboy_advance.cpu.constants import CPUState, ARMShiftType
+from pyboy_advance.cpu.constants import CPUState, ShiftType
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.memory.memory import MemoryAccess
 from pyboy_advance.utils import get_bits, get_bit, sign_32, add_uint32_to_uint32, add_int32_to_uint32
@@ -38,7 +38,7 @@ def thumb_move_shifted_register(cpu: CPU, instr: int):
     rs = get_bits(instr, 3, 5)  # Source reg
     rd = get_bits(instr, 0, 2)  # Destination reg
 
-    opcode = ARMShiftType(get_bits(instr, 11, 12))
+    opcode = ShiftType(get_bits(instr, 11, 12))
     offset = get_bits(instr, 6, 10)
 
     result, carry = cpu.compute_shift(cpu.regs[rs], opcode, offset, immediate=True)
@@ -103,7 +103,7 @@ def thumb_alu(cpu: CPU, instr: int):
     op1 = cpu.regs[rd]
     op2 = cpu.regs[rs]
 
-    def execute_shift(shift_type: ARMShiftType):
+    def execute_shift(shift_type: ShiftType):
         shift = op2 & 0xFF
         result, carry = cpu.compute_shift(op1, shift_type, shift, immediate=False)
         cpu.regs[rd] = result
@@ -118,17 +118,17 @@ def thumb_alu(cpu: CPU, instr: int):
         case ThumbALUOpcode.EOR:
             arm_alu_eor(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
         case ThumbALUOpcode.LSL:
-            execute_shift(ARMShiftType.LSL)
+            execute_shift(ShiftType.LSL)
         case ThumbALUOpcode.LSR:
-            execute_shift(ARMShiftType.LSR)
+            execute_shift(ShiftType.LSR)
         case ThumbALUOpcode.ASR:
-            execute_shift(ARMShiftType.ASR)
+            execute_shift(ShiftType.ASR)
         case ThumbALUOpcode.ADC:
             arm_alu_adc(cpu, op1, op2, rd, set_cond_codes=True)
         case ThumbALUOpcode.SBC:
             arm_alu_sbc(cpu, op1, op2, rd, set_cond_codes=True)
         case ThumbALUOpcode.ROR:
-            execute_shift(ARMShiftType.ROR)
+            execute_shift(ShiftType.ROR)
         case ThumbALUOpcode.TST:
             arm_alu_tst(cpu, op1, op2, shift_carry=cpu.regs.cpsr.carry_flag)
         case ThumbALUOpcode.NEG:

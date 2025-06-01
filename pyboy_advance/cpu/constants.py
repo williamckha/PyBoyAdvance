@@ -16,7 +16,7 @@ class CPUMode(IntEnum):
     SYSTEM = 0b11111
 
 
-class ARMCondition(IntEnum):
+class Condition(IntEnum):
     EQ = 0x0
     NE = 0x1
     HS = 0x2
@@ -35,7 +35,7 @@ class ARMCondition(IntEnum):
     NV = 0xF
 
 
-class ARMShiftType(IntEnum):
+class ShiftType(IntEnum):
     LSL = 0
     LSR = 1
     ASR = 2

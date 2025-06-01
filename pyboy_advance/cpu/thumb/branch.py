@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyboy_advance.cpu.constants import ARMCondition
+from pyboy_advance.cpu.constants import Condition
 from pyboy_advance.memory.memory import MemoryAccess
 from pyboy_advance.utils import get_bits, interpret_signed_12, add_int32_to_uint32, interpret_signed_8, get_bit, \
     add_uint32_to_uint32, interpret_signed_23
@@ -18,7 +18,7 @@ def thumb_unconditional_branch(cpu: CPU, instr: int):
 
 
 def thumb_conditional_branch(cpu: CPU, instr: int):
-    condition = ARMCondition(get_bits(instr, 8, 11))
+    condition = Condition(get_bits(instr, 8, 11))
     offset = interpret_signed_8(get_bits(instr, 0, 7)) * 2
 
     if cpu.check_condition(condition):

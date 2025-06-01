@@ -1,6 +1,6 @@
 from pyboy_advance.cpu.arm.decode import arm_decode
-from pyboy_advance.cpu.constants import CPUMode, CPUState, ARMCondition, ARM_PC_INCREMENT, THUMB_PC_INCREMENT, \
-    ARMShiftType
+from pyboy_advance.cpu.constants import CPUMode, CPUState, Condition, ARM_PC_INCREMENT, THUMB_PC_INCREMENT, \
+    ShiftType
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.cpu.thumb.decode import thumb_decode
 from pyboy_advance.memory.memory import MemoryAccess, Memory
@@ -27,7 +27,7 @@ class CPU:
 
             instruction_func = arm_decode(instruction)
 
-            cond = ARMCondition(get_bits(instruction, 28, 31))
+            cond = Condition(get_bits(instruction, 28, 31))
             if self.check_condition(cond):
                 print("Executing <{0:#010x}> {1:032b} {2}".format(
                     (self.regs.pc - 8),
@@ -83,40 +83,40 @@ class CPU:
     def switch_mode(self, new_mode: CPUMode):
         self.regs.switch_mode(new_mode)
 
-    def check_condition(self, cond: ARMCondition) -> bool:
+    def check_condition(self, cond: Condition) -> bool:
         cpsr = self.regs.cpsr
         match cond:
-            case ARMCondition.EQ:
+            case Condition.EQ:
                 return cpsr.zero_flag
-            case ARMCondition.NE:
+            case Condition.NE:
                 return not cpsr.zero_flag
-            case ARMCondition.HS:
+            case Condition.HS:
                 return cpsr.carry_flag
-            case ARMCondition.LO:
+            case Condition.LO:
                 return not cpsr.carry_flag
-            case ARMCondition.MI:
+            case Condition.MI:
                 return cpsr.sign_flag
-            case ARMCondition.PL:
+            case Condition.PL:
                 return not cpsr.sign_flag
-            case ARMCondition.VS:
+            case Condition.VS:
                 return cpsr.overflow_flag
-            case ARMCondition.VC:
+            case Condition.VC:
                 return not cpsr.overflow_flag
-            case ARMCondition.HI:
+            case Condition.HI:
                 return cpsr.carry_flag and not cpsr.zero_flag
-            case ARMCondition.LS:
+            case Condition.LS:
                 return not cpsr.carry_flag or cpsr.zero_flag
-            case ARMCondition.GE:
+            case Condition.GE:
                 return cpsr.sign_flag == cpsr.overflow_flag
-            case ARMCondition.LT:
+            case Condition.LT:
                 return cpsr.sign_flag != cpsr.overflow_flag
-            case ARMCondition.GT:
+            case Condition.GT:
                 return not cpsr.zero_flag and cpsr.sign_flag == cpsr.overflow_flag
-            case ARMCondition.LE:
+            case Condition.LE:
                 return cpsr.zero_flag or cpsr.sign_flag != cpsr.overflow_flag
-            case ARMCondition.AL:
+            case Condition.AL:
                 return True
-            case ARMCondition.NV:
+            case Condition.NV:
                 raise ValueError("Condition NV (never) is reserved")
             case _:
                 raise ValueError
@@ -129,13 +129,13 @@ class CPU:
             shift_reg = get_bits(shift, 4, 7)
             shift_amount = self.regs[shift_reg] & 0xFF
 
-        shift_type = ARMShiftType(get_bits(shift, 1, 2))
+        shift_type = ShiftType(get_bits(shift, 1, 2))
 
         return self.compute_shift(value, shift_type, shift_amount, immediate)
 
     def compute_shift(self,
                       value: int,
-                      shift_type: ARMShiftType,
+                      shift_type: ShiftType,
                       shift_amount: int,
                       immediate: bool) -> tuple[int, bool]:
 
@@ -147,7 +147,7 @@ class CPU:
 
         match shift_type:
 
-            case ARMShiftType.LSL:
+            case ShiftType.LSL:
                 # LSL#0 and Immediate: No shift performed, the C flag is NOT affected.
                 # LSL#32 has result zero, carry out equal to bit 0 of value.
                 # LSL by more than 32 has result zero, carry out zero.
@@ -163,7 +163,7 @@ class CPU:
                     carry_out = False
                     result = 0
 
-            case ARMShiftType.LSR:
+            case ShiftType.LSR:
                 # LSR#0 and Immediate: Interpreted as LSR#32, i.e. result is zero, C becomes bit 31 of value.
                 # LSR#32 has result zero, carry out equal to bit 31 of value.
                 # LSR by more than 32 has result zero, carry out zero.
@@ -180,7 +180,7 @@ class CPU:
                     carry_out = False
                     result = 0
 
-            case ARMShiftType.ASR:
+            case ShiftType.ASR:
                 # ASR#0 and Immediate = 0: Interpreted as ASR#32, i.e. result and C are filled by bit 31 of value.
                 # ASR by 32 or more has result filled with and carry out equal to bit 31 of value.
                 if shift_amount == 0 or shift_amount >= 32:
@@ -190,7 +190,7 @@ class CPU:
                     carry_out = get_bit(value, shift_amount - 1)
                     result = (interpret_signed_32(value) >> shift_amount) & 0xFFFFFFFF
 
-            case ARMShiftType.ROR:
+            case ShiftType.ROR:
                 # ROR by n where n is greater than 32 will give the same result and carry out
                 # as ROR by n-32; therefore repeatedly subtract 32 from n until the amount is
                 # in the range 1 to 32.
