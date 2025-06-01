@@ -23,6 +23,10 @@ def sign_24(num: int) -> bool:
     return get_bit(num, 23)
 
 
+def sign_23(num: int) -> bool:
+    return get_bit(num, 22)
+
+
 def sign_16(num: int) -> bool:
     return get_bit(num, 15)
 
@@ -49,6 +53,10 @@ def interpret_signed_32(num: int) -> int:
 
 def interpret_signed_24(num: int) -> int:
     return (num - (1 << 24)) if sign_24(num) else num
+
+
+def interpret_signed_23(num: int) -> int:
+    return (num - (1 << 23)) if sign_23(num) else num
 
 
 def interpret_signed_12(num: int) -> int:

@@ -61,11 +61,13 @@ class CPU:
 
     def flush_pipeline(self):
         if self.regs.cpsr.state == CPUState.ARM:
+            self.regs.pc &= ~0b11  # Align PC to 4 byte boundary
             self.pipeline[0] = self.memory.read_32(self.regs.pc, MemoryAccess.NON_SEQUENTIAL)
             self.arm_advance_pc()
             self.pipeline[1] = self.memory.read_32(self.regs.pc, MemoryAccess.SEQUENTIAL)
             self.arm_advance_pc()
         else:
+            self.regs.pc &= ~0b1  # Align PC to 2 byte boundary
             self.pipeline[0] = self.memory.read_16(self.regs.pc, MemoryAccess.NON_SEQUENTIAL)
             self.thumb_advance_pc()
             self.pipeline[1] = self.memory.read_16(self.regs.pc, MemoryAccess.SEQUENTIAL)
