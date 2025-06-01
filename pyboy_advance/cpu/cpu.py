@@ -1,3 +1,5 @@
+from typing import Callable
+
 from pyboy_advance.cpu.arm.decode import arm_decode
 from pyboy_advance.cpu.constants import CPUMode, CPUState, Condition, ARM_PC_INCREMENT, THUMB_PC_INCREMENT, \
     ShiftType
@@ -207,3 +209,6 @@ class CPU:
                     result = ror_32(value, get_bits(shift_amount, 0, 4))
 
         return result, carry_out
+
+
+InstructionHandler = Callable[[CPU, int], None]
