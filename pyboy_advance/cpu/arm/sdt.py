@@ -38,7 +38,6 @@ def arm_single_data_transfer(cpu: CPU, instr: int):
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
     if load_store_bit:  # Load
-
         if byte_word_bit:
             # Load byte
             value = cpu.memory.read_8(effective_address, MemoryAccess.NON_SEQUENTIAL)
@@ -57,7 +56,6 @@ def arm_single_data_transfer(cpu: CPU, instr: int):
             cpu.flush_pipeline()
 
     else:  # Store
-
         if byte_word_bit:
             # Store byte
             cpu.memory.write_8(effective_address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)

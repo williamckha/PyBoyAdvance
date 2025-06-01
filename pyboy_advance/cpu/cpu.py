@@ -1,12 +1,24 @@
 from typing import Callable
 
 from pyboy_advance.cpu.arm.decode import arm_decode
-from pyboy_advance.cpu.constants import CPUMode, CPUState, Condition, ARM_PC_INCREMENT, THUMB_PC_INCREMENT, \
-    ShiftType
+from pyboy_advance.cpu.constants import (
+    CPUMode,
+    CPUState,
+    Condition,
+    ARM_PC_INCREMENT,
+    THUMB_PC_INCREMENT,
+    ShiftType,
+)
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.cpu.thumb.decode import thumb_decode
 from pyboy_advance.memory.memory import MemoryAccess, Memory
-from pyboy_advance.utils import get_bits, get_bit, ror_32, add_uint32_to_uint32, interpret_signed_32
+from pyboy_advance.utils import (
+    get_bits,
+    get_bit,
+    ror_32,
+    add_uint32_to_uint32,
+    interpret_signed_32,
+)
 
 
 class CPU:
@@ -36,20 +48,24 @@ class CPU:
 
         cond = Condition(get_bits(instruction, 28, 31))
         if self.check_condition(cond):
-            print("Executing <{0:#010x}> {1:032b} {2}".format(
-                (self.regs.pc - 8),
-                instruction,
-                instruction_handler.__name__,
-            ))
+            print(
+                "Executing <{0:#010x}> {1:032b} {2}".format(
+                    (self.regs.pc - 8),
+                    instruction,
+                    instruction_handler.__name__,
+                )
+            )
 
             instruction_handler(self, instruction)
         else:
             # Skip instruction since condition was not met
-            print("Skipping  <{0:#010x}> {1:032b} {2}".format(
-                (self.regs.pc - 8),
-                instruction,
-                instruction_handler.__name__,
-            ))
+            print(
+                "Skipping  <{0:#010x}> {1:032b} {2}".format(
+                    (self.regs.pc - 8),
+                    instruction,
+                    instruction_handler.__name__,
+                )
+            )
 
             self.arm_advance_pc()
             self.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -61,11 +77,13 @@ class CPU:
 
         instruction_handler = thumb_decode(instruction)
 
-        print("Executing <{0:#010x}> {1:032b} {2}".format(
-            (self.regs.pc - 4),
-            instruction,
-            instruction_handler.__name__,
-        ))
+        print(
+            "Executing <{0:#010x}> {1:032b} {2}".format(
+                (self.regs.pc - 4),
+                instruction,
+                instruction_handler.__name__,
+            )
+        )
 
         instruction_handler(self, instruction)
 
@@ -143,12 +161,9 @@ class CPU:
 
         return self.compute_shift(value, shift_type, shift_amount, immediate)
 
-    def compute_shift(self,
-                      value: int,
-                      shift_type: ShiftType,
-                      shift_amount: int,
-                      immediate: bool) -> tuple[int, bool]:
-
+    def compute_shift(
+        self, value: int, shift_type: ShiftType, shift_amount: int, immediate: bool
+    ) -> tuple[int, bool]:
         if not immediate and shift_amount == 0:
             return value, self.regs.cpsr.carry_flag
 
@@ -156,7 +171,6 @@ class CPU:
         carry_out = False
 
         match shift_type:
-
             case ShiftType.LSL:
                 # LSL#0 and Immediate: No shift performed, the C flag is NOT affected.
                 # LSL#32 has result zero, carry out equal to bit 0 of value.

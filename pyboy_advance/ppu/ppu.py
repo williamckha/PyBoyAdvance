@@ -22,13 +22,11 @@ class PPU:
 
 
 class DisplayControlRegister:
-
     def __init__(self):
         self.reg = 0
 
 
 class DisplayStatusRegister:
-
     def __init__(self):
         self.reg = 0
 

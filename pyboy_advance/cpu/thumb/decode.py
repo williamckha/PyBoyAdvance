@@ -2,15 +2,32 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyboy_advance.cpu.thumb.alu import thumb_move_shifted_register, thumb_add_subtract, \
-    thumb_move_compare_add_subtract, thumb_alu, thumb_high_reg_branch_exchange, thumb_add_offset_to_stack_pointer, \
-    thumb_load_address
-from pyboy_advance.cpu.thumb.bdt import thumb_multiple_load_store, thumb_push_pop_registers
-from pyboy_advance.cpu.thumb.branch import thumb_unconditional_branch, thumb_conditional_branch, \
-    thumb_long_branch_with_link
-from pyboy_advance.cpu.thumb.sdt import thumb_pc_relative_load, thumb_load_store_sign_extended, \
-    thumb_load_store_register_offset, thumb_load_store_immediate_offset, thumb_load_store_halfword, \
-    thumb_sp_relative_load_store
+from pyboy_advance.cpu.thumb.alu import (
+    thumb_move_shifted_register,
+    thumb_add_subtract,
+    thumb_move_compare_add_subtract,
+    thumb_alu,
+    thumb_high_reg_branch_exchange,
+    thumb_add_offset_to_stack_pointer,
+    thumb_load_address,
+)
+from pyboy_advance.cpu.thumb.bdt import (
+    thumb_multiple_load_store,
+    thumb_push_pop_registers,
+)
+from pyboy_advance.cpu.thumb.branch import (
+    thumb_unconditional_branch,
+    thumb_conditional_branch,
+    thumb_long_branch_with_link,
+)
+from pyboy_advance.cpu.thumb.sdt import (
+    thumb_pc_relative_load,
+    thumb_load_store_sign_extended,
+    thumb_load_store_register_offset,
+    thumb_load_store_immediate_offset,
+    thumb_load_store_halfword,
+    thumb_sp_relative_load_store,
+)
 from pyboy_advance.cpu.thumb.swi import thumb_software_interrupt
 
 if TYPE_CHECKING:

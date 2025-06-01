@@ -3,13 +3,31 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
-from pyboy_advance.cpu.arm.alu import arm_alu_sub, arm_alu_add, arm_alu_mov, arm_alu_adc, arm_alu_sbc, \
-    arm_alu_tst, arm_alu_cmp, arm_alu_cmn, arm_alu_orr, arm_alu_bic, \
-    arm_alu_mvn, arm_alu_and, arm_alu_eor
+from pyboy_advance.cpu.arm.alu import (
+    arm_alu_sub,
+    arm_alu_add,
+    arm_alu_mov,
+    arm_alu_adc,
+    arm_alu_sbc,
+    arm_alu_tst,
+    arm_alu_cmp,
+    arm_alu_cmn,
+    arm_alu_orr,
+    arm_alu_bic,
+    arm_alu_mvn,
+    arm_alu_and,
+    arm_alu_eor,
+)
 from pyboy_advance.cpu.constants import CPUState, ShiftType
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.memory.memory import MemoryAccess
-from pyboy_advance.utils import get_bits, get_bit, sign_32, add_uint32_to_uint32, add_int32_to_uint32
+from pyboy_advance.utils import (
+    get_bits,
+    get_bit,
+    sign_32,
+    add_uint32_to_uint32,
+    add_int32_to_uint32,
+)
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -84,7 +102,13 @@ def thumb_move_compare_add_subtract(cpu: CPU, instr: int):
 
     match opcode:
         case 0:  # MOV
-            arm_alu_mov(cpu, value, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+            arm_alu_mov(
+                cpu,
+                value,
+                rd,
+                set_cond_codes=True,
+                shift_carry=cpu.regs.cpsr.carry_flag,
+            )
         case 1:  # CMP
             arm_alu_cmp(cpu, cpu.regs[rd], value)
         case 2:  # ADD
@@ -114,9 +138,23 @@ def thumb_alu(cpu: CPU, instr: int):
     opcode = get_bits(instr, 6, 9)
     match opcode:
         case ThumbALUOpcode.AND:
-            arm_alu_and(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+            arm_alu_and(
+                cpu,
+                op1,
+                op2,
+                rd,
+                set_cond_codes=True,
+                shift_carry=cpu.regs.cpsr.carry_flag,
+            )
         case ThumbALUOpcode.EOR:
-            arm_alu_eor(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+            arm_alu_eor(
+                cpu,
+                op1,
+                op2,
+                rd,
+                set_cond_codes=True,
+                shift_carry=cpu.regs.cpsr.carry_flag,
+            )
         case ThumbALUOpcode.LSL:
             execute_shift(ShiftType.LSL)
         case ThumbALUOpcode.LSR:
@@ -138,13 +176,27 @@ def thumb_alu(cpu: CPU, instr: int):
         case ThumbALUOpcode.CMN:
             arm_alu_cmn(cpu, op1, op2)
         case ThumbALUOpcode.ORR:
-            arm_alu_orr(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+            arm_alu_orr(
+                cpu,
+                op1,
+                op2,
+                rd,
+                set_cond_codes=True,
+                shift_carry=cpu.regs.cpsr.carry_flag,
+            )
         case ThumbALUOpcode.MUL:
             cpu.regs[rd] = (op1 * op2) & 0xFFFFFFFF
             cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd])
             cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
         case ThumbALUOpcode.BIC:
-            arm_alu_bic(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+            arm_alu_bic(
+                cpu,
+                op1,
+                op2,
+                rd,
+                set_cond_codes=True,
+                shift_carry=cpu.regs.cpsr.carry_flag,
+            )
         case ThumbALUOpcode.MVN:
             arm_alu_mvn(cpu, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
 
@@ -158,7 +210,6 @@ def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):
 
     opcode = get_bits(instr, 8, 9)
     match opcode:
-
         case 0:  # ADD
             cpu.regs[rd] = add_uint32_to_uint32(cpu.regs[rd], cpu.regs[rs])
             if rd == Registers.PC:

@@ -7,8 +7,16 @@ from typing import TYPE_CHECKING
 from pyboy_advance.memory.constants import MemoryRegion
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
-from pyboy_advance.utils import get_bit, array_read_16, array_read_32, array_write_32, array_write_16, ror_32, \
-    extend_sign_16, extend_sign_8
+from pyboy_advance.utils import (
+    get_bit,
+    array_read_16,
+    array_read_32,
+    array_write_32,
+    array_write_16,
+    ror_32,
+    extend_sign_16,
+    extend_sign_8,
+)
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -20,7 +28,6 @@ class MemoryAccess(Enum):
 
 
 class Memory:
-
     def __init__(self, io: IO, gamepak: GamePak):
         self.cpu: CPU | None = None
         self.io = io
@@ -95,7 +102,9 @@ class Memory:
             case MemoryRegion.BIOS_REGION:
                 if address <= MemoryRegion.BIOS_END:
                     if not self.cpu or self.cpu.regs.pc <= MemoryRegion.BIOS_END:
-                        self.bios_last_opcode = array_read_32(self.bios, address & MemoryRegion.BIOS_MASK)
+                        self.bios_last_opcode = array_read_32(
+                            self.bios, address & MemoryRegion.BIOS_MASK
+                        )
                     return self.bios_last_opcode
                 else:
                     raise ValueError(f"Invalid BIOS read_32 at address {address:#010x}")
@@ -108,11 +117,13 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 return array_read_32(self.palram, address & MemoryRegion.PALRAM_MASK)
             case MemoryRegion.VRAM_REGION:
-                mask = (MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2)
+                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
                 return array_read_32(self.vram, address & mask)
             case MemoryRegion.OAM_REGION:
                 return array_read_32(self.oam, address & MemoryRegion.OAM_MASK)
-            case region if MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            case region if (
+                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
+            ):
                 return self.gamepak.read_32(address)
             case MemoryRegion.SRAM_REGION:
                 return self.gamepak.read_32(address)
@@ -139,11 +150,13 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 return array_read_16(self.palram, address & MemoryRegion.PALRAM_MASK)
             case MemoryRegion.VRAM_REGION:
-                mask = (MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2)
+                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
                 return array_read_16(self.vram, address & mask)
             case MemoryRegion.OAM_REGION:
                 return array_read_16(self.oam, address & MemoryRegion.OAM_MASK)
-            case region if MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            case region if (
+                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
+            ):
                 return self.gamepak.read_16(address)
             case MemoryRegion.SRAM_REGION:
                 return self.gamepak.read_16(address)
@@ -169,11 +182,13 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 return self.palram[address & MemoryRegion.PALRAM_MASK]
             case MemoryRegion.VRAM_REGION:
-                mask = (MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2)
+                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
                 return self.vram[address & mask]
             case MemoryRegion.OAM_REGION:
                 return self.oam[address & MemoryRegion.OAM_MASK]
-            case region if MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            case region if (
+                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
+            ):
                 return self.gamepak.read_8(address)
             case MemoryRegion.SRAM_REGION:
                 return self.gamepak.read_8(address)
@@ -196,11 +211,13 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 array_write_32(self.palram, address & MemoryRegion.PALRAM_MASK, value)
             case MemoryRegion.VRAM_REGION:
-                mask = (MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2)
+                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
                 array_write_32(self.vram, address & mask, value)
             case MemoryRegion.OAM_REGION:
                 array_write_32(self.oam, address & MemoryRegion.OAM_MASK, value)
-            case region if MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            case region if (
+                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
+            ):
                 raise NotImplementedError
             case MemoryRegion.SRAM_REGION:
                 raise NotImplementedError
@@ -223,11 +240,13 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 array_write_16(self.palram, address & MemoryRegion.PALRAM_MASK, value)
             case MemoryRegion.VRAM_REGION:
-                mask = (MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2)
+                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
                 array_write_16(self.vram, address & mask, value)
             case MemoryRegion.OAM_REGION:
                 array_write_16(self.oam, address & MemoryRegion.OAM_MASK, value)
-            case region if MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            case region if (
+                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
+            ):
                 raise NotImplementedError
             case MemoryRegion.SRAM_REGION:
                 raise NotImplementedError
@@ -249,11 +268,13 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 self.palram[address & MemoryRegion.PALRAM_MASK] = value
             case MemoryRegion.VRAM_REGION:
-                mask = (MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2)
+                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
                 self.vram[address & mask] = value
             case MemoryRegion.OAM_REGION:
                 self.oam[address & MemoryRegion.OAM_MASK] = value
-            case region if MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            case region if (
+                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
+            ):
                 raise NotImplementedError
             case MemoryRegion.SRAM_REGION:
                 raise NotImplementedError

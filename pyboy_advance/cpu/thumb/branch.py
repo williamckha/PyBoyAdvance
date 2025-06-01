@@ -4,8 +4,15 @@ from typing import TYPE_CHECKING
 
 from pyboy_advance.cpu.constants import Condition
 from pyboy_advance.memory.memory import MemoryAccess
-from pyboy_advance.utils import get_bits, interpret_signed_12, add_int32_to_uint32, interpret_signed_8, get_bit, \
-    add_uint32_to_uint32, interpret_signed_23
+from pyboy_advance.utils import (
+    get_bits,
+    interpret_signed_12,
+    add_int32_to_uint32,
+    interpret_signed_8,
+    get_bit,
+    add_uint32_to_uint32,
+    interpret_signed_23,
+)
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU

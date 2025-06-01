@@ -10,12 +10,9 @@ from pyboy_advance.ppu.ppu import PPU
 
 
 class GBA:
-
     def __init__(self, gamepak: GamePak | str | os.PathLike, skip_bios: bool = False):
         self.gamepak = (
-            GamePak.from_file(gamepak)
-            if isinstance(gamepak, (str, os.PathLike)) else
-            gamepak
+            GamePak.from_file(gamepak) if isinstance(gamepak, (str, os.PathLike)) else gamepak
         )
 
         self.ppu = PPU()
@@ -24,13 +21,13 @@ class GBA:
         self.cpu = CPU(self.memory)
 
         if skip_bios:
-            self.cpu.regs.banked_sp[BankIndex.SYSTEM_USER] = 0x03007f00
-            self.cpu.regs.banked_sp[BankIndex.FIQ] = 0x03007f00
-            self.cpu.regs.banked_sp[BankIndex.IRQ] = 0x03007fa0
-            self.cpu.regs.banked_sp[BankIndex.SWI] = 0x03007fe0
-            self.cpu.regs.banked_sp[BankIndex.ABORT] = 0x03007f00
-            self.cpu.regs.banked_sp[BankIndex.UNDEFINED] = 0x03007f00
-            self.cpu.regs.sp = 0x03007f00
+            self.cpu.regs.banked_sp[BankIndex.SYSTEM_USER] = 0x03007F00
+            self.cpu.regs.banked_sp[BankIndex.FIQ] = 0x03007F00
+            self.cpu.regs.banked_sp[BankIndex.IRQ] = 0x03007FA0
+            self.cpu.regs.banked_sp[BankIndex.SWI] = 0x03007FE0
+            self.cpu.regs.banked_sp[BankIndex.ABORT] = 0x03007F00
+            self.cpu.regs.banked_sp[BankIndex.UNDEFINED] = 0x03007F00
+            self.cpu.regs.sp = 0x03007F00
             self.cpu.regs.pc = 0x08000000
             self.cpu.flush_pipeline()
 

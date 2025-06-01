@@ -43,7 +43,6 @@ def arm_alu(cpu: CPU, instr: int):
     early_advance_pc = False
 
     if immediate:  # Immediate value as 2nd operand
-
         op1 = cpu.regs[rn]
         op2 = get_bits(instr, 0, 7)
         ror_amount = get_bits(instr, 8, 11) * 2
@@ -53,7 +52,6 @@ def arm_alu(cpu: CPU, instr: int):
             op2 = ror_32(op2, ror_amount)
 
     else:  # Register value as 2nd operand
-
         rm = get_bits(instr, 0, 3)
         shift = get_bits(instr, 4, 11)
 
@@ -128,7 +126,9 @@ def arm_alu_and(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bool, shi
     cpu.regs[rd] = arm_alu_and_impl(cpu, op1, op2, rd, set_cond_codes, shift_carry)
 
 
-def arm_alu_and_impl(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bool, shift_carry: bool) -> int:
+def arm_alu_and_impl(
+    cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bool, shift_carry: bool
+) -> int:
     result = op1 & op2
     if set_cond_codes and rd != Registers.PC:
         cpu.regs.cpsr.sign_flag = sign_32(result)
@@ -141,7 +141,9 @@ def arm_alu_eor(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bool, shi
     cpu.regs[rd] = arm_alu_eor_impl(cpu, op1, op2, rd, set_cond_codes, shift_carry)
 
 
-def arm_alu_eor_impl(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bool, shift_carry: bool) -> int:
+def arm_alu_eor_impl(
+    cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bool, shift_carry: bool
+) -> int:
     result = op1 ^ op2
     if set_cond_codes and rd != Registers.PC:
         cpu.regs.cpsr.sign_flag = sign_32(result)

@@ -5,7 +5,6 @@ from pyboy_advance.utils import get_bit, set_bit
 
 
 class ProgramStatusRegister:
-
     def __init__(self, value: int = 0):
         self.reg = value
 

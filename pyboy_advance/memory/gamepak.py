@@ -9,7 +9,6 @@ from pyboy_advance.utils import array_read_32, array_read_16
 
 
 class GamePak:
-
     @staticmethod
     def from_file(rom_file_path: str | os.PathLike) -> GamePak:
         with open(rom_file_path, "rb") as rom_file:

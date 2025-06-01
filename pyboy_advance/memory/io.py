@@ -4,7 +4,6 @@ from pyboy_advance.utils import get_bit
 
 
 class IO:
-
     def __init__(self, ppu: PPU):
         self.ppu = ppu
 
@@ -47,8 +46,8 @@ class IO:
         old_value = self.read_16(aligned_address)
         new_value = (
             (old_value & 0x00FF) | (value << 8)
-            if get_bit(value, 0) else
-            (old_value & 0xFF00) | value
+            if get_bit(value, 0)
+            else (old_value & 0xFF00) | value
         )
 
         self.write_16(aligned_address, new_value)

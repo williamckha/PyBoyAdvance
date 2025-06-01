@@ -1,5 +1,3 @@
-import traceback
-
 from pyboy_advance.gba import GBA
 
 # Corresponds to instruction "idle: b idle"
@@ -15,8 +13,10 @@ def run_test_rom(rom: str, test_reg: int):
     gba = GBA(rom, skip_bios=True)
 
     try:
-        while (gba.cpu.pipeline[0] != ARM_IDLE_INSTRUCTION and
-               gba.cpu.pipeline[0] != THUMB_IDLE_INSTRUCTION):
+        while (
+            gba.cpu.pipeline[0] != ARM_IDLE_INSTRUCTION
+            and gba.cpu.pipeline[0] != THUMB_IDLE_INSTRUCTION
+        ):
             gba.step()
     except Exception as e:
         print(f"Was executing test {gba.cpu.regs[test_reg]:03}")
@@ -26,28 +26,16 @@ def run_test_rom(rom: str, test_reg: int):
 
 
 def test_arm():
-    run_test_rom(
-        "external/gba-tests/arm/arm.gba",
-        ARM_TEST_REGISTER
-    )
+    run_test_rom("external/gba-tests/arm/arm.gba", ARM_TEST_REGISTER)
 
 
 def test_bios():
-    run_test_rom(
-        "external/gba-tests/bios/bios.gba",
-        ARM_TEST_REGISTER
-    )
+    run_test_rom("external/gba-tests/bios/bios.gba", ARM_TEST_REGISTER)
 
 
 def test_memory():
-    run_test_rom(
-        "external/gba-tests/memory/memory.gba",
-        ARM_TEST_REGISTER
-    )
+    run_test_rom("external/gba-tests/memory/memory.gba", ARM_TEST_REGISTER)
 
 
 def test_thumb():
-    run_test_rom(
-        "external/gba-tests/thumb/thumb.gba",
-        THUMB_TEST_REGISTER
-    )
+    run_test_rom("external/gba-tests/thumb/thumb.gba", THUMB_TEST_REGISTER)

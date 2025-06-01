@@ -21,7 +21,6 @@ def arm_decode(instr: int) -> Callable[[CPU, int], None]:
     top_bits = get_bits(instr, 26, 27)
 
     if top_bits == 0b00:
-
         if get_bits(instr, 4, 25) == 0b00_0001_0010_1111_1111_1111_0001:
             return arm_branch_exchange
 
@@ -41,10 +40,10 @@ def arm_decode(instr: int) -> Callable[[CPU, int], None]:
         set_conditions = get_bit(instr, 20)
         alu_opcode = get_bits(instr, 21, 24)
         if not set_conditions and (
-                alu_opcode == ALUOpcode.TST or
-                alu_opcode == ALUOpcode.TEQ or
-                alu_opcode == ALUOpcode.CMP or
-                alu_opcode == ALUOpcode.CMN
+            alu_opcode == ALUOpcode.TST
+            or alu_opcode == ALUOpcode.TEQ
+            or alu_opcode == ALUOpcode.CMP
+            or alu_opcode == ALUOpcode.CMN
         ):
             if get_bit(instr, 21):
                 return arm_msr
