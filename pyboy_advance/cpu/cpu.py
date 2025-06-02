@@ -1,3 +1,4 @@
+import logging
 from typing import Callable
 
 from pyboy_advance.cpu.arm.decode import arm_decode
@@ -19,6 +20,8 @@ from pyboy_advance.utils import (
     add_uint32_to_uint32,
     interpret_signed_32,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class CPU:
@@ -48,7 +51,7 @@ class CPU:
 
         cond = Condition(get_bits(instruction, 28, 31))
         if self.check_condition(cond):
-            print(
+            logger.debug(
                 "Executing <{0:#010x}> {1:032b} {2}".format(
                     (self.regs.pc - 8),
                     instruction,
@@ -59,7 +62,7 @@ class CPU:
             instruction_handler(self, instruction)
         else:
             # Skip instruction since condition was not met
-            print(
+            logger.debug(
                 "Skipping  <{0:#010x}> {1:032b} {2}".format(
                     (self.regs.pc - 8),
                     instruction,
@@ -77,7 +80,7 @@ class CPU:
 
         instruction_handler = thumb_decode(instruction)
 
-        print(
+        logger.debug(
             "Executing <{0:#010x}> {1:032b} {2}".format(
                 (self.regs.pc - 4),
                 instruction,

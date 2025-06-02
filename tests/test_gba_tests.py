@@ -1,4 +1,4 @@
-from pyboy_advance.gba import GBA
+from pyboy_advance.gba import PyBoyAdvance
 
 # Corresponds to instruction "idle: b idle"
 ARM_IDLE_INSTRUCTION = 0b11101010111111111111111111111110
@@ -10,7 +10,7 @@ THUMB_TEST_REGISTER = 7
 
 
 def run_test_rom(rom: str, test_reg: int):
-    gba = GBA(rom, skip_bios=True)
+    gba = PyBoyAdvance(rom, skip_bios=True)
 
     try:
         while (

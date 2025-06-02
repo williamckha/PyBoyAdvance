@@ -37,11 +37,6 @@ class Memory:
         self.ewram = array("B", [0] * MemoryRegion.EWRAM_SIZE)
         self.iwram = array("B", [0] * MemoryRegion.IWRAM_SIZE)
 
-        # Internal Display Memory
-        self.palram = array("B", [0] * MemoryRegion.PALRAM_SIZE)
-        self.vram = array("B", [0] * MemoryRegion.VRAM_SIZE)
-        self.oam = array("B", [0] * MemoryRegion.OAM_SIZE)
-
         # External Memory (Game Pak)
         self.gamepak = gamepak
 
@@ -115,12 +110,12 @@ class Memory:
             case MemoryRegion.IO_REGION:
                 return self.io.read_32(address)
             case MemoryRegion.PALRAM_REGION:
-                return array_read_32(self.palram, address & MemoryRegion.PALRAM_MASK)
+                return array_read_32(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK)
             case MemoryRegion.VRAM_REGION:
                 mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
-                return array_read_32(self.vram, address & mask)
+                return array_read_32(self.io.ppu.vram, address & mask)
             case MemoryRegion.OAM_REGION:
-                return array_read_32(self.oam, address & MemoryRegion.OAM_MASK)
+                return array_read_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK)
             case region if (
                 MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
             ):
@@ -148,12 +143,12 @@ class Memory:
             case MemoryRegion.IO_REGION:
                 return self.io.read_16(address)
             case MemoryRegion.PALRAM_REGION:
-                return array_read_16(self.palram, address & MemoryRegion.PALRAM_MASK)
+                return array_read_16(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK)
             case MemoryRegion.VRAM_REGION:
                 mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
-                return array_read_16(self.vram, address & mask)
+                return array_read_16(self.io.ppu.vram, address & mask)
             case MemoryRegion.OAM_REGION:
-                return array_read_16(self.oam, address & MemoryRegion.OAM_MASK)
+                return array_read_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK)
             case region if (
                 MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
             ):
@@ -180,12 +175,12 @@ class Memory:
             case MemoryRegion.IO_REGION:
                 return self.io.read_8(address)
             case MemoryRegion.PALRAM_REGION:
-                return self.palram[address & MemoryRegion.PALRAM_MASK]
+                return self.io.ppu.palram[address & MemoryRegion.PALRAM_MASK]
             case MemoryRegion.VRAM_REGION:
                 mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
-                return self.vram[address & mask]
+                return self.io.ppu.vram[address & mask]
             case MemoryRegion.OAM_REGION:
-                return self.oam[address & MemoryRegion.OAM_MASK]
+                return self.io.ppu.oam[address & MemoryRegion.OAM_MASK]
             case region if (
                 MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
             ):
@@ -209,12 +204,12 @@ class Memory:
             case MemoryRegion.IO_REGION:
                 self.io.write_32(address, value)
             case MemoryRegion.PALRAM_REGION:
-                array_write_32(self.palram, address & MemoryRegion.PALRAM_MASK, value)
+                array_write_32(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK, value)
             case MemoryRegion.VRAM_REGION:
                 mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
-                array_write_32(self.vram, address & mask, value)
+                array_write_32(self.io.ppu.vram, address & mask, value)
             case MemoryRegion.OAM_REGION:
-                array_write_32(self.oam, address & MemoryRegion.OAM_MASK, value)
+                array_write_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
             case region if (
                 MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
             ):
@@ -238,12 +233,12 @@ class Memory:
             case MemoryRegion.IO_REGION:
                 self.io.write_16(address, value)
             case MemoryRegion.PALRAM_REGION:
-                array_write_16(self.palram, address & MemoryRegion.PALRAM_MASK, value)
+                array_write_16(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK, value)
             case MemoryRegion.VRAM_REGION:
                 mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
-                array_write_16(self.vram, address & mask, value)
+                array_write_16(self.io.ppu.vram, address & mask, value)
             case MemoryRegion.OAM_REGION:
-                array_write_16(self.oam, address & MemoryRegion.OAM_MASK, value)
+                array_write_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
             case region if (
                 MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
             ):
@@ -266,12 +261,12 @@ class Memory:
             case MemoryRegion.IO_REGION:
                 self.io.write_8(address, value)
             case MemoryRegion.PALRAM_REGION:
-                self.palram[address & MemoryRegion.PALRAM_MASK] = value
+                self.io.ppu.palram[address & MemoryRegion.PALRAM_MASK] = value
             case MemoryRegion.VRAM_REGION:
                 mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
-                self.vram[address & mask] = value
+                self.io.ppu.vram[address & mask] = value
             case MemoryRegion.OAM_REGION:
-                self.oam[address & MemoryRegion.OAM_MASK] = value
+                self.io.ppu.oam[address & MemoryRegion.OAM_MASK] = value
             case region if (
                 MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
             ):

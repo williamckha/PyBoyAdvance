@@ -1,21 +1,24 @@
 import argparse
 import os
 
+from pyboy_advance.app.window import Window
 from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.cpu.registers import BankIndex
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
 from pyboy_advance.memory.memory import Memory
 from pyboy_advance.ppu.ppu import PPU
+from pyboy_advance.scheduler import Scheduler
 
 
-class GBA:
+class PyBoyAdvance:
     def __init__(self, gamepak: GamePak | str | os.PathLike, skip_bios: bool = False):
         self.gamepak = (
             GamePak.from_file(gamepak) if isinstance(gamepak, (str, os.PathLike)) else gamepak
         )
 
-        self.ppu = PPU()
+        self.scheduler = Scheduler()
+        self.ppu = PPU(self.scheduler)
         self.io = IO(self.ppu)
         self.memory = Memory(self.io, self.gamepak)
         self.cpu = CPU(self.memory)
@@ -33,7 +36,7 @@ class GBA:
 
     def step(self):
         self.cpu.step()
-        self.ppu.draw()
+        self.scheduler.update(1)
 
 
 if __name__ == "__main__":
@@ -41,6 +44,11 @@ if __name__ == "__main__":
     parser.add_argument("rom", type=str)
     args = parser.parse_args()
 
-    gba = GBA(args.rom, skip_bios=True)
+    window = Window()
+
+    gba = PyBoyAdvance(args.rom, skip_bios=True)
     while True:
         gba.step()
+        if gba.scheduler.cycles % 280896 == 0:
+            window.get_events()
+            window.render(gba.ppu.frame_buffer_ptr)
