@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="docs/images/pyboy_advance.svg" alt="PyBoy Advance" width="240">
+    <img src="assets/pyboy_advance.svg" alt="PyBoy Advance" width="240">
 </p>
 
 ---
