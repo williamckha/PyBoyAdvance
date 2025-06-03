@@ -93,205 +93,253 @@ class Memory:
 
     def _read_32_internal(self, address: int) -> int:
         address = address & ~0b11  # Align address to 4-byte boundary
-        match address >> 24:
-            case MemoryRegion.BIOS_REGION:
-                if address <= MemoryRegion.BIOS_END:
-                    if not self.cpu or self.cpu.regs.pc <= MemoryRegion.BIOS_END:
-                        self.bios_last_opcode = array_read_32(
-                            self.bios, address & MemoryRegion.BIOS_MASK
-                        )
-                    return self.bios_last_opcode
-                else:
-                    raise ValueError(f"Invalid BIOS read_32 at address {address:#010x}")
-            case MemoryRegion.EWRAM_REGION:
-                return array_read_32(self.ewram, address & MemoryRegion.EWRAM_MASK)
-            case MemoryRegion.IWRAM_REGION:
-                return array_read_32(self.iwram, address & MemoryRegion.IWRAM_MASK)
-            case MemoryRegion.IO_REGION:
-                return self.io.read_32(address)
-            case MemoryRegion.PALRAM_REGION:
-                return array_read_32(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK)
-            case MemoryRegion.VRAM_REGION:
-                mask = self._get_vram_address_mask(address)
-                return array_read_32(self.io.ppu.vram, address & mask)
-            case MemoryRegion.OAM_REGION:
-                return array_read_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK)
-            case region if (
-                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
-            ):
-                return self.gamepak.read_32(address)
-            case MemoryRegion.SRAM_REGION:
-                return self.gamepak.read_32(address)
-            case _:
-                print(f"Attempt to read from unused memory: {address:#010x}")
-                return 0
+        region = address >> 24
+
+        if region == MemoryRegion.BIOS_REGION:
+            if address <= MemoryRegion.BIOS_END:
+                if not self.cpu or self.cpu.regs.pc <= MemoryRegion.BIOS_END:
+                    self.bios_last_opcode = array_read_32(
+                        self.bios, address & MemoryRegion.BIOS_MASK
+                    )
+                return self.bios_last_opcode
+            else:
+                raise ValueError(f"Invalid BIOS read_32 at address {address:#010x}")
+
+        elif region == MemoryRegion.EWRAM_REGION:
+            return array_read_32(self.ewram, address & MemoryRegion.EWRAM_MASK)
+
+        elif region == MemoryRegion.IWRAM_REGION:
+            return array_read_32(self.iwram, address & MemoryRegion.IWRAM_MASK)
+
+        elif region == MemoryRegion.IO_REGION:
+            return self.io.read_32(address)
+
+        elif region == MemoryRegion.PALRAM_REGION:
+            return array_read_32(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK)
+
+        elif region == MemoryRegion.VRAM_REGION:
+            mask = self._get_vram_address_mask(address)
+            return array_read_32(self.io.ppu.vram, address & mask)
+
+        elif region == MemoryRegion.OAM_REGION:
+            return array_read_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK)
+
+        elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            return self.gamepak.read_32(address)
+
+        elif region == MemoryRegion.SRAM_REGION:
+            return self.gamepak.read_32(address)
+
+        else:
+            print(f"Attempt to read from unused memory: {address:#010x}")
+            return 0
 
     def _read_16_internal(self, address: int) -> int:
         address = address & ~0b1  # Align address to 2-byte boundary
-        match address >> 24:
-            case MemoryRegion.BIOS_REGION:
-                if address <= MemoryRegion.BIOS_END:
-                    if not self.cpu or self.cpu.regs.pc <= MemoryRegion.BIOS_END:
-                        return array_read_16(self.bios, address & MemoryRegion.BIOS_MASK)
-                    return (self.bios_last_opcode >> ((address & 2) << 3)) & 0xFFFF
-                else:
-                    raise ValueError(f"Invalid BIOS read_16 at address {address:#010x}")
-            case MemoryRegion.EWRAM_REGION:
-                return array_read_16(self.ewram, address & MemoryRegion.EWRAM_MASK)
-            case MemoryRegion.IWRAM_REGION:
-                return array_read_16(self.iwram, address & MemoryRegion.IWRAM_MASK)
-            case MemoryRegion.IO_REGION:
-                return self.io.read_16(address)
-            case MemoryRegion.PALRAM_REGION:
-                return array_read_16(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK)
-            case MemoryRegion.VRAM_REGION:
-                mask = self._get_vram_address_mask(address)
-                return array_read_16(self.io.ppu.vram, address & mask)
-            case MemoryRegion.OAM_REGION:
-                return array_read_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK)
-            case region if (
-                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
-            ):
-                return self.gamepak.read_16(address)
-            case MemoryRegion.SRAM_REGION:
-                return self.gamepak.read_16(address)
-            case _:
-                print(f"Attempt to read from unused memory: {address:#010x}")
-                return 0
+        region = address >> 24
+
+        if region == MemoryRegion.BIOS_REGION:
+            if address <= MemoryRegion.BIOS_END:
+                if not self.cpu or self.cpu.regs.pc <= MemoryRegion.BIOS_END:
+                    return array_read_16(self.bios, address & MemoryRegion.BIOS_MASK)
+                return (self.bios_last_opcode >> ((address & 2) << 3)) & 0xFFFF
+            else:
+                raise ValueError(f"Invalid BIOS read_16 at address {address:#010x}")
+
+        elif region == MemoryRegion.EWRAM_REGION:
+            return array_read_16(self.ewram, address & MemoryRegion.EWRAM_MASK)
+
+        elif region == MemoryRegion.IWRAM_REGION:
+            return array_read_16(self.iwram, address & MemoryRegion.IWRAM_MASK)
+
+        elif region == MemoryRegion.IO_REGION:
+            return self.io.read_16(address)
+
+        elif region == MemoryRegion.PALRAM_REGION:
+            return array_read_16(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK)
+
+        elif region == MemoryRegion.VRAM_REGION:
+            mask = self._get_vram_address_mask(address)
+            return array_read_16(self.io.ppu.vram, address & mask)
+
+        elif region == MemoryRegion.OAM_REGION:
+            return array_read_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK)
+
+        elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            return self.gamepak.read_16(address)
+
+        elif region == MemoryRegion.SRAM_REGION:
+            return self.gamepak.read_16(address)
+
+        else:
+            print(f"Attempt to read from unused memory: {address:#010x}")
+            return 0
 
     def _read_8_internal(self, address: int) -> int:
-        match address >> 24:
-            case MemoryRegion.BIOS_REGION:
-                if address <= MemoryRegion.BIOS_END:
-                    if not self.cpu or self.cpu.regs.pc <= MemoryRegion.BIOS_END:
-                        return self.bios[address & MemoryRegion.BIOS_MASK]
-                    return (self.bios_last_opcode >> ((address & 3) << 3)) & 0xFF
-                else:
-                    raise ValueError(f"Invalid BIOS read_8 at address {address:#010x}")
-            case MemoryRegion.EWRAM_REGION:
-                return self.ewram[address & MemoryRegion.EWRAM_MASK]
-            case MemoryRegion.IWRAM_REGION:
-                return self.iwram[address & MemoryRegion.IWRAM_MASK]
-            case MemoryRegion.IO_REGION:
-                return self.io.read_8(address)
-            case MemoryRegion.PALRAM_REGION:
-                return self.io.ppu.palram[address & MemoryRegion.PALRAM_MASK]
-            case MemoryRegion.VRAM_REGION:
-                mask = self._get_vram_address_mask(address)
-                return self.io.ppu.vram[address & mask]
-            case MemoryRegion.OAM_REGION:
-                return self.io.ppu.oam[address & MemoryRegion.OAM_MASK]
-            case region if (
-                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
-            ):
-                return self.gamepak.read_8(address)
-            case MemoryRegion.SRAM_REGION:
-                return self.gamepak.read_8(address)
-            case _:
-                print(f"Attempt to read from unused memory: {address:#010x}")
-                return 0
+        region = address >> 24
+
+        if region == MemoryRegion.BIOS_REGION:
+            if address <= MemoryRegion.BIOS_END:
+                if not self.cpu or self.cpu.regs.pc <= MemoryRegion.BIOS_END:
+                    return self.bios[address & MemoryRegion.BIOS_MASK]
+                return (self.bios_last_opcode >> ((address & 3) << 3)) & 0xFF
+            else:
+                raise ValueError(f"Invalid BIOS read_8 at address {address:#010x}")
+
+        elif region == MemoryRegion.EWRAM_REGION:
+            return self.ewram[address & MemoryRegion.EWRAM_MASK]
+
+        elif region == MemoryRegion.IWRAM_REGION:
+            return self.iwram[address & MemoryRegion.IWRAM_MASK]
+
+        elif region == MemoryRegion.IO_REGION:
+            return self.io.read_8(address)
+
+        elif region == MemoryRegion.PALRAM_REGION:
+            return self.io.ppu.palram[address & MemoryRegion.PALRAM_MASK]
+
+        elif region == MemoryRegion.VRAM_REGION:
+            mask = self._get_vram_address_mask(address)
+            return self.io.ppu.vram[address & mask]
+
+        elif region == MemoryRegion.OAM_REGION:
+            return self.io.ppu.oam[address & MemoryRegion.OAM_MASK]
+
+        elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            return self.gamepak.read_8(address)
+
+        elif region == MemoryRegion.SRAM_REGION:
+            return self.gamepak.read_8(address)
+
+        else:
+            print(f"Attempt to read from unused memory: {address:#010x}")
+            return 0
 
     def _write_32_internal(self, address: int, value: int):
         address = address & ~0b11  # Align address to 4-byte boundary
-        match address >> 24:
-            case MemoryRegion.BIOS_REGION:
-                # Ignore attempts to write to BIOS region
-                pass
-            case MemoryRegion.EWRAM_REGION:
-                array_write_32(self.ewram, address & MemoryRegion.EWRAM_MASK, value)
-            case MemoryRegion.IWRAM_REGION:
-                array_write_32(self.iwram, address & MemoryRegion.IWRAM_MASK, value)
-            case MemoryRegion.IO_REGION:
-                self.io.write_32(address, value)
-            case MemoryRegion.PALRAM_REGION:
-                array_write_32(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK, value)
-            case MemoryRegion.VRAM_REGION:
-                mask = self._get_vram_address_mask(address)
-                array_write_32(self.io.ppu.vram, address & mask, value)
-            case MemoryRegion.OAM_REGION:
-                array_write_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
-            case region if (
-                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
-            ):
-                raise NotImplementedError
-            case MemoryRegion.SRAM_REGION:
-                raise NotImplementedError
-            case _:
-                print(f"Attempt to write to unused memory: {address:#010x}")
+        region = address >> 24
+
+        if region == MemoryRegion.BIOS_REGION:
+            # Ignore attempts to write to BIOS region
+            pass
+
+        elif region == MemoryRegion.EWRAM_REGION:
+            array_write_32(self.ewram, address & MemoryRegion.EWRAM_MASK, value)
+
+        elif region == MemoryRegion.IWRAM_REGION:
+            array_write_32(self.iwram, address & MemoryRegion.IWRAM_MASK, value)
+
+        elif region == MemoryRegion.IO_REGION:
+            self.io.write_32(address, value)
+
+        elif region == MemoryRegion.PALRAM_REGION:
+            array_write_32(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK, value)
+
+        elif region == MemoryRegion.VRAM_REGION:
+            mask = self._get_vram_address_mask(address)
+            array_write_32(self.io.ppu.vram, address & mask, value)
+
+        elif region == MemoryRegion.OAM_REGION:
+            array_write_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
+
+        elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            raise NotImplementedError
+
+        elif region == MemoryRegion.SRAM_REGION:
+            raise NotImplementedError
+
+        else:
+            print(f"Attempt to write to unused memory: {address:#010x}")
 
     def _write_16_internal(self, address: int, value: int):
         address = address & ~0b1  # Align address to 2-byte boundary
         value = value & 0xFFFF
-        match address >> 24:
-            case MemoryRegion.BIOS_REGION:
-                # Ignore attempts to write to BIOS region
-                pass
-            case MemoryRegion.EWRAM_REGION:
-                array_write_16(self.ewram, address & MemoryRegion.EWRAM_MASK, value)
-            case MemoryRegion.IWRAM_REGION:
-                array_write_16(self.iwram, address & MemoryRegion.IWRAM_MASK, value)
-            case MemoryRegion.IO_REGION:
-                self.io.write_16(address, value)
-            case MemoryRegion.PALRAM_REGION:
-                array_write_16(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK, value)
-            case MemoryRegion.VRAM_REGION:
-                mask = self._get_vram_address_mask(address)
-                array_write_16(self.io.ppu.vram, address & mask, value)
-            case MemoryRegion.OAM_REGION:
-                array_write_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
-            case region if (
-                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
-            ):
-                raise NotImplementedError
-            case MemoryRegion.SRAM_REGION:
-                raise NotImplementedError
-            case _:
-                print(f"Attempt to write to unused memory: {address:#010x}")
+        region = address >> 24
+
+        if region == MemoryRegion.BIOS_REGION:
+            # Ignore attempts to write to BIOS region
+            pass
+
+        elif region == MemoryRegion.EWRAM_REGION:
+            array_write_16(self.ewram, address & MemoryRegion.EWRAM_MASK, value)
+
+        elif region == MemoryRegion.IWRAM_REGION:
+            array_write_16(self.iwram, address & MemoryRegion.IWRAM_MASK, value)
+
+        elif region == MemoryRegion.IO_REGION:
+            self.io.write_16(address, value)
+
+        elif region == MemoryRegion.PALRAM_REGION:
+            array_write_16(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK, value)
+
+        elif region == MemoryRegion.VRAM_REGION:
+            mask = self._get_vram_address_mask(address)
+            array_write_16(self.io.ppu.vram, address & mask, value)
+
+        elif region == MemoryRegion.OAM_REGION:
+            array_write_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
+
+        elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            raise NotImplementedError
+
+        elif region == MemoryRegion.SRAM_REGION:
+            raise NotImplementedError
+
+        else:
+            print(f"Attempt to write to unused memory: {address:#010x}")
 
     def _write_8_internal(self, address: int, value: int):
         value = value & 0xFF
-        match address >> 24:
-            case MemoryRegion.BIOS_REGION:
-                # Ignore attempts to write to BIOS region
-                pass
-            case MemoryRegion.EWRAM_REGION:
-                self.ewram[address & MemoryRegion.EWRAM_MASK] = value
-            case MemoryRegion.IWRAM_REGION:
-                self.iwram[address & MemoryRegion.IWRAM_MASK] = value
-            case MemoryRegion.IO_REGION:
-                self.io.write_8(address, value)
-            case MemoryRegion.PALRAM_REGION:
-                # Writing a byte to PALRAM writes the value to both the upper and lower 8-bits
+        region = address >> 24
+
+        if region == MemoryRegion.BIOS_REGION:
+            # Ignore attempts to write to BIOS region
+            pass
+
+        elif region == MemoryRegion.EWRAM_REGION:
+            self.ewram[address & MemoryRegion.EWRAM_MASK] = value
+
+        elif region == MemoryRegion.IWRAM_REGION:
+            self.iwram[address & MemoryRegion.IWRAM_MASK] = value
+
+        elif region == MemoryRegion.IO_REGION:
+            self.io.write_8(address, value)
+
+        elif region == MemoryRegion.PALRAM_REGION:
+            # Writing a byte to PALRAM writes the value to both the upper and lower 8-bits
+            # of the addressed halfword
+            address = address & ~0b1  # Align address to 2-byte boundary
+            self.io.ppu.palram[address & MemoryRegion.PALRAM_MASK] = value
+            self.io.ppu.palram[(address + 1) & MemoryRegion.PALRAM_MASK] = value
+
+        elif region == MemoryRegion.VRAM_REGION:
+            # VRAM is split into BG and OBJ regions.
+            # Size of the BG region changes depending on whether we are in bitmap mode
+            video_mode = self.io.ppu.display_control.video_mode
+            bg_region_end = 0x14000 if video_mode.is_bitmapped() else 0x10000
+
+            # Ignore attempts to write a byte into OBJ, but allow writes into BG
+            if address & 0x1FFFF < bg_region_end:
+                # Writing a byte to BG writes the value to both the upper and lower 8-bits
                 # of the addressed halfword
                 address = address & ~0b1  # Align address to 2-byte boundary
-                self.io.ppu.palram[address & MemoryRegion.PALRAM_MASK] = value
-                self.io.ppu.palram[(address + 1) & MemoryRegion.PALRAM_MASK] = value
-            case MemoryRegion.VRAM_REGION:
-                # VRAM is split into BG and OBJ regions.
-                # Size of the BG region changes depending on whether we are in bitmap mode
-                video_mode = self.io.ppu.display_control.video_mode
-                bg_region_end = 0x14000 if video_mode.is_bitmapped() else 0x10000
+                mask_1 = self._get_vram_address_mask(address)
+                mask_2 = self._get_vram_address_mask(address + 1)
+                self.io.ppu.vram[address & mask_1] = value
+                self.io.ppu.vram[(address + 1) & mask_2] = value
 
-                # Ignore attempts to write a byte into OBJ, but allow writes into BG
-                if address & 0x1FFFF < bg_region_end:
-                    # Writing a byte to BG writes the value to both the upper and lower 8-bits
-                    # of the addressed halfword
-                    address = address & ~0b1  # Align address to 2-byte boundary
-                    mask_1 = self._get_vram_address_mask(address)
-                    mask_2 = self._get_vram_address_mask(address + 1)
-                    self.io.ppu.vram[address & mask_1] = value
-                    self.io.ppu.vram[(address + 1) & mask_2] = value
-            case MemoryRegion.OAM_REGION:
-                # Ignore attempts to write a byte into OAM
-                pass
-            case region if (
-                MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
-            ):
-                raise NotImplementedError
-            case MemoryRegion.SRAM_REGION:
-                raise NotImplementedError
-            case _:
-                print(f"Attempt to write to unused memory: {address:#010x}")
+        elif region == MemoryRegion.OAM_REGION:
+            # Ignore attempts to write a byte into OAM
+            pass
+
+        elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
+            raise NotImplementedError
+
+        elif region == MemoryRegion.SRAM_REGION:
+            raise NotImplementedError
+
+        else:
+            print(f"Attempt to write to unused memory: {address:#010x}")
 
     @staticmethod
     def _get_vram_address_mask(address: int) -> int:

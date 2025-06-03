@@ -80,15 +80,14 @@ def thumb_add_subtract(cpu: CPU, instr: int):
     op1 = cpu.regs[rs]
     op2 = get_bits(instr, 6, 8) if immediate_bit else cpu.regs[get_bits(instr, 6, 8)]
 
-    match opcode:
-        case 0:  # ADD (Register)
-            arm_alu_add(cpu, op1, op2, rd, set_cond_codes=True)
-        case 1:  # SUB (Register)
-            arm_alu_sub(cpu, op1, op2, rd, set_cond_codes=True)
-        case 2:  # ADD (Immediate)
-            arm_alu_add(cpu, op1, op2, rd, set_cond_codes=True)
-        case 3:  # SUB (Immediate)
-            arm_alu_sub(cpu, op1, op2, rd, set_cond_codes=True)
+    if opcode == 0:  # ADD (Register)
+        arm_alu_add(cpu, op1, op2, rd, set_cond_codes=True)
+    elif opcode == 1:  # SUB (Register)
+        arm_alu_sub(cpu, op1, op2, rd, set_cond_codes=True)
+    elif opcode == 2:  # ADD (Immediate)
+        arm_alu_add(cpu, op1, op2, rd, set_cond_codes=True)
+    elif opcode == 3:  # SUB (Immediate)
+        arm_alu_sub(cpu, op1, op2, rd, set_cond_codes=True)
 
     cpu.thumb_advance_pc()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -100,21 +99,14 @@ def thumb_move_compare_add_subtract(cpu: CPU, instr: int):
     opcode = get_bits(instr, 11, 12)
     value = get_bits(instr, 0, 7)
 
-    match opcode:
-        case 0:  # MOV
-            arm_alu_mov(
-                cpu,
-                value,
-                rd,
-                set_cond_codes=True,
-                shift_carry=cpu.regs.cpsr.carry_flag,
-            )
-        case 1:  # CMP
-            arm_alu_cmp(cpu, cpu.regs[rd], value)
-        case 2:  # ADD
-            arm_alu_add(cpu, cpu.regs[rd], value, rd, set_cond_codes=True)
-        case 3:  # SUB
-            arm_alu_sub(cpu, cpu.regs[rd], value, rd, set_cond_codes=True)
+    if opcode == 0:  # MOV
+        arm_alu_mov(cpu, value, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+    elif opcode == 1:  # CMP
+        arm_alu_cmp(cpu, cpu.regs[rd], value)
+    elif opcode == 2:  # ADD
+        arm_alu_add(cpu, cpu.regs[rd], value, rd, set_cond_codes=True)
+    elif opcode == 3:  # SUB
+        arm_alu_sub(cpu, cpu.regs[rd], value, rd, set_cond_codes=True)
 
     cpu.thumb_advance_pc()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -136,69 +128,40 @@ def thumb_alu(cpu: CPU, instr: int):
         cpu.regs.cpsr.carry_flag = carry
 
     opcode = get_bits(instr, 6, 9)
-    match opcode:
-        case ThumbALUOpcode.AND:
-            arm_alu_and(
-                cpu,
-                op1,
-                op2,
-                rd,
-                set_cond_codes=True,
-                shift_carry=cpu.regs.cpsr.carry_flag,
-            )
-        case ThumbALUOpcode.EOR:
-            arm_alu_eor(
-                cpu,
-                op1,
-                op2,
-                rd,
-                set_cond_codes=True,
-                shift_carry=cpu.regs.cpsr.carry_flag,
-            )
-        case ThumbALUOpcode.LSL:
-            execute_shift(ShiftType.LSL)
-        case ThumbALUOpcode.LSR:
-            execute_shift(ShiftType.LSR)
-        case ThumbALUOpcode.ASR:
-            execute_shift(ShiftType.ASR)
-        case ThumbALUOpcode.ADC:
-            arm_alu_adc(cpu, op1, op2, rd, set_cond_codes=True)
-        case ThumbALUOpcode.SBC:
-            arm_alu_sbc(cpu, op1, op2, rd, set_cond_codes=True)
-        case ThumbALUOpcode.ROR:
-            execute_shift(ShiftType.ROR)
-        case ThumbALUOpcode.TST:
-            arm_alu_tst(cpu, op1, op2, shift_carry=cpu.regs.cpsr.carry_flag)
-        case ThumbALUOpcode.NEG:
-            arm_alu_sub(cpu, 0, op2, rd, set_cond_codes=True)
-        case ThumbALUOpcode.CMP:
-            arm_alu_cmp(cpu, op1, op2)
-        case ThumbALUOpcode.CMN:
-            arm_alu_cmn(cpu, op1, op2)
-        case ThumbALUOpcode.ORR:
-            arm_alu_orr(
-                cpu,
-                op1,
-                op2,
-                rd,
-                set_cond_codes=True,
-                shift_carry=cpu.regs.cpsr.carry_flag,
-            )
-        case ThumbALUOpcode.MUL:
-            cpu.regs[rd] = (op1 * op2) & 0xFFFFFFFF
-            cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd])
-            cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
-        case ThumbALUOpcode.BIC:
-            arm_alu_bic(
-                cpu,
-                op1,
-                op2,
-                rd,
-                set_cond_codes=True,
-                shift_carry=cpu.regs.cpsr.carry_flag,
-            )
-        case ThumbALUOpcode.MVN:
-            arm_alu_mvn(cpu, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+    if opcode == ThumbALUOpcode.AND:
+        arm_alu_and(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+    elif opcode == ThumbALUOpcode.EOR:
+        arm_alu_eor(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+    elif opcode == ThumbALUOpcode.LSL:
+        execute_shift(ShiftType.LSL)
+    elif opcode == ThumbALUOpcode.LSR:
+        execute_shift(ShiftType.LSR)
+    elif opcode == ThumbALUOpcode.ASR:
+        execute_shift(ShiftType.ASR)
+    elif opcode == ThumbALUOpcode.ADC:
+        arm_alu_adc(cpu, op1, op2, rd, set_cond_codes=True)
+    elif opcode == ThumbALUOpcode.SBC:
+        arm_alu_sbc(cpu, op1, op2, rd, set_cond_codes=True)
+    elif opcode == ThumbALUOpcode.ROR:
+        execute_shift(ShiftType.ROR)
+    elif opcode == ThumbALUOpcode.TST:
+        arm_alu_tst(cpu, op1, op2, shift_carry=cpu.regs.cpsr.carry_flag)
+    elif opcode == ThumbALUOpcode.NEG:
+        arm_alu_sub(cpu, 0, op2, rd, set_cond_codes=True)
+    elif opcode == ThumbALUOpcode.CMP:
+        arm_alu_cmp(cpu, op1, op2)
+    elif opcode == ThumbALUOpcode.CMN:
+        arm_alu_cmn(cpu, op1, op2)
+    elif opcode == ThumbALUOpcode.ORR:
+        arm_alu_orr(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+    elif opcode == ThumbALUOpcode.MUL:
+        cpu.regs[rd] = (op1 * op2) & 0xFFFFFFFF
+        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd])
+        cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
+    elif opcode == ThumbALUOpcode.BIC:
+        arm_alu_bic(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+    elif opcode == ThumbALUOpcode.MVN:
+        arm_alu_mvn(cpu, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
 
     cpu.thumb_advance_pc()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -209,31 +172,31 @@ def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):
     rd = (get_bit(instr, 7) << 3) | get_bits(instr, 0, 2)
 
     opcode = get_bits(instr, 8, 9)
-    match opcode:
-        case 0:  # ADD
-            cpu.regs[rd] = add_uint32_to_uint32(cpu.regs[rd], cpu.regs[rs])
-            if rd == Registers.PC:
-                cpu.flush_pipeline()
-                return
 
-        case 1:  # CMP
-            arm_alu_cmp(cpu, cpu.regs[rd], cpu.regs[rs])
-
-        case 2:  # MOV
-            cpu.regs[rd] = cpu.regs[rs]
-            if rd == Registers.PC:
-                cpu.flush_pipeline()
-                return
-
-        case 3:  # BX
-            address = cpu.regs[rs]
-
-            # Mask out the last bit indicating whether to switch to ARM mode
-            cpu.regs.pc = address & ~1
-            cpu.regs.cpsr.state = CPUState(get_bit(address, 0))
-
+    if opcode == 0:  # ADD
+        cpu.regs[rd] = add_uint32_to_uint32(cpu.regs[rd], cpu.regs[rs])
+        if rd == Registers.PC:
             cpu.flush_pipeline()
             return
+
+    elif opcode == 1:  # CMP
+        arm_alu_cmp(cpu, cpu.regs[rd], cpu.regs[rs])
+
+    elif opcode == 2:  # MOV
+        cpu.regs[rd] = cpu.regs[rs]
+        if rd == Registers.PC:
+            cpu.flush_pipeline()
+            return
+
+    elif opcode == 3:  # BX
+        address = cpu.regs[rs]
+
+        # Mask out the last bit indicating whether to switch to ARM mode
+        cpu.regs.pc = address & ~1
+        cpu.regs.cpsr.state = CPUState(get_bit(address, 0))
+
+        cpu.flush_pipeline()
+        return
 
     cpu.thumb_advance_pc()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL

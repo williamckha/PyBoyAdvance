@@ -29,15 +29,14 @@ def thumb_load_store_register_offset(cpu: CPU, instr: int):
     address = add_uint32_to_uint32(cpu.regs[rb], cpu.regs[ro])
 
     opcode = get_bits(instr, 10, 11)
-    match opcode:
-        case 0:  # STR
-            cpu.memory.write_32(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
-        case 1:  # STRB
-            cpu.memory.write_8(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
-        case 2:  # LDR
-            cpu.regs[rd] = cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL)
-        case 3:  # LDRB
-            cpu.regs[rd] = cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL)
+    if opcode == 0:  # STR
+        cpu.memory.write_32(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+    elif opcode == 1:  # STRB
+        cpu.memory.write_8(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+    elif opcode == 2:  # LDR
+        cpu.regs[rd] = cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL)
+    elif opcode == 3:  # LDRB
+        cpu.regs[rd] = cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL)
 
     cpu.thumb_advance_pc()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
@@ -51,15 +50,14 @@ def thumb_load_store_sign_extended(cpu: CPU, instr: int):
     address = add_uint32_to_uint32(cpu.regs[rb], cpu.regs[ro])
 
     opcode = get_bits(instr, 10, 11)
-    match opcode:
-        case 0:  # STRH
-            cpu.memory.write_16(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
-        case 1:  # LDSB
-            cpu.regs[rd] = cpu.memory.read_8_signed(address, MemoryAccess.NON_SEQUENTIAL)
-        case 2:  # LDRH
-            cpu.regs[rd] = cpu.memory.read_16_ror(address, MemoryAccess.NON_SEQUENTIAL)
-        case 3:  # LDSH
-            cpu.regs[rd] = cpu.memory.read_16_signed(address, MemoryAccess.NON_SEQUENTIAL)
+    if opcode == 0:  # STRH
+        cpu.memory.write_16(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+    elif opcode == 1:  # LDSB
+        cpu.regs[rd] = cpu.memory.read_8_signed(address, MemoryAccess.NON_SEQUENTIAL)
+    elif opcode == 2:  # LDRH
+        cpu.regs[rd] = cpu.memory.read_16_ror(address, MemoryAccess.NON_SEQUENTIAL)
+    elif opcode == 3:  # LDSH
+        cpu.regs[rd] = cpu.memory.read_16_signed(address, MemoryAccess.NON_SEQUENTIAL)
 
     cpu.thumb_advance_pc()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
@@ -73,15 +71,14 @@ def thumb_load_store_immediate_offset(cpu: CPU, instr: int):
     offset = (get_bits(instr, 6, 10) << 2) if opcode in (0, 1) else get_bits(instr, 6, 10)
     address = add_uint32_to_uint32(cpu.regs[rb], offset)
 
-    match opcode:
-        case 0:  # STR
-            cpu.memory.write_32(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
-        case 1:  # LDR
-            cpu.regs[rd] = cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL)
-        case 2:  # STRB
-            cpu.memory.write_8(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
-        case 3:  # LDRB
-            cpu.regs[rd] = cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL)
+    if opcode == 0:  # STR
+        cpu.memory.write_32(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+    elif opcode == 1:  # LDR
+        cpu.regs[rd] = cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL)
+    elif opcode == 2:  # STRB
+        cpu.memory.write_8(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+    elif opcode == 3:  # LDRB
+        cpu.regs[rd] = cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL)
 
     cpu.thumb_advance_pc()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL

@@ -13,15 +13,14 @@ class IO:
         return (upper_bits << 8) | lower_bits
 
     def read_16(self, address: int) -> int:
-        match address:
-            case IOAddress.REG_DISPCNT:
-                return self.ppu.display_control.reg
-            case IOAddress.REG_DISPSTAT:
-                return self.ppu.display_status.reg
-            case IOAddress.REG_VCOUNT:
-                return self.ppu.vcount
-            case _:
-                return 0
+        if address == IOAddress.REG_DISPCNT:
+            return self.ppu.display_control.reg
+        elif address == IOAddress.REG_DISPSTAT:
+            return self.ppu.display_status.reg
+        elif address == IOAddress.REG_VCOUNT:
+            return self.ppu.vcount
+        else:
+            return 0
 
     def read_8(self, address: int) -> int:
         value = self.read_16(address & ~1)
@@ -32,13 +31,12 @@ class IO:
         self.write_16(address + 2, (value >> 8) & 0xFFFF)
 
     def write_16(self, address: int, value: int):
-        match address:
-            case IOAddress.REG_DISPCNT:
-                self.ppu.display_control.reg = value
-            case IOAddress.REG_DISPSTAT:
-                self.ppu.display_status.reg = value
-            case IOAddress.REG_VCOUNT:
-                self.ppu.vcount = value
+        if address == IOAddress.REG_DISPCNT:
+            self.ppu.display_control.reg = value
+        elif address == IOAddress.REG_DISPSTAT:
+            self.ppu.display_status.reg = value
+        elif address == IOAddress.REG_VCOUNT:
+            self.ppu.vcount = value
 
     def write_8(self, address: int, value: int):
         aligned_address = address & ~1

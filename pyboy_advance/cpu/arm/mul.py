@@ -52,19 +52,18 @@ def arm_multiply_long(cpu: CPU, instr: int):
     opcode = get_bits(instr, 21, 22)
     set_cond_codes = get_bit(instr, 20)
 
-    match opcode:
-        case MultiplyLongOpcode.UMULL:
-            result = cpu.regs[rm] * cpu.regs[rs]
-        case MultiplyLongOpcode.UMLAL:
-            result = (cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo]
-            result += cpu.regs[rm] * cpu.regs[rs]
-        case MultiplyLongOpcode.SMULL:
-            result = interpret_signed_32(cpu.regs[rm]) * interpret_signed_32(cpu.regs[rs])
-        case MultiplyLongOpcode.SMLAL:
-            result = interpret_signed_32((cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo])
-            result += interpret_signed_32(cpu.regs[rm]) * interpret_signed_32(cpu.regs[rs])
-        case _:
-            raise ValueError
+    if opcode == MultiplyLongOpcode.UMULL:
+        result = cpu.regs[rm] * cpu.regs[rs]
+    elif opcode == MultiplyLongOpcode.UMLAL:
+        result = (cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo]
+        result += cpu.regs[rm] * cpu.regs[rs]
+    elif opcode == MultiplyLongOpcode.SMULL:
+        result = interpret_signed_32(cpu.regs[rm]) * interpret_signed_32(cpu.regs[rs])
+    elif opcode == MultiplyLongOpcode.SMLAL:
+        result = interpret_signed_32((cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo])
+        result += interpret_signed_32(cpu.regs[rm]) * interpret_signed_32(cpu.regs[rs])
+    else:
+        raise ValueError
 
     cpu.regs[rd_lo] = result & 0xFFFFFFFF
     cpu.regs[rd_hi] = (result >> 32) & 0xFFFFFFFF

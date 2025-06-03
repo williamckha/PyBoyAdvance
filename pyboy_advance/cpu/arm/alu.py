@@ -71,39 +71,38 @@ def arm_alu(cpu: CPU, instr: int):
         op2, shift_carry = cpu.decode_and_compute_shift(cpu.regs[rm], shift)
 
     opcode = ALUOpcode(get_bits(instr, 21, 24))
-    match opcode:
-        case ALUOpcode.AND:
-            arm_alu_and(cpu, op1, op2, rd, set_cond_codes, shift_carry)
-        case ALUOpcode.EOR:
-            arm_alu_eor(cpu, op1, op2, rd, set_cond_codes, shift_carry)
-        case ALUOpcode.SUB:
-            arm_alu_sub(cpu, op1, op2, rd, set_cond_codes)
-        case ALUOpcode.RSB:
-            arm_alu_rsb(cpu, op1, op2, rd, set_cond_codes)
-        case ALUOpcode.ADD:
-            arm_alu_add(cpu, op1, op2, rd, set_cond_codes)
-        case ALUOpcode.ADC:
-            arm_alu_adc(cpu, op1, op2, rd, set_cond_codes)
-        case ALUOpcode.SBC:
-            arm_alu_sbc(cpu, op1, op2, rd, set_cond_codes)
-        case ALUOpcode.RSC:
-            arm_alu_rsc(cpu, op1, op2, rd, set_cond_codes)
-        case ALUOpcode.TST:
-            arm_alu_tst(cpu, op1, op2, shift_carry)
-        case ALUOpcode.TEQ:
-            arm_alu_teq(cpu, op1, op2, shift_carry)
-        case ALUOpcode.CMP:
-            arm_alu_cmp(cpu, op1, op2)
-        case ALUOpcode.CMN:
-            arm_alu_cmn(cpu, op1, op2)
-        case ALUOpcode.ORR:
-            arm_alu_orr(cpu, op1, op2, rd, set_cond_codes, shift_carry)
-        case ALUOpcode.MOV:
-            arm_alu_mov(cpu, op2, rd, set_cond_codes, shift_carry)
-        case ALUOpcode.BIC:
-            arm_alu_bic(cpu, op1, op2, rd, set_cond_codes, shift_carry)
-        case ALUOpcode.MVN:
-            arm_alu_mvn(cpu, op2, rd, set_cond_codes, shift_carry)
+    if opcode == ALUOpcode.AND:
+        arm_alu_and(cpu, op1, op2, rd, set_cond_codes, shift_carry)
+    elif opcode == ALUOpcode.EOR:
+        arm_alu_eor(cpu, op1, op2, rd, set_cond_codes, shift_carry)
+    elif opcode == ALUOpcode.SUB:
+        arm_alu_sub(cpu, op1, op2, rd, set_cond_codes)
+    elif opcode == ALUOpcode.RSB:
+        arm_alu_rsb(cpu, op1, op2, rd, set_cond_codes)
+    elif opcode == ALUOpcode.ADD:
+        arm_alu_add(cpu, op1, op2, rd, set_cond_codes)
+    elif opcode == ALUOpcode.ADC:
+        arm_alu_adc(cpu, op1, op2, rd, set_cond_codes)
+    elif opcode == ALUOpcode.SBC:
+        arm_alu_sbc(cpu, op1, op2, rd, set_cond_codes)
+    elif opcode == ALUOpcode.RSC:
+        arm_alu_rsc(cpu, op1, op2, rd, set_cond_codes)
+    elif opcode == ALUOpcode.TST:
+        arm_alu_tst(cpu, op1, op2, shift_carry)
+    elif opcode == ALUOpcode.TEQ:
+        arm_alu_teq(cpu, op1, op2, shift_carry)
+    elif opcode == ALUOpcode.CMP:
+        arm_alu_cmp(cpu, op1, op2)
+    elif opcode == ALUOpcode.CMN:
+        arm_alu_cmn(cpu, op1, op2)
+    elif opcode == ALUOpcode.ORR:
+        arm_alu_orr(cpu, op1, op2, rd, set_cond_codes, shift_carry)
+    elif opcode == ALUOpcode.MOV:
+        arm_alu_mov(cpu, op2, rd, set_cond_codes, shift_carry)
+    elif opcode == ALUOpcode.BIC:
+        arm_alu_bic(cpu, op1, op2, rd, set_cond_codes, shift_carry)
+    elif opcode == ALUOpcode.MVN:
+        arm_alu_mvn(cpu, op2, rd, set_cond_codes, shift_carry)
 
     # When S bit = 1 (set_cond_codes) and Rd = PC, the result of operation is stored in PC
     # and SPSR of the current mode is moved to CPSR

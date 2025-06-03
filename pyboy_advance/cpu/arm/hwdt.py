@@ -54,31 +54,23 @@ def arm_halfword_data_transfer(cpu: CPU, instr: int):
         if not pre_post_bit or write_back_bit:
             cpu.regs[rn] = address
 
-        match opcode:
-            case DataTransferOpcode.LDRH:
-                cpu.regs[rd] = cpu.memory.read_16_ror(
-                    effective_address, MemoryAccess.NON_SEQUENTIAL
-                )
-            case DataTransferOpcode.LDRSB:
-                cpu.regs[rd] = cpu.memory.read_8_signed(
-                    effective_address, MemoryAccess.NON_SEQUENTIAL
-                )
-            case DataTransferOpcode.LDRSH:
-                cpu.regs[rd] = cpu.memory.read_16_signed(
-                    effective_address, MemoryAccess.NON_SEQUENTIAL
-                )
+        if opcode == DataTransferOpcode.LDRH:
+            cpu.regs[rd] = cpu.memory.read_16_ror(effective_address, MemoryAccess.NON_SEQUENTIAL)
+        elif opcode == DataTransferOpcode.LDRSB:
+            cpu.regs[rd] = cpu.memory.read_8_signed(effective_address, MemoryAccess.NON_SEQUENTIAL)
+        elif opcode == DataTransferOpcode.LDRSH:
+            cpu.regs[rd] = cpu.memory.read_16_signed(effective_address, MemoryAccess.NON_SEQUENTIAL)
 
         if rd == Registers.PC:
             cpu.flush_pipeline()
 
     else:  # Store
-        match opcode:
-            case DataTransferOpcode.STRH:
-                cpu.memory.write_16(effective_address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
-            case DataTransferOpcode.LDRD:
-                raise NotImplementedError("LDRD not implemented on ARM7")
-            case DataTransferOpcode.STRD:
-                raise NotImplementedError("STRD not implemented on ARM7")
+        if opcode == DataTransferOpcode.STRH:
+            cpu.memory.write_16(effective_address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+        elif opcode == DataTransferOpcode.LDRD:
+            raise NotImplementedError("LDRD not implemented on ARM7")
+        elif opcode == DataTransferOpcode.STRD:
+            raise NotImplementedError("STRD not implemented on ARM7")
 
         # When post-indexing, write back is always enabled
         # When pre-indexing, write back is optional (controlled by W bit)

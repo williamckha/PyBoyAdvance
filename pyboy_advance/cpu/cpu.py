@@ -116,41 +116,40 @@ class CPU:
 
     def check_condition(self, cond: Condition) -> bool:
         cpsr = self.regs.cpsr
-        match cond:
-            case Condition.EQ:
-                return cpsr.zero_flag
-            case Condition.NE:
-                return not cpsr.zero_flag
-            case Condition.HS:
-                return cpsr.carry_flag
-            case Condition.LO:
-                return not cpsr.carry_flag
-            case Condition.MI:
-                return cpsr.sign_flag
-            case Condition.PL:
-                return not cpsr.sign_flag
-            case Condition.VS:
-                return cpsr.overflow_flag
-            case Condition.VC:
-                return not cpsr.overflow_flag
-            case Condition.HI:
-                return cpsr.carry_flag and not cpsr.zero_flag
-            case Condition.LS:
-                return not cpsr.carry_flag or cpsr.zero_flag
-            case Condition.GE:
-                return cpsr.sign_flag == cpsr.overflow_flag
-            case Condition.LT:
-                return cpsr.sign_flag != cpsr.overflow_flag
-            case Condition.GT:
-                return not cpsr.zero_flag and cpsr.sign_flag == cpsr.overflow_flag
-            case Condition.LE:
-                return cpsr.zero_flag or cpsr.sign_flag != cpsr.overflow_flag
-            case Condition.AL:
-                return True
-            case Condition.NV:
-                raise ValueError("Condition NV (never) is reserved")
-            case _:
-                raise ValueError
+        if cond == Condition.EQ:
+            return cpsr.zero_flag
+        elif cond == Condition.NE:
+            return not cpsr.zero_flag
+        elif cond == Condition.HS:
+            return cpsr.carry_flag
+        elif cond == Condition.LO:
+            return not cpsr.carry_flag
+        elif cond == Condition.MI:
+            return cpsr.sign_flag
+        elif cond == Condition.PL:
+            return not cpsr.sign_flag
+        elif cond == Condition.VS:
+            return cpsr.overflow_flag
+        elif cond == Condition.VC:
+            return not cpsr.overflow_flag
+        elif cond == Condition.HI:
+            return cpsr.carry_flag and not cpsr.zero_flag
+        elif cond == Condition.LS:
+            return not cpsr.carry_flag or cpsr.zero_flag
+        elif cond == Condition.GE:
+            return cpsr.sign_flag == cpsr.overflow_flag
+        elif cond == Condition.LT:
+            return cpsr.sign_flag != cpsr.overflow_flag
+        elif cond == Condition.GT:
+            return not cpsr.zero_flag and cpsr.sign_flag == cpsr.overflow_flag
+        elif cond == Condition.LE:
+            return cpsr.zero_flag or cpsr.sign_flag != cpsr.overflow_flag
+        elif cond == Condition.AL:
+            return True
+        elif cond == Condition.NV:
+            raise ValueError("Condition NV (never) is reserved")
+        else:
+            raise ValueError
 
     def decode_and_compute_shift(self, value: int, shift: int) -> tuple[int, bool]:
         immediate = not get_bit(shift, 0)
@@ -173,65 +172,64 @@ class CPU:
         result = value
         carry_out = False
 
-        match shift_type:
-            case ShiftType.LSL:
-                # LSL#0 and Immediate: No shift performed, the C flag is NOT affected.
-                # LSL#32 has result zero, carry out equal to bit 0 of value.
-                # LSL by more than 32 has result zero, carry out zero.
-                if shift_amount == 0:
-                    carry_out = self.regs.cpsr.carry_flag
-                elif shift_amount < 32:
-                    carry_out = get_bit(value, 32 - shift_amount)
-                    result = (value << shift_amount) & 0xFFFFFFFF
-                elif shift_amount == 32:
-                    carry_out = get_bit(value, 0)
-                    result = 0
-                else:
-                    carry_out = False
-                    result = 0
+        if shift_type == ShiftType.LSL:
+            # LSL#0 and Immediate: No shift performed, the C flag is NOT affected.
+            # LSL#32 has result zero, carry out equal to bit 0 of value.
+            # LSL by more than 32 has result zero, carry out zero.
+            if shift_amount == 0:
+                carry_out = self.regs.cpsr.carry_flag
+            elif shift_amount < 32:
+                carry_out = get_bit(value, 32 - shift_amount)
+                result = (value << shift_amount) & 0xFFFFFFFF
+            elif shift_amount == 32:
+                carry_out = get_bit(value, 0)
+                result = 0
+            else:
+                carry_out = False
+                result = 0
 
-            case ShiftType.LSR:
-                # LSR#0 and Immediate: Interpreted as LSR#32, i.e. result is zero, C becomes bit 31 of value.
-                # LSR#32 has result zero, carry out equal to bit 31 of value.
-                # LSR by more than 32 has result zero, carry out zero.
-                if shift_amount == 0:
-                    carry_out = get_bit(value, 31)
-                    result = 0
-                elif shift_amount < 32:
-                    carry_out = get_bit(value, shift_amount - 1)
-                    result = value >> shift_amount
-                elif shift_amount == 32:
-                    carry_out = get_bit(value, 31)
-                    result = 0
-                else:
-                    carry_out = False
-                    result = 0
+        elif shift_type == ShiftType.LSR:
+            # LSR#0 and Immediate: Interpreted as LSR#32, i.e. result is zero, C becomes bit 31 of value.
+            # LSR#32 has result zero, carry out equal to bit 31 of value.
+            # LSR by more than 32 has result zero, carry out zero.
+            if shift_amount == 0:
+                carry_out = get_bit(value, 31)
+                result = 0
+            elif shift_amount < 32:
+                carry_out = get_bit(value, shift_amount - 1)
+                result = value >> shift_amount
+            elif shift_amount == 32:
+                carry_out = get_bit(value, 31)
+                result = 0
+            else:
+                carry_out = False
+                result = 0
 
-            case ShiftType.ASR:
-                # ASR#0 and Immediate = 0: Interpreted as ASR#32, i.e. result and C are filled by bit 31 of value.
-                # ASR by 32 or more has result filled with and carry out equal to bit 31 of value.
-                if shift_amount == 0 or shift_amount >= 32:
-                    carry_out = get_bit(value, 31)
-                    result = 0xFFFFFFFF if carry_out else 0
-                else:
-                    carry_out = get_bit(value, shift_amount - 1)
-                    result = (interpret_signed_32(value) >> shift_amount) & 0xFFFFFFFF
+        elif shift_type == ShiftType.ASR:
+            # ASR#0 and Immediate = 0: Interpreted as ASR#32, i.e. result and C are filled by bit 31 of value.
+            # ASR by 32 or more has result filled with and carry out equal to bit 31 of value.
+            if shift_amount == 0 or shift_amount >= 32:
+                carry_out = get_bit(value, 31)
+                result = 0xFFFFFFFF if carry_out else 0
+            else:
+                carry_out = get_bit(value, shift_amount - 1)
+                result = (interpret_signed_32(value) >> shift_amount) & 0xFFFFFFFF
 
-            case ShiftType.ROR:
-                # ROR by n where n is greater than 32 will give the same result and carry out
-                # as ROR by n-32; therefore repeatedly subtract 32 from n until the amount is
-                # in the range 1 to 32.
-                if shift_amount > 32:
-                    shift_amount = ((shift_amount - 1) % 32) + 1
+        elif shift_type == ShiftType.ROR:
+            # ROR by n where n is greater than 32 will give the same result and carry out
+            # as ROR by n-32; therefore repeatedly subtract 32 from n until the amount is
+            # in the range 1 to 32.
+            if shift_amount > 32:
+                shift_amount = ((shift_amount - 1) % 32) + 1
 
-                # ROR#0 and Immediate = 0: Interpreted as RRX#1 (RCR), like ROR#1, but bit 31 of result set to old C.
-                # ROR#32 has result equal to value, carry out equal to bit 31 of value.
-                if shift_amount == 0:
-                    carry_out = get_bit(value, 0)
-                    result = (value >> 1) | (self.regs.cpsr.carry_flag << 31)
-                else:
-                    carry_out = get_bit(value, shift_amount - 1)
-                    result = ror_32(value, get_bits(shift_amount, 0, 4))
+            # ROR#0 and Immediate = 0: Interpreted as RRX#1 (RCR), like ROR#1, but bit 31 of result set to old C.
+            # ROR#32 has result equal to value, carry out equal to bit 31 of value.
+            if shift_amount == 0:
+                carry_out = get_bit(value, 0)
+                result = (value >> 1) | (self.regs.cpsr.carry_flag << 31)
+            else:
+                carry_out = get_bit(value, shift_amount - 1)
+                result = ror_32(value, get_bits(shift_amount, 0, 4))
 
         return result, carry_out
 
