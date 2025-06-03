@@ -261,12 +261,29 @@ class Memory:
             case MemoryRegion.IO_REGION:
                 self.io.write_8(address, value)
             case MemoryRegion.PALRAM_REGION:
+                # Writing a byte to PALRAM writes the value to both the upper and lower 8-bits
+                # of the addressed halfword
+                address = address & ~0b1  # Align address to 2-byte boundary
                 self.io.ppu.palram[address & MemoryRegion.PALRAM_MASK] = value
+                self.io.ppu.palram[(address + 1) & MemoryRegion.PALRAM_MASK] = value
             case MemoryRegion.VRAM_REGION:
-                mask = self._get_vram_address_mask(address)
-                self.io.ppu.vram[address & mask] = value
+                # VRAM is split into BG and OBJ regions.
+                # Size of the BG region changes depending on whether we are in bitmap mode
+                video_mode = self.io.ppu.display_control.video_mode
+                bg_region_end = 0x14000 if video_mode.is_bitmapped() else 0x10000
+
+                # Ignore attempts to write a byte into OBJ, but allow writes into BG
+                if address & 0x1FFFF < bg_region_end:
+                    # Writing a byte to BG writes the value to both the upper and lower 8-bits
+                    # of the addressed halfword
+                    address = address & ~0b1  # Align address to 2-byte boundary
+                    mask_1 = self._get_vram_address_mask(address)
+                    mask_2 = self._get_vram_address_mask(address + 1)
+                    self.io.ppu.vram[address & mask_1] = value
+                    self.io.ppu.vram[(address + 1) & mask_2] = value
             case MemoryRegion.OAM_REGION:
-                self.io.ppu.oam[address & MemoryRegion.OAM_MASK] = value
+                # Ignore attempts to write a byte into OAM
+                pass
             case region if (
                 MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END
             ):

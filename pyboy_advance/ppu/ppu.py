@@ -1,5 +1,6 @@
 from array import array
 from ctypes import c_void_p
+from enum import IntEnum
 
 from pyboy_advance.memory.constants import MemoryRegion
 from pyboy_advance.scheduler import Scheduler
@@ -48,17 +49,17 @@ class PPU:
 
     def render_scanline(self):
         video_mode = self.display_control.video_mode
-        if video_mode == 0:
+        if video_mode == VideoMode.MODE_0:
             self.render_scanline_mode_0()
-        elif video_mode == 1:
+        elif video_mode == VideoMode.MODE_1:
             self.render_scanline_mode_1()
-        elif video_mode == 2:
+        elif video_mode == VideoMode.MODE_2:
             self.render_scanline_mode_2()
-        elif video_mode == 3:
+        elif video_mode == VideoMode.MODE_3:
             self.render_scanline_mode_3()
-        elif video_mode == 4:
+        elif video_mode == VideoMode.MODE_4:
             self.render_scanline_mode_4()
-        elif video_mode == 5:
+        elif video_mode == VideoMode.MODE_5:
             self.render_scanline_mode_5()
 
     def render_scanline_mode_0(self):
@@ -117,13 +118,30 @@ class PPU:
         return color & 0x7FFF
 
 
+class VideoMode(IntEnum):
+    MODE_0 = 0
+    MODE_1 = 1
+    MODE_2 = 2
+    MODE_3 = 3
+    MODE_4 = 4
+    MODE_5 = 5
+
+    @classmethod
+    def _missing_(cls, value):
+        if value == 6 or value == 7:
+            return cls.MODE_5
+
+    def is_bitmapped(self):
+        return self in [VideoMode.MODE_3, VideoMode.MODE_4, VideoMode.MODE_5]
+
+
 class DisplayControlRegister:
     def __init__(self):
         self.reg = 0
 
     @property
-    def video_mode(self) -> int:
-        return get_bits(self.reg, 0, 2)
+    def video_mode(self) -> VideoMode:
+        return VideoMode(get_bits(self.reg, 0, 2))
 
     @property
     def display_frame_select(self) -> bool:
