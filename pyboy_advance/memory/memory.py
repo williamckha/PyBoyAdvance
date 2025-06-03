@@ -112,7 +112,7 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 return array_read_32(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK)
             case MemoryRegion.VRAM_REGION:
-                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
+                mask = self._get_vram_address_mask(address)
                 return array_read_32(self.io.ppu.vram, address & mask)
             case MemoryRegion.OAM_REGION:
                 return array_read_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK)
@@ -145,7 +145,7 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 return array_read_16(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK)
             case MemoryRegion.VRAM_REGION:
-                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
+                mask = self._get_vram_address_mask(address)
                 return array_read_16(self.io.ppu.vram, address & mask)
             case MemoryRegion.OAM_REGION:
                 return array_read_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK)
@@ -177,7 +177,7 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 return self.io.ppu.palram[address & MemoryRegion.PALRAM_MASK]
             case MemoryRegion.VRAM_REGION:
-                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
+                mask = self._get_vram_address_mask(address)
                 return self.io.ppu.vram[address & mask]
             case MemoryRegion.OAM_REGION:
                 return self.io.ppu.oam[address & MemoryRegion.OAM_MASK]
@@ -206,7 +206,7 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 array_write_32(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK, value)
             case MemoryRegion.VRAM_REGION:
-                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
+                mask = self._get_vram_address_mask(address)
                 array_write_32(self.io.ppu.vram, address & mask, value)
             case MemoryRegion.OAM_REGION:
                 array_write_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
@@ -235,7 +235,7 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 array_write_16(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK, value)
             case MemoryRegion.VRAM_REGION:
-                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
+                mask = self._get_vram_address_mask(address)
                 array_write_16(self.io.ppu.vram, address & mask, value)
             case MemoryRegion.OAM_REGION:
                 array_write_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
@@ -263,7 +263,7 @@ class Memory:
             case MemoryRegion.PALRAM_REGION:
                 self.io.ppu.palram[address & MemoryRegion.PALRAM_MASK] = value
             case MemoryRegion.VRAM_REGION:
-                mask = MemoryRegion.VRAM_MASK_1 if get_bit(address, 4) else MemoryRegion.VRAM_MASK_2
+                mask = self._get_vram_address_mask(address)
                 self.io.ppu.vram[address & mask] = value
             case MemoryRegion.OAM_REGION:
                 self.io.ppu.oam[address & MemoryRegion.OAM_MASK] = value
@@ -275,6 +275,19 @@ class Memory:
                 raise NotImplementedError
             case _:
                 print(f"Attempt to write to unused memory: {address:#010x}")
+
+    @staticmethod
+    def _get_vram_address_mask(address: int) -> int:
+        """
+        Get the appropriate mask for the given VRAM address.
+
+        GBA VRAM is 96 KB (64K + 32K) but is mirrored in 128 KB steps
+        (64K + 32K + 32K, the two 32K blocks being mirrors of each other).
+
+        Hence, if the address is in the mirrored upper region (bit 16 set), we use
+        VRAM_MASK_1 to wrap it back into valid VRAM space. Otherwise, we use VRAM_MASK_2.
+        """
+        return MemoryRegion.VRAM_MASK_1 if get_bit(address, 16) else MemoryRegion.VRAM_MASK_2
 
     def _add_cycles(self, address: int, access_type: MemoryAccess):
         pass
