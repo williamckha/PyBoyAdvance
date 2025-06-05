@@ -19,6 +19,7 @@ from pyboy_advance.utils import (
     ror_32,
     add_uint32_to_uint32,
     interpret_signed_32,
+    bint,
 )
 
 logger = logging.getLogger(__name__)
@@ -51,24 +52,26 @@ class CPU:
 
         cond = Condition(get_bits(instruction, 28, 31))
         if self.check_condition(cond):
-            logger.debug(
-                "Executing <{0:#010x}> {1:032b} {2}".format(
-                    (self.regs.pc - 8),
-                    instruction,
-                    instruction_handler.__name__,
+            if __debug__:
+                logger.debug(
+                    "Executing <{0:#010x}> {1:032b} {2}".format(
+                        (self.regs.pc - 8),
+                        instruction,
+                        instruction_handler.__name__,
+                    )
                 )
-            )
 
             instruction_handler(self, instruction)
         else:
             # Skip instruction since condition was not met
-            logger.debug(
-                "Skipping  <{0:#010x}> {1:032b} {2}".format(
-                    (self.regs.pc - 8),
-                    instruction,
-                    instruction_handler.__name__,
+            if __debug__:
+                logger.debug(
+                    "Skipping  <{0:#010x}> {1:032b} {2}".format(
+                        (self.regs.pc - 8),
+                        instruction,
+                        instruction_handler.__name__,
+                    )
                 )
-            )
 
             self.arm_advance_pc()
             self.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -80,13 +83,14 @@ class CPU:
 
         instruction_handler = thumb_decode(instruction)
 
-        logger.debug(
-            "Executing <{0:#010x}> {1:032b} {2}".format(
-                (self.regs.pc - 4),
-                instruction,
-                instruction_handler.__name__,
+        if __debug__:
+            logger.debug(
+                "Executing <{0:#010x}> {1:032b} {2}".format(
+                    (self.regs.pc - 4),
+                    instruction,
+                    instruction_handler.__name__,
+                )
             )
-        )
 
         instruction_handler(self, instruction)
 
@@ -114,7 +118,7 @@ class CPU:
     def switch_mode(self, new_mode: CPUMode):
         self.regs.switch_mode(new_mode)
 
-    def check_condition(self, cond: Condition) -> bool:
+    def check_condition(self, cond: Condition) -> bint:
         cpsr = self.regs.cpsr
         if cond == Condition.EQ:
             return cpsr.zero_flag
@@ -151,7 +155,7 @@ class CPU:
         else:
             raise ValueError
 
-    def decode_and_compute_shift(self, value: int, shift: int) -> tuple[int, bool]:
+    def decode_and_compute_shift(self, value: int, shift: int) -> tuple[int, bint]:
         immediate = not get_bit(shift, 0)
         if immediate:
             shift_amount = get_bits(shift, 3, 7)
@@ -164,8 +168,8 @@ class CPU:
         return self.compute_shift(value, shift_type, shift_amount, immediate)
 
     def compute_shift(
-        self, value: int, shift_type: ShiftType, shift_amount: int, immediate: bool
-    ) -> tuple[int, bool]:
+        self, value: int, shift_type: ShiftType, shift_amount: int, immediate: bint
+    ) -> tuple[int, bint]:
         if not immediate and shift_amount == 0:
             return value, self.regs.cpsr.carry_flag
 

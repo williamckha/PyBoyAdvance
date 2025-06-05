@@ -1,5 +1,5 @@
-import argparse
 import os
+import time
 
 from pyboy_advance.app.window import Window
 from pyboy_advance.cpu.cpu import CPU
@@ -36,19 +36,18 @@ class PyBoyAdvance:
 
     def step(self):
         self.cpu.step()
-        self.scheduler.update(1)
+        self.scheduler.update(2)
 
+    def run(self):
+        window = Window()
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser("pyboy_advance")
-    parser.add_argument("rom", type=str)
-    args = parser.parse_args()
+        s = time.perf_counter()
+        while True:
+            self.step()
+            if self.scheduler.cycles % 280896 == 0:
+                e = time.perf_counter()
+                print(e - s)
+                s = time.perf_counter()
 
-    window = Window()
-
-    gba = PyBoyAdvance(args.rom, skip_bios=True)
-    while True:
-        gba.step()
-        if gba.scheduler.cycles % 280896 == 0:
-            window.get_events()
-            window.render(gba.ppu.frame_buffer_ptr)
+                window.get_events()
+                window.render(self.ppu.frame_buffer_ptr)

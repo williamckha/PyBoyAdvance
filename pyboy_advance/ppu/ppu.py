@@ -9,6 +9,7 @@ from pyboy_advance.utils import (
     get_bits,
     set_bit,
     array_read_16,
+    bint,
 )
 
 DISPLAY_WIDTH = 240
@@ -144,51 +145,51 @@ class DisplayControlRegister:
         return VideoMode(get_bits(self.reg, 0, 2))
 
     @property
-    def display_frame_select(self) -> bool:
+    def display_frame_select(self) -> bint:
         return get_bit(self.reg, 4)
 
     @property
-    def hblank_interval_free(self) -> bool:
+    def hblank_interval_free(self) -> bint:
         return get_bit(self.reg, 5)
 
     @property
-    def obj_vram_dimension(self) -> bool:
+    def obj_vram_dimension(self) -> bint:
         return get_bit(self.reg, 6)
 
     @property
-    def force_blank(self) -> bool:
+    def force_blank(self) -> bint:
         return get_bit(self.reg, 7)
 
     @property
-    def display_bg_0(self) -> bool:
+    def display_bg_0(self) -> bint:
         return get_bit(self.reg, 8)
 
     @property
-    def display_bg_1(self) -> bool:
+    def display_bg_1(self) -> bint:
         return get_bit(self.reg, 9)
 
     @property
-    def display_bg_2(self) -> bool:
+    def display_bg_2(self) -> bint:
         return get_bit(self.reg, 10)
 
     @property
-    def display_bg_3(self) -> bool:
+    def display_bg_3(self) -> bint:
         return get_bit(self.reg, 11)
 
     @property
-    def display_obj(self) -> bool:
+    def display_obj(self) -> bint:
         return get_bit(self.reg, 12)
 
     @property
-    def display_window_0(self) -> bool:
+    def display_window_0(self) -> bint:
         return get_bit(self.reg, 13)
 
     @property
-    def display_window_1(self) -> bool:
+    def display_window_1(self) -> bint:
         return get_bit(self.reg, 14)
 
     @property
-    def display_obj_window(self) -> bool:
+    def display_obj_window(self) -> bint:
         return get_bit(self.reg, 15)
 
 
@@ -197,51 +198,51 @@ class DisplayStatusRegister:
         self.reg = 0
 
     @property
-    def vblank_status(self) -> bool:
+    def vblank_status(self) -> bint:
         return get_bit(self.reg, 0)
 
     @vblank_status.setter
-    def vblank_status(self, value: bool):
+    def vblank_status(self, value: bint):
         self.reg = set_bit(self.reg, 0, value)
 
     @property
-    def hblank_status(self) -> bool:
+    def hblank_status(self) -> bint:
         return get_bit(self.reg, 1)
 
     @hblank_status.setter
-    def hblank_status(self, value: bool):
+    def hblank_status(self, value: bint):
         self.reg = set_bit(self.reg, 1, value)
 
     @property
-    def vcount_trigger_status(self) -> bool:
+    def vcount_trigger_status(self) -> bint:
         return get_bit(self.reg, 2)
 
     @vcount_trigger_status.setter
-    def vcount_trigger_status(self, value: bool):
+    def vcount_trigger_status(self, value: bint):
         self.reg = set_bit(self.reg, 2, value)
 
     @property
-    def vblank_irq(self) -> bool:
+    def vblank_irq(self) -> bint:
         return get_bit(self.reg, 3)
 
     @vblank_irq.setter
-    def vblank_irq(self, value: bool):
+    def vblank_irq(self, value: bint):
         self.reg = set_bit(self.reg, 3, value)
 
     @property
-    def hblank_irq(self) -> bool:
+    def hblank_irq(self) -> bint:
         return get_bit(self.reg, 4)
 
     @hblank_irq.setter
-    def hblank_irq(self, value: bool):
+    def hblank_irq(self, value: bint):
         self.reg = set_bit(self.reg, 4, value)
 
     @property
-    def vcount_irq(self) -> bool:
+    def vcount_irq(self) -> bint:
         return get_bit(self.reg, 5)
 
     @vcount_irq.setter
-    def vcount_irq(self, value: bool):
+    def vcount_irq(self, value: bint):
         self.reg = set_bit(self.reg, 5, value)
 
     @property

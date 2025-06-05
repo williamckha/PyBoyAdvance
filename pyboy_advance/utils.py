@@ -1,8 +1,17 @@
 from array import array
+from typing import TypeAlias
+
+bint: TypeAlias = int
+"""
+This type alias is used to indicate that the value is intended to behave
+like a boolean (0 for False, 1 for True) while still being an integer.
+Casting to bool has a measurable performance hit, so it is better to avoid
+casts and use bint where possible.
+"""
 
 
-def get_bit(num: int, i: int) -> bool:
-    return bool((num >> i) & 1)
+def get_bit(num: int, i: int) -> bint:
+    return (num >> i) & 1
 
 
 def get_bits(num: int, start: int, end: int) -> int:
@@ -11,31 +20,31 @@ def get_bits(num: int, start: int, end: int) -> int:
     return (num >> start) & mask
 
 
-def set_bit(num: int, i: int, bit: bool) -> int:
+def set_bit(num: int, i: int, bit: bint) -> int:
     return (num & ~(1 << i)) | (bit << i)
 
 
-def sign_32(num: int) -> bool:
+def sign_32(num: int) -> bint:
     return get_bit(num, 31)
 
 
-def sign_24(num: int) -> bool:
+def sign_24(num: int) -> bint:
     return get_bit(num, 23)
 
 
-def sign_23(num: int) -> bool:
+def sign_23(num: int) -> bint:
     return get_bit(num, 22)
 
 
-def sign_16(num: int) -> bool:
+def sign_16(num: int) -> bint:
     return get_bit(num, 15)
 
 
-def sign_12(num: int) -> bool:
+def sign_12(num: int) -> bint:
     return get_bit(num, 11)
 
 
-def sign_8(num: int) -> bool:
+def sign_8(num: int) -> bint:
     return get_bit(num, 7)
 
 

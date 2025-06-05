@@ -1,7 +1,7 @@
 from enum import IntEnum
 
 from pyboy_advance.cpu.constants import CPUMode, CPUState
-from pyboy_advance.utils import get_bit, set_bit
+from pyboy_advance.utils import get_bit, set_bit, bint
 
 
 class ProgramStatusRegister:
@@ -22,62 +22,62 @@ class ProgramStatusRegister:
 
     @state.setter
     def state(self, state: CPUState):
-        self.reg = set_bit(self.reg, 5, bool(state))
+        self.reg = set_bit(self.reg, 5, state)
 
     @property
-    def sign_flag(self) -> bool:
+    def sign_flag(self) -> bint:
         return get_bit(self.reg, 31)
 
     @sign_flag.setter
-    def sign_flag(self, value: bool):
+    def sign_flag(self, value: bint):
         self.reg = set_bit(self.reg, 31, value)
 
     @property
-    def zero_flag(self) -> bool:
+    def zero_flag(self) -> bint:
         return get_bit(self.reg, 30)
 
     @zero_flag.setter
-    def zero_flag(self, value: bool):
+    def zero_flag(self, value: bint):
         self.reg = set_bit(self.reg, 30, value)
 
     @property
-    def carry_flag(self) -> bool:
+    def carry_flag(self) -> bint:
         return get_bit(self.reg, 29)
 
     @carry_flag.setter
-    def carry_flag(self, value: bool):
+    def carry_flag(self, value: bint):
         self.reg = set_bit(self.reg, 29, value)
 
     @property
-    def overflow_flag(self) -> bool:
+    def overflow_flag(self) -> bint:
         return get_bit(self.reg, 28)
 
     @overflow_flag.setter
-    def overflow_flag(self, value: bool):
+    def overflow_flag(self, value: bint):
         self.reg = set_bit(self.reg, 28, value)
 
     @property
-    def sticky_overflow_flag(self) -> bool:
+    def sticky_overflow_flag(self) -> bint:
         return get_bit(self.reg, 27)
 
     @sticky_overflow_flag.setter
-    def sticky_overflow_flag(self, value: bool):
+    def sticky_overflow_flag(self, value: bint):
         self.reg = set_bit(self.reg, 27, value)
 
     @property
-    def irq_disable(self) -> bool:
+    def irq_disable(self) -> bint:
         return get_bit(self.reg, 7)
 
     @irq_disable.setter
-    def irq_disable(self, value: bool):
+    def irq_disable(self, value: bint):
         self.reg = set_bit(self.reg, 7, value)
 
     @property
-    def fiq_disable(self) -> bool:
+    def fiq_disable(self) -> bint:
         return get_bit(self.reg, 6)
 
     @fiq_disable.setter
-    def fiq_disable(self, value: bool):
+    def fiq_disable(self, value: bint):
         self.reg = set_bit(self.reg, 6, value)
 
 

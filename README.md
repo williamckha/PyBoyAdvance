@@ -8,13 +8,42 @@ PyBoy Advance is a Game Boy Advance emulator written in Python.
 
 There are already plenty of fantastic GBA emulators out in the wild,
 most written in languages better suited than Python for emulation development.
-This project is not meant to supplant those emulators or match their
-capabilities and performance.
+This project is not meant to supplant those emulators nor match their
+capabilities.
+
+# Getting started
+
+PyBoy Advance is written in "pure" Python and can be run with the standard CPython interpreter, but
+performance will be unacceptably slow. Instead, you will need to run PyBoy Advance with [PyPy](https://pypy.org/),
+a fast implementation of Python (see [Downloading and Installing PyPy](https://doc.pypy.org/en/stable/install.html)).
+
+Install PyBoy Advance with `pip`:
+
+```bash
+$ pypy -m pip install pyboy-advance
+```
+
+Now you can use PyBoy Advance from the terminal:
+
+```bash
+$ pyboy_advance game_rom.gba
+```
+
+Or import and use it in your Python scripts:
+
+```python
+from pyboy_advance import PyBoyAdvance
+pba = PyBoyAdvance("game_rom.gba")
+while True:
+    pba.step()
+```
 
 # Acknowledgements
 
 - [GBATEK](https://problemkaputt.de/gbatek.htm) by Martin Korth, the king of GBA hardware documentation
 - [ARM7TDMI Technical Reference Manual](https://developer.arm.com/documentation/ddi0210/c/)
+- [CowBite Virtual Hardware Specifications](https://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpec.htm) by Tom Happ
+- [Tonc](https://www.coranac.com/tonc/text/toc.htm) by Jasper Vijn
 - Excellent reference GBA emulators:
     - [mGBA](https://mgba.io/) by Vicki Pfau (endrift)
     - [NanoBoyAdvance](https://github.com/nba-emu/NanoBoyAdvance) by Fleroviux
