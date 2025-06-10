@@ -24,6 +24,10 @@ def set_bit(num: int, i: int, bit: bint) -> int:
     return (num & ~(1 << i)) | (bit << i)
 
 
+def sign_64(num: int) -> bint:
+    return get_bit(num, 64)
+
+
 def sign_32(num: int) -> bint:
     return get_bit(num, 31)
 
@@ -54,6 +58,10 @@ def extend_sign_16(num: int) -> int:
 
 def extend_sign_8(num: int) -> int:
     return num | 0xFFFFFF00 if sign_8(num) else num
+
+
+def interpret_signed_64(num: int) -> int:
+    return (num - (1 << 64)) if sign_64(num) else num
 
 
 def interpret_signed_32(num: int) -> int:
