@@ -4,6 +4,7 @@ from array import array
 from enum import Enum
 from typing import TYPE_CHECKING
 
+from pyboy_advance.cpu.constants import CPUState
 from pyboy_advance.memory.constants import MemoryRegion
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
@@ -102,8 +103,7 @@ class Memory:
                         self.bios, address & MemoryRegion.BIOS_MASK
                     )
                 return self.bios_last_opcode
-            else:
-                raise ValueError(f"Invalid BIOS read_32 at address {address:#010x}")
+            return self._read_unused_memory()
 
         elif region == MemoryRegion.EWRAM_REGION:
             return array_read_32(self.ewram, address & MemoryRegion.EWRAM_MASK)
@@ -131,8 +131,7 @@ class Memory:
             return self.gamepak.read_32(address)
 
         else:
-            print(f"Attempt to read from unused memory: {address:#010x}")
-            return 0
+            return self._read_unused_memory()
 
     def _read_16_internal(self, address: int) -> int:
         address = address & ~0b1  # Align address to 2-byte boundary
@@ -143,8 +142,7 @@ class Memory:
                 if not self.cpu or self.cpu.regs.pc <= MemoryRegion.BIOS_END:
                     return array_read_16(self.bios, address & MemoryRegion.BIOS_MASK)
                 return (self.bios_last_opcode >> ((address & 2) << 3)) & 0xFFFF
-            else:
-                raise ValueError(f"Invalid BIOS read_16 at address {address:#010x}")
+            return (self._read_unused_memory() >> ((address & 2) << 3)) & 0xFFFF
 
         elif region == MemoryRegion.EWRAM_REGION:
             return array_read_16(self.ewram, address & MemoryRegion.EWRAM_MASK)
@@ -172,8 +170,7 @@ class Memory:
             return self.gamepak.read_16(address)
 
         else:
-            print(f"Attempt to read from unused memory: {address:#010x}")
-            return 0
+            return (self._read_unused_memory() >> ((address & 2) << 3)) & 0xFFFF
 
     def _read_8_internal(self, address: int) -> int:
         region = address >> 24
@@ -183,8 +180,7 @@ class Memory:
                 if not self.cpu or self.cpu.regs.pc <= MemoryRegion.BIOS_END:
                     return self.bios[address & MemoryRegion.BIOS_MASK]
                 return (self.bios_last_opcode >> ((address & 3) << 3)) & 0xFF
-            else:
-                raise ValueError(f"Invalid BIOS read_8 at address {address:#010x}")
+            return (self._read_unused_memory() >> ((address & 3) << 3)) & 0xFF
 
         elif region == MemoryRegion.EWRAM_REGION:
             return self.ewram[address & MemoryRegion.EWRAM_MASK]
@@ -212,8 +208,7 @@ class Memory:
             return self.gamepak.read_8(address)
 
         else:
-            print(f"Attempt to read from unused memory: {address:#010x}")
-            return 0
+            return (self._read_unused_memory() >> ((address & 3) << 3)) & 0xFF
 
     def _write_32_internal(self, address: int, value: int):
         address = address & ~0b11  # Align address to 4-byte boundary
@@ -340,6 +335,36 @@ class Memory:
 
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
+
+    def _read_unused_memory(self) -> int:
+        """
+        Reading from unused memory returns the last prefetched instruction.
+        https://problemkaputt.de/gbatek.htm#gbaunpredictablethings
+
+        For THUMB code, the result consists of two 16-bit fragments and depends on
+        the address area and alignment where the opcode was stored.
+        """
+        if self.cpu.regs.cpsr.state == CPUState.ARM:
+            return self.cpu.pipeline[1]
+
+        region = self.cpu.regs.pc >> 24
+
+        if region == MemoryRegion.BIOS_REGION or region == MemoryRegion.OAM_REGION:
+            if (self.cpu.regs.pc & 0b11) == 0:
+                # According to GBATEK, we should be using [$+6] for the top 16 bits
+                # here, but that isn't prefetched yet?
+                return (self.cpu.pipeline[1] << 16) | self.cpu.pipeline[1]
+            else:
+                return (self.cpu.pipeline[1] << 16) | self.cpu.pipeline[0]
+
+        elif region == MemoryRegion.IWRAM_REGION:
+            if (self.cpu.regs.pc & 0b11) == 0:
+                return (self.cpu.pipeline[0] << 16) | self.cpu.pipeline[1]
+            else:
+                return (self.cpu.pipeline[1] << 16) | self.cpu.pipeline[0]
+
+        else:
+            return (self.cpu.pipeline[1] << 16) | self.cpu.pipeline[1]
 
     @staticmethod
     def _get_vram_address_mask(address: int) -> int:
