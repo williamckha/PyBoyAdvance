@@ -23,17 +23,25 @@ Install PyBoy Advance with `pip`:
 $ pypy -m pip install pyboy-advance
 ```
 
-Now you can use PyBoy Advance from the terminal:
+You will need to provide a Game Boy Advance BIOS. An open source BIOS is
+available [here](https://github.com/Nebuleon/ReGBA/blob/master/bios/gba_bios.bin).
+
+Launch PyBoy Advance from the terminal:
 
 ```bash
-$ pyboy_advance game_rom.gba
+$ pyboy_advance --bios /path/to/bios.bin game_rom.gba
 ```
 
 Or import and use it in your Python scripts:
 
 ```python
 from pyboy_advance import PyBoyAdvance
-pba = PyBoyAdvance("game_rom.gba")
+
+pba = PyBoyAdvance(
+  rom="game_rom.gba", 
+  bios="/path/to/bios.bin"
+)
+
 while True:
     pba.step()
 ```

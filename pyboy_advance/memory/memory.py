@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from array import array
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 from pyboy_advance.cpu.constants import CPUState
 from pyboy_advance.memory.constants import MemoryRegion
@@ -29,12 +29,12 @@ class MemoryAccess(Enum):
 
 
 class Memory:
-    def __init__(self, io: IO, gamepak: GamePak):
+    def __init__(self, io: IO, gamepak: GamePak, bios: bytes | bytearray | Iterable[int]):
         self.cpu: CPU | None = None
         self.io = io
 
         # General Internal Memory
-        self.bios = array("B", [0] * MemoryRegion.BIOS_SIZE)
+        self.bios = array("B", bios.ljust(MemoryRegion.BIOS_SIZE))
         self.ewram = array("B", [0] * MemoryRegion.EWRAM_SIZE)
         self.iwram = array("B", [0] * MemoryRegion.IWRAM_SIZE)
 

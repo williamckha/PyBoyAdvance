@@ -12,8 +12,8 @@ class GamePak:
     @staticmethod
     def from_file(rom_file_path: str | os.PathLike) -> GamePak:
         with open(rom_file_path, "rb") as rom_file:
-            rom_bytes = bytearray(rom_file.read())
-            return GamePak(rom_bytes)
+            rom_data = bytearray(rom_file.read())
+            return GamePak(rom_data)
 
     def __init__(self, rom: bytes | bytearray | Iterable[int]):
         self.rom = array("B", rom.ljust(MemoryRegion.GAMEPAK_SIZE))

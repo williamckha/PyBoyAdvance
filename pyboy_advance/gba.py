@@ -12,15 +12,26 @@ from pyboy_advance.scheduler import Scheduler
 
 
 class PyBoyAdvance:
-    def __init__(self, gamepak: GamePak | str | os.PathLike, skip_bios: bool = False):
+    def __init__(
+        self,
+        gamepak: GamePak | str | os.PathLike,
+        bios: str | os.PathLike | None,
+        skip_bios: bool = False,
+    ):
         self.gamepak = (
             GamePak.from_file(gamepak) if isinstance(gamepak, (str, os.PathLike)) else gamepak
         )
 
+        if bios:
+            with open(bios, "rb") as bios_file:
+                bios_data = bytearray(bios_file.read())
+        else:
+            bios_data = b""
+
         self.scheduler = Scheduler()
         self.ppu = PPU(self.scheduler)
         self.io = IO(self.ppu)
-        self.memory = Memory(self.io, self.gamepak)
+        self.memory = Memory(self.io, self.gamepak, bios_data)
         self.cpu = CPU(self.memory)
 
         if skip_bios:
