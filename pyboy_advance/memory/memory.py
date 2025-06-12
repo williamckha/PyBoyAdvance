@@ -311,7 +311,7 @@ class Memory:
             # VRAM is split into BG and OBJ regions.
             # Size of the BG region changes depending on whether we are in bitmap mode
             video_mode = self.io.ppu.display_control.video_mode
-            bg_region_end = 0x14000 if video_mode.is_bitmapped() else 0x10000
+            bg_region_end = 0x14000 if video_mode.bitmapped else 0x10000
 
             # Ignore attempts to write a byte into OBJ, but allow writes into BG
             if address & 0x1FFFF < bg_region_end:

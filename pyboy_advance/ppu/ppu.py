@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from array import array
 from ctypes import c_void_p
 from enum import IntEnum
@@ -25,6 +27,12 @@ CYCLES_PIXEL = 4
 CYCLES_HDRAW = DISPLAY_WIDTH * CYCLES_PIXEL
 CYCLES_HBLANK = HBLANK_PIXELS * CYCLES_PIXEL
 
+SMALL_DISPLAY_WIDTH = 160
+SMALL_DISPLAY_HEIGHT = 128
+
+MAX_NUM_OBJECTS = 128
+OAM_ENTRY_SIZE = 8
+
 
 class PPU:
     def __init__(self, scheduler: Scheduler):
@@ -48,50 +56,12 @@ class PPU:
     def frame_buffer_ptr(self) -> c_void_p:
         return self.front_buffer_ptr
 
-    def render_scanline(self):
-        video_mode = self.display_control.video_mode
-        if video_mode == VideoMode.MODE_0:
-            self.render_scanline_mode_0()
-        elif video_mode == VideoMode.MODE_1:
-            self.render_scanline_mode_1()
-        elif video_mode == VideoMode.MODE_2:
-            self.render_scanline_mode_2()
-        elif video_mode == VideoMode.MODE_3:
-            self.render_scanline_mode_3()
-        elif video_mode == VideoMode.MODE_4:
-            self.render_scanline_mode_4()
-        elif video_mode == VideoMode.MODE_5:
-            self.render_scanline_mode_5()
-
-    def render_scanline_mode_0(self):
-        pass
-
-    def render_scanline_mode_1(self):
-        pass
-
-    def render_scanline_mode_2(self):
-        pass
-
-    def render_scanline_mode_3(self):
-        pass
-
-    def render_scanline_mode_4(self):
-        page_offset = 0xA000 if self.display_control.display_frame_select else 0
-
-        if self.display_control.display_bg_2:
-            for x in range(DISPLAY_WIDTH):
-                palette_index = self.vram[DISPLAY_WIDTH * self.vcount + page_offset + x]
-                color = self.get_palette_color(palette_index)
-                self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = color
-
-    def render_scanline_mode_5(self):
-        pass
-
     def hblank_start(self):
         self.display_status.hblank_status = True
 
         if self.vcount < DISPLAY_HEIGHT:
-            self.render_scanline()
+            self.render_objects()
+            self.render_background()
 
         self.scheduler.schedule(self.hblank_end, CYCLES_HBLANK)
 
@@ -114,9 +84,95 @@ class PPU:
 
         self.scheduler.schedule(self.hblank_start, CYCLES_HDRAW)
 
-    def get_palette_color(self, index):
-        color = array_read_16(self.palram, index * 2)
-        return color & 0x7FFF
+    def render_background(self):
+        video_mode = self.display_control.video_mode
+        if video_mode == VideoMode.MODE_0:
+            pass
+        elif video_mode == VideoMode.MODE_1:
+            pass
+        elif video_mode == VideoMode.MODE_2:
+            pass
+        elif video_mode == VideoMode.MODE_3:
+            self.render_background_bitmap(paletted=False, small=False)
+        elif video_mode == VideoMode.MODE_4:
+            self.render_background_bitmap(paletted=True, small=False)
+        elif video_mode == VideoMode.MODE_5:
+            self.render_background_bitmap(paletted=False, small=True)
+
+    def render_background_bitmap(self, paletted, small):
+        if self.display_control.display_bg_2:
+            page_offset = 0xA000 if self.display_control.display_frame_select else 0
+
+            display_width = SMALL_DISPLAY_WIDTH if small else DISPLAY_WIDTH
+            display_height = SMALL_DISPLAY_HEIGHT if small else DISPLAY_HEIGHT
+
+            if paletted:
+                for x in range(display_width):
+                    palette_index = self.vram[page_offset + display_width * self.vcount + x]
+                    colour = array_read_16(self.palram, palette_index * 2)
+                    self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
+            else:
+                for x in range(display_width):
+                    colour = array_read_16(self.vram, (display_width * self.vcount + x) * 2)
+                    self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
+
+    def render_objects(self):
+        for obj_index in range(MAX_NUM_OBJECTS - 1, -1, -1):
+            obj_address = obj_index * OAM_ENTRY_SIZE
+            obj = Object(
+                array_read_16(self.oam, obj_address),
+                array_read_16(self.oam, obj_address + 2),
+                array_read_16(self.oam, obj_address + 4),
+            )
+            self.render_object(obj)
+
+    def render_object(self, obj: Object):
+        if obj.disabled:
+            return
+
+        if self.display_control.video_mode.bitmapped and obj.tile_index < 512:
+            return
+
+        obj_x, obj_y, (obj_w, obj_h) = obj.x, obj.y, obj.size
+        obj_flip_h, obj_flip_v = obj.flip_horizontal, obj.flip_vertical
+
+        if not (obj_y <= self.vcount < obj_y + obj_h):
+            return
+
+        tile_size = 64 if obj.colour_256 else 32
+        tile_base_address = 0x10000 + obj.tile_index * 32
+        tile_row_len = obj_w / 8 if self.display_control.obj_vram_dimension else 32
+
+        offset_y = self.vcount - obj_y
+        for offset_x in range(0, obj_w):
+            rel_x = obj_w - offset_x - 1 if obj_flip_h else offset_x
+            rel_y = obj_y - offset_y - 1 if obj_flip_v else offset_y
+
+            tile_x = rel_x // 8
+            tile_y = rel_y // 8
+
+            tile_offset = tile_y * tile_row_len + tile_x
+            tile_address = tile_base_address + tile_offset * tile_size
+
+            pixel_x = rel_x % 8
+            pixel_y = rel_y % 8
+
+            if obj.colour_256:
+                # 256-colour object. One byte per pixel, one palette with 256 colours
+                pixel_address = tile_address + pixel_y * 8 + pixel_x
+                palette_index = self.vram[pixel_address]
+            else:
+                # 16-colour object. Each byte represents two pixels.
+
+                # Palette num selects one of 16 palettes, each palette having 16 colours
+                palette_index = obj.palette_num * 16
+
+                # Lower 4 bits are for the left pixel and upper 4 bits are for the right pixel
+                pixel_address = tile_address + pixel_y * 4 + pixel_x // 2
+                palette_index += (self.vram[pixel_address] >> ((pixel_x % 2) * 4)) & 0xF
+
+            colour = array_read_16(self.palram, palette_index * 2)
+            self.back_buffer[DISPLAY_WIDTH * self.vcount + obj_x + offset_x] = colour
 
 
 class VideoMode(IntEnum):
@@ -132,7 +188,8 @@ class VideoMode(IntEnum):
         if value == 6 or value == 7:
             return cls.MODE_5
 
-    def is_bitmapped(self):
+    @property
+    def bitmapped(self):
         return self in [VideoMode.MODE_3, VideoMode.MODE_4, VideoMode.MODE_5]
 
 
@@ -252,3 +309,94 @@ class DisplayStatusRegister:
     @vcount_trigger_value.setter
     def vcount_trigger_value(self, value: int):
         self.reg = (self.reg & 0xFF) | (value << 8)
+
+
+class ObjectMode(IntEnum):
+    NORMAL = 0
+    BLEND = 1
+    WINDOW = 2
+
+
+class ObjectShape(IntEnum):
+    SQUARE = 0
+    HORIZONTAL = 1
+    VERTICAL = 2
+
+
+class Object:
+    """
+    Corresponds to an OAM entry representing an object (moveable sprite).
+    Each entry consist of three 16-bit attributes.
+    """
+
+    SIZES = [
+        [(8, 8), (16, 16), (32, 32), (64, 64)],  # Square
+        [(16, 8), (32, 8), (32, 16), (64, 32)],  # Horizontal
+        [(8, 16), (8, 32), (16, 32), (32, 64)],  # Vertical
+    ]
+
+    def __init__(self, attr_0: int, attr_1: int, attr_2: int):
+        self.attr_0 = attr_0
+        self.attr_1 = attr_1
+        self.attr_2 = attr_2
+
+    @property
+    def x(self) -> int:
+        return get_bits(self.attr_1, 0, 7)
+
+    @property
+    def y(self) -> int:
+        return get_bits(self.attr_0, 0, 7)
+
+    @property
+    def affine(self) -> bint:
+        return get_bit(self.attr_0, 8)
+
+    @property
+    def double_size(self) -> bint:
+        return get_bit(self.attr_0, 9)
+
+    @property
+    def disabled(self) -> bint:
+        return get_bit(self.attr_0, 9) & ~self.affine
+
+    @property
+    def mode(self) -> ObjectMode:
+        return ObjectMode(get_bits(self.attr_0, 10, 11))
+
+    @property
+    def mosaic(self) -> bint:
+        return get_bit(self.attr_0, 12)
+
+    @property
+    def colour_256(self) -> bint:
+        return get_bit(self.attr_0, 13)
+
+    @property
+    def shape(self) -> ObjectShape:
+        return ObjectShape(get_bits(self.attr_0, 14, 15))
+
+    @property
+    def flip_horizontal(self) -> bint:
+        return get_bit(self.attr_1, 12) & ~self.affine
+
+    @property
+    def flip_vertical(self) -> bint:
+        return get_bit(self.attr_1, 13) & ~self.affine
+
+    @property
+    def size(self) -> tuple[int, int]:
+        size = get_bits(self.attr_1, 14, 15)
+        return Object.SIZES[self.shape][size]
+
+    @property
+    def tile_index(self) -> int:
+        return get_bits(self.attr_2, 0, 9)
+
+    @property
+    def priority(self) -> int:
+        return get_bits(self.attr_2, 10, 11)
+
+    @property
+    def palette_num(self) -> int:
+        return get_bits(self.attr_2, 12, 15)

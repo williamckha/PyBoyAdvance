@@ -43,7 +43,8 @@ class PyBoyAdvance:
             self.cpu.regs.banked_sp[BankIndex.UNDEFINED] = 0x03007F00
             self.cpu.regs.sp = 0x03007F00
             self.cpu.regs.pc = 0x08000000
-            self.cpu.flush_pipeline()
+
+        self.cpu.flush_pipeline()
 
     def step(self):
         self.cpu.step()
