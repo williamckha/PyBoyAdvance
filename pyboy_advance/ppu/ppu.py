@@ -4,6 +4,7 @@ from array import array
 from ctypes import c_void_p
 from enum import IntEnum
 
+from pyboy_advance.interrupt_controller import InterruptController, Interrupt
 from pyboy_advance.memory.constants import MemoryRegion
 from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import (
@@ -35,7 +36,10 @@ OAM_ENTRY_SIZE = 8
 
 
 class PPU:
-    def __init__(self, scheduler: Scheduler):
+    def __init__(self, scheduler: Scheduler, interrupt_controller: InterruptController):
+        self.scheduler = scheduler
+        self.interrupt_controller = interrupt_controller
+
         self.display_control = DisplayControlRegister()
         self.display_status = DisplayStatusRegister()
         self.vcount = 0
@@ -49,7 +53,6 @@ class PPU:
         self.front_buffer_ptr = c_void_p(self.front_buffer.buffer_info()[0])
         self.back_buffer_ptr = c_void_p(self.front_buffer.buffer_info()[0])
 
-        self.scheduler = scheduler
         self.scheduler.schedule(self.hblank_start, CYCLES_HDRAW)
 
     @property
@@ -63,6 +66,9 @@ class PPU:
             self.render_objects()
             self.render_background()
 
+        if self.display_status.hblank_irq:
+            self.interrupt_controller.signal(Interrupt.HBLANK)
+
         self.scheduler.schedule(self.hblank_end, CYCLES_HBLANK)
 
     def hblank_end(self):
@@ -72,6 +78,9 @@ class PPU:
 
         self.display_status.hblank_status = False
         self.display_status.vblank_status = self.vcount >= DISPLAY_HEIGHT
+        self.display_status.vcount_trigger_status = (
+            self.vcount == self.display_status.vcount_trigger_value
+        )
 
         if self.vcount == DISPLAY_HEIGHT:
             # Swap front and back buffers
@@ -81,6 +90,12 @@ class PPU:
                 self.back_buffer_ptr,
                 self.front_buffer_ptr,
             )
+
+            if self.display_status.vblank_irq:
+                self.interrupt_controller.signal(Interrupt.VBLANK)
+
+        if self.display_status.vcount_irq and self.display_status.vcount_trigger_status:
+            self.interrupt_controller.signal(Interrupt.VCOUNT)
 
         self.scheduler.schedule(self.hblank_start, CYCLES_HDRAW)
 

@@ -42,5 +42,16 @@ class ShiftType(IntEnum):
     ROR = 3
 
 
+class ExceptionVector(IntEnum):
+    RESET = 0x00
+    UNDEFINED_INSTRUCTION = 0x04
+    SWI = 0x08
+    PREFETCH_ABORT = 0x0C
+    DATA_ABORT = 0x10
+    ADDRESS_EXCEEDS_26_BITS = 0x14
+    IRQ = 0x18
+    FIQ = 0x1C
+
+
 ARM_PC_INCREMENT = 4
 THUMB_PC_INCREMENT = 2

@@ -49,6 +49,10 @@ class Memory:
     def connect_cpu(self, cpu: CPU):
         self.cpu = cpu
 
+    @property
+    def irq_line(self) -> bool:
+        return self.io.interrupt_controller.irq_line
+
     def read_32(self, address: int, access_type: MemoryAccess) -> int:
         self._add_cycles(address, access_type)
         return self._read_32_internal(address)
@@ -111,7 +115,7 @@ class Memory:
         elif region == MemoryRegion.IWRAM_REGION:
             return array_read_32(self.iwram, address & MemoryRegion.IWRAM_MASK)
 
-        elif region == MemoryRegion.IO_REGION:
+        elif MemoryRegion.IO_START <= address <= MemoryRegion.IO_END:
             return self.io.read_32(address)
 
         elif region == MemoryRegion.PALRAM_REGION:
@@ -150,7 +154,7 @@ class Memory:
         elif region == MemoryRegion.IWRAM_REGION:
             return array_read_16(self.iwram, address & MemoryRegion.IWRAM_MASK)
 
-        elif region == MemoryRegion.IO_REGION:
+        elif MemoryRegion.IO_START <= address <= MemoryRegion.IO_END:
             return self.io.read_16(address)
 
         elif region == MemoryRegion.PALRAM_REGION:
@@ -188,7 +192,7 @@ class Memory:
         elif region == MemoryRegion.IWRAM_REGION:
             return self.iwram[address & MemoryRegion.IWRAM_MASK]
 
-        elif region == MemoryRegion.IO_REGION:
+        elif MemoryRegion.IO_START <= address <= MemoryRegion.IO_END:
             return self.io.read_8(address)
 
         elif region == MemoryRegion.PALRAM_REGION:

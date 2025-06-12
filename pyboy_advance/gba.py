@@ -4,6 +4,7 @@ import time
 from pyboy_advance.app.window import Window
 from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.cpu.registers import BankIndex
+from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
 from pyboy_advance.memory.memory import Memory
@@ -29,8 +30,9 @@ class PyBoyAdvance:
             bios_data = b""
 
         self.scheduler = Scheduler()
-        self.ppu = PPU(self.scheduler)
-        self.io = IO(self.ppu)
+        self.interrupt_controller = InterruptController(self.scheduler)
+        self.ppu = PPU(self.scheduler, self.interrupt_controller)
+        self.io = IO(self.interrupt_controller, self.ppu)
         self.memory = Memory(self.io, self.gamepak, bios_data)
         self.cpu = CPU(self.memory)
 
@@ -57,9 +59,9 @@ class PyBoyAdvance:
         while True:
             self.step()
             if self.scheduler.cycles % 280896 == 0:
-                e = time.perf_counter()
-                print(e - s)
-                s = time.perf_counter()
+                # e = time.perf_counter()
+                # print(e - s)
+                # s = time.perf_counter()
 
                 window.get_events()
                 window.render(self.ppu.frame_buffer_ptr)

@@ -1,10 +1,12 @@
+from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.memory.constants import IOAddress
 from pyboy_advance.ppu.ppu import PPU
 from pyboy_advance.utils import get_bit
 
 
 class IO:
-    def __init__(self, ppu: PPU):
+    def __init__(self, interrupt_controller: InterruptController, ppu: PPU):
+        self.interrupt_controller = interrupt_controller
         self.ppu = ppu
 
     def read_32(self, address: int) -> int:
@@ -19,6 +21,12 @@ class IO:
             return self.ppu.display_status.reg
         elif address == IOAddress.REG_VCOUNT:
             return self.ppu.vcount
+        elif address == IOAddress.REG_IE:
+            return self.interrupt_controller.interrupt_enable
+        elif address == IOAddress.REG_IF:
+            return self.interrupt_controller.interrupt_flags
+        elif address == IOAddress.REG_IME:
+            return self.interrupt_controller.interrupt_master_enable
         else:
             return 0
 
@@ -37,6 +45,12 @@ class IO:
             self.ppu.display_status.reg = value
         elif address == IOAddress.REG_VCOUNT:
             self.ppu.vcount = value
+        elif address == IOAddress.REG_IE:
+            self.interrupt_controller.interrupt_enable = value
+        elif address == IOAddress.REG_IF:
+            self.interrupt_controller.interrupt_flags = value
+        elif address == IOAddress.REG_IME:
+            self.interrupt_controller.interrupt_master_enable = value
 
     def write_8(self, address: int, value: int):
         aligned_address = address & ~1

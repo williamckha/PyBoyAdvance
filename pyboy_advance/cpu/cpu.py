@@ -9,8 +9,9 @@ from pyboy_advance.cpu.constants import (
     ARM_PC_INCREMENT,
     THUMB_PC_INCREMENT,
     ShiftType,
+    ExceptionVector,
 )
-from pyboy_advance.cpu.registers import Registers
+from pyboy_advance.cpu.registers import Registers, BankIndex
 from pyboy_advance.cpu.thumb.decode import thumb_decode
 from pyboy_advance.memory.memory import MemoryAccess, Memory
 from pyboy_advance.utils import (
@@ -20,6 +21,7 @@ from pyboy_advance.utils import (
     add_uint32_to_uint32,
     interpret_signed_32,
     bint,
+    add_int32_to_uint32,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,6 +40,9 @@ class CPU:
         self.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
     def step(self):
+        if self.memory.irq_line and not self.regs.cpsr.irq_disable:
+            self.interrupt(ExceptionVector.IRQ)
+
         if self.regs.cpsr.state == CPUState.ARM:
             self.arm_step()
         else:
@@ -117,6 +122,42 @@ class CPU:
 
     def switch_mode(self, new_mode: CPUMode):
         self.regs.switch_mode(new_mode)
+
+    def interrupt(self, vector: ExceptionVector):
+        if vector == ExceptionVector.RESET:
+            new_mode = CPUMode.SWI
+        elif vector == ExceptionVector.UNDEFINED_INSTRUCTION:
+            new_mode = CPUMode.UNDEFINED
+        elif vector == ExceptionVector.SWI:
+            new_mode = CPUMode.SWI
+        elif vector == ExceptionVector.PREFETCH_ABORT:
+            new_mode = CPUMode.ABORT
+        elif vector == ExceptionVector.DATA_ABORT:
+            new_mode = CPUMode.ABORT
+        elif vector == ExceptionVector.ADDRESS_EXCEEDS_26_BITS:
+            new_mode = CPUMode.SWI
+        elif vector == ExceptionVector.IRQ:
+            new_mode = CPUMode.IRQ
+        elif vector == ExceptionVector.FIQ:
+            new_mode = CPUMode.FIQ
+        else:
+            raise ValueError
+
+        new_bank_index = BankIndex.from_cpu_mode(new_mode)
+        self.regs.banked_spsr[new_bank_index].reg = self.regs.cpsr.reg
+        self.regs.banked_lr[new_bank_index] = add_int32_to_uint32(
+            self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else -2
+        )
+
+        self.switch_mode(new_mode)
+
+        self.regs.cpsr.state = CPUState.ARM
+        self.regs.cpsr.irq_disable = True
+        if vector in [ExceptionVector.RESET, ExceptionVector.FIQ]:
+            self.regs.cpsr.fiq_disable = True
+
+        self.regs.pc = vector
+        self.flush_pipeline()
 
     def check_condition(self, cond: Condition) -> bint:
         cpsr = self.regs.cpsr
