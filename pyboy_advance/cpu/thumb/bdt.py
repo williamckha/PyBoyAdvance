@@ -19,7 +19,7 @@ def thumb_multiple_load_store(cpu: CPU, instr: int):
     rb = get_bits(instr, 8, 10)
     address = cpu.regs[rb]
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.prefetch_access_type = MemoryAccess.NON_SEQUENTIAL
 
     load = get_bit(instr, 11)  # 0 = STMIA (Store), 1 = LDMIA (Load)

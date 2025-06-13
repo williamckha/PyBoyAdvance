@@ -36,6 +36,10 @@ OAM_ENTRY_SIZE = 8
 
 
 class PPU:
+    """
+    Picture Processing Unit.
+    """
+
     def __init__(self, scheduler: Scheduler, interrupt_controller: InterruptController):
         self.scheduler = scheduler
         self.interrupt_controller = interrupt_controller

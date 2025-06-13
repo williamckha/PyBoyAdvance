@@ -37,7 +37,7 @@ def arm_multiply(cpu: CPU, instr: int):
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd])
         cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
 
-    cpu.arm_advance_pc()
+    cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
 
@@ -72,5 +72,5 @@ def arm_multiply_long(cpu: CPU, instr: int):
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd_hi])
         cpu.regs.cpsr.zero_flag = cpu.regs[rd_hi] == 0 and cpu.regs[rd_lo] == 0
 
-    cpu.arm_advance_pc()
+    cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL

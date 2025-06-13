@@ -34,7 +34,7 @@ def arm_single_data_transfer(cpu: CPU, instr: int):
     address = add_int32_to_uint32(base, offset if up_down_bit else -offset)
     effective_address = address if pre_post_bit else base
 
-    cpu.arm_advance_pc()
+    cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
     if load_store_bit:  # Load

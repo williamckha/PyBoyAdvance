@@ -17,7 +17,7 @@ def thumb_pc_relative_load(cpu: CPU, instr: int):
 
     cpu.regs[rd] = cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL)
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
 
@@ -38,7 +38,7 @@ def thumb_load_store_register_offset(cpu: CPU, instr: int):
     elif opcode == 3:  # LDRB
         cpu.regs[rd] = cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL)
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
 
@@ -59,7 +59,7 @@ def thumb_load_store_sign_extended(cpu: CPU, instr: int):
     elif opcode == 3:  # LDSH
         cpu.regs[rd] = cpu.memory.read_16_signed(address, MemoryAccess.NON_SEQUENTIAL)
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
 
@@ -80,7 +80,7 @@ def thumb_load_store_immediate_offset(cpu: CPU, instr: int):
     elif opcode == 3:  # LDRB
         cpu.regs[rd] = cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL)
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
 
@@ -97,7 +97,7 @@ def thumb_load_store_halfword(cpu: CPU, instr: int):
     else:  # STRH
         cpu.memory.write_16(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
 
@@ -113,5 +113,5 @@ def thumb_sp_relative_load_store(cpu: CPU, instr: int):
     else:  # STR
         cpu.memory.write_32(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL

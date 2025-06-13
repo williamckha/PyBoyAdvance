@@ -66,7 +66,7 @@ def thumb_move_shifted_register(cpu: CPU, instr: int):
     cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
     cpu.regs.cpsr.carry_flag = carry
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
 
 
@@ -89,7 +89,7 @@ def thumb_add_subtract(cpu: CPU, instr: int):
     elif opcode == 3:  # SUB (Immediate)
         arm_alu_sub(cpu, op1, op2, rd, set_cond_codes=True)
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
 
 
@@ -108,7 +108,7 @@ def thumb_move_compare_add_subtract(cpu: CPU, instr: int):
     elif opcode == 3:  # SUB
         arm_alu_sub(cpu, cpu.regs[rd], value, rd, set_cond_codes=True)
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
 
 
@@ -163,7 +163,7 @@ def thumb_alu(cpu: CPU, instr: int):
     elif opcode == ThumbALUOpcode.MVN:
         arm_alu_mvn(cpu, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
 
 
@@ -198,7 +198,7 @@ def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):
         cpu.flush_pipeline()
         return
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
 
 
@@ -214,7 +214,7 @@ def thumb_load_address(cpu: CPU, instr: int):
         # Load from PC
         cpu.regs[rd] = add_uint32_to_uint32(cpu.regs.pc & ~2, offset)
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
 
 
@@ -227,5 +227,5 @@ def thumb_add_offset_to_stack_pointer(cpu: CPU, instr: int):
 
     cpu.regs.sp = add_int32_to_uint32(cpu.regs.sp, offset)
 
-    cpu.thumb_advance_pc()
+    cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL

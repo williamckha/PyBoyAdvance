@@ -62,7 +62,7 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
     if psr_and_force_user_bit and not (pc_in_reg_list and load_store_bit):
         cpu.switch_mode(CPUMode.USER)
 
-    cpu.arm_advance_pc()
+    cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
     first = True

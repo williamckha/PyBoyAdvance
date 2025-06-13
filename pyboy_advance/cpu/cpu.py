@@ -1,5 +1,5 @@
 import logging
-from typing import Callable
+from typing import Callable, TypeAlias
 
 from pyboy_advance.cpu.arm.decode import arm_decode
 from pyboy_advance.cpu.constants import (
@@ -28,6 +28,17 @@ logger = logging.getLogger(__name__)
 
 
 class CPU:
+    """
+    ARM7TDMI, a 32-bit RISC processor. It has a 3 stage instruction pipeline
+    (fetch, decode, execute).
+
+    The ARM7TDMI can operate in one of two different CPU states:
+     - ARM, which uses a full instruction set with 32-bit opcodes
+     - THUMB, which uses a cut-down instruction set with 16-bit opcodes
+
+    https://problemkaputt.de/gbatek.htm#armcpureference
+    """
+
     def __init__(self, memory: Memory):
         self.regs = Registers()
         self.regs.cpsr.mode = CPUMode.SYSTEM
@@ -44,11 +55,11 @@ class CPU:
             self.interrupt(ExceptionVector.IRQ)
 
         if self.regs.cpsr.state == CPUState.ARM:
-            self.arm_step()
+            self.step_arm()
         else:
-            self.thumb_step()
+            self.step_thumb()
 
-    def arm_step(self):
+    def step_arm(self):
         instruction = self.pipeline[0]
         self.pipeline[0] = self.pipeline[1]
         self.pipeline[1] = self.memory.read_32(self.regs.pc, self.next_fetch_access)
@@ -78,10 +89,10 @@ class CPU:
                     )
                 )
 
-            self.arm_advance_pc()
+            self.advance_pc_arm()
             self.next_fetch_access = MemoryAccess.SEQUENTIAL
 
-    def thumb_step(self):
+    def step_thumb(self):
         instruction = self.pipeline[0]
         self.pipeline[0] = self.pipeline[1]
         self.pipeline[1] = self.memory.read_16(self.regs.pc, self.next_fetch_access)
@@ -99,25 +110,25 @@ class CPU:
 
         instruction_handler(self, instruction)
 
-    def arm_advance_pc(self):
+    def advance_pc_arm(self):
         self.regs.pc = add_uint32_to_uint32(self.regs.pc, ARM_PC_INCREMENT)
 
-    def thumb_advance_pc(self):
+    def advance_pc_thumb(self):
         self.regs.pc = add_uint32_to_uint32(self.regs.pc, THUMB_PC_INCREMENT)
 
     def flush_pipeline(self):
         if self.regs.cpsr.state == CPUState.ARM:
             self.regs.pc &= ~0b11  # Align PC to 4 byte boundary
             self.pipeline[0] = self.memory.read_32(self.regs.pc, MemoryAccess.NON_SEQUENTIAL)
-            self.arm_advance_pc()
+            self.advance_pc_arm()
             self.pipeline[1] = self.memory.read_32(self.regs.pc, MemoryAccess.SEQUENTIAL)
-            self.arm_advance_pc()
+            self.advance_pc_arm()
         else:
             self.regs.pc &= ~0b1  # Align PC to 2 byte boundary
             self.pipeline[0] = self.memory.read_16(self.regs.pc, MemoryAccess.NON_SEQUENTIAL)
-            self.thumb_advance_pc()
+            self.advance_pc_thumb()
             self.pipeline[1] = self.memory.read_16(self.regs.pc, MemoryAccess.SEQUENTIAL)
-            self.thumb_advance_pc()
+            self.advance_pc_thumb()
         self.next_fetch_access = MemoryAccess.SEQUENTIAL
 
     def switch_mode(self, new_mode: CPUMode):
@@ -279,4 +290,4 @@ class CPU:
         return result, carry_out
 
 
-InstructionHandler = Callable[[CPU, int], None]
+InstructionHandler: TypeAlias = Callable[[CPU, int], None]

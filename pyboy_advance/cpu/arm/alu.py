@@ -60,7 +60,7 @@ def arm_alu(cpu: CPU, instr: int):
         # then the operand should be PC + 12.
         if get_bit(shift, 0):
             # Advance PC by 4 so that cpu.regs.pc returns PC + 12
-            cpu.arm_advance_pc()
+            cpu.advance_pc_arm()
             early_advance_pc = True
         else:
             # Otherwise, the operand should be PC + 8
@@ -118,7 +118,7 @@ def arm_alu(cpu: CPU, instr: int):
             cpu.flush_pipeline()
 
     elif not early_advance_pc:
-        cpu.arm_advance_pc()
+        cpu.advance_pc_arm()
 
 
 def arm_alu_and(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint, shift_carry: bint):

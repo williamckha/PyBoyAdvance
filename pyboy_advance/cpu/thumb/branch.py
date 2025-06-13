@@ -32,7 +32,7 @@ def thumb_conditional_branch(cpu: CPU, instr: int):
         cpu.regs.pc = add_int32_to_uint32(cpu.regs.pc, offset)
         cpu.flush_pipeline()
     else:
-        cpu.thumb_advance_pc()
+        cpu.advance_pc_thumb()
         cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
 
 
@@ -43,7 +43,7 @@ def thumb_long_branch_with_link(cpu: CPU, instr: int):
     if is_first_opcode:
         address_upper_bits = interpret_signed_23(get_bits(instr, 0, 10) << 12)
         cpu.regs.lr = add_int32_to_uint32(cpu.regs.pc, address_upper_bits)
-        cpu.thumb_advance_pc()
+        cpu.advance_pc_thumb()
         cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
     else:
         address_lower_bits = get_bits(instr, 0, 10) << 1

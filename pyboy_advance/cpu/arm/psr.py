@@ -24,7 +24,7 @@ def arm_mrs(cpu: CPU, instr: int):
     psr = get_bit(instr, 22)
     cpu.regs[rd] = cpu.regs.spsr.reg if psr else cpu.regs.cpsr.reg
 
-    cpu.arm_advance_pc()
+    cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
 
 
@@ -67,5 +67,5 @@ def arm_msr(cpu: CPU, instr: int):
         cpu.switch_mode(new_cpsr.mode)
         cpu.regs.cpsr.reg = new_cpsr.reg
 
-    cpu.arm_advance_pc()
+    cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
