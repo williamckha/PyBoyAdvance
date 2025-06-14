@@ -21,6 +21,16 @@ class IO:
             return self.ppu.display_status.reg
         elif address == IOAddress.REG_VCOUNT:
             return self.ppu.vcount
+
+        elif address == IOAddress.REG_BG0CNT:
+            return self.ppu.bg_control[0].reg
+        elif address == IOAddress.REG_BG1CNT:
+            return self.ppu.bg_control[1].reg
+        elif address == IOAddress.REG_BG2CNT:
+            return self.ppu.bg_control[2].reg
+        elif address == IOAddress.REG_BG3CNT:
+            return self.ppu.bg_control[3].reg
+
         elif address == IOAddress.REG_IE:
             return self.interrupt_controller.interrupt_enable
         elif address == IOAddress.REG_IF:
@@ -45,6 +55,33 @@ class IO:
             self.ppu.display_status.reg = value
         elif address == IOAddress.REG_VCOUNT:
             self.ppu.vcount = value
+
+        elif address == IOAddress.REG_BG0CNT:
+            self.ppu.bg_control[0].reg = value
+        elif address == IOAddress.REG_BG1CNT:
+            self.ppu.bg_control[1].reg = value
+        elif address == IOAddress.REG_BG2CNT:
+            self.ppu.bg_control[2].reg = value
+        elif address == IOAddress.REG_BG3CNT:
+            self.ppu.bg_control[3].reg = value
+
+        elif address == IOAddress.REG_BG0HOFS:
+            self.ppu.bg_offset_h[0] = value
+        elif address == IOAddress.REG_BG0VOFS:
+            self.ppu.bg_offset_v[0] = value
+        elif address == IOAddress.REG_BG1HOFS:
+            self.ppu.bg_offset_h[1] = value
+        elif address == IOAddress.REG_BG1VOFS:
+            self.ppu.bg_offset_v[1] = value
+        elif address == IOAddress.REG_BG2HOFS:
+            self.ppu.bg_offset_h[2] = value
+        elif address == IOAddress.REG_BG2VOFS:
+            self.ppu.bg_offset_v[2] = value
+        elif address == IOAddress.REG_BG3HOFS:
+            self.ppu.bg_offset_h[3] = value
+        elif address == IOAddress.REG_BG3VOFS:
+            self.ppu.bg_offset_v[3] = value
+
         elif address == IOAddress.REG_IE:
             self.interrupt_controller.interrupt_enable = value
         elif address == IOAddress.REG_IF:

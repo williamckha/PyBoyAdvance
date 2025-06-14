@@ -69,7 +69,7 @@ class CPU:
         cond = Condition(get_bits(instruction, 28, 31))
         if self.check_condition(cond):
             if __debug__:
-                logger.debug(
+                print(
                     "Executing <{0:#010x}> {1:032b} {2}".format(
                         (self.regs.pc - 8),
                         instruction,
@@ -81,7 +81,7 @@ class CPU:
         else:
             # Skip instruction since condition was not met
             if __debug__:
-                logger.debug(
+                print(
                     "Skipping  <{0:#010x}> {1:032b} {2}".format(
                         (self.regs.pc - 8),
                         instruction,
@@ -100,7 +100,7 @@ class CPU:
         instruction_handler = thumb_decode(instruction)
 
         if __debug__:
-            logger.debug(
+            print(
                 "Executing <{0:#010x}> {1:032b} {2}".format(
                     (self.regs.pc - 4),
                     instruction,

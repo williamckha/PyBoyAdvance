@@ -34,6 +34,15 @@ SMALL_DISPLAY_HEIGHT = 128
 MAX_NUM_OBJECTS = 128
 OAM_ENTRY_SIZE = 8
 
+NUM_BACKGROUNDS = 4
+
+NUM_PRIORITY_LEVELS = 4
+
+TILE_WIDTH = TILE_HEIGHT = 8
+TILE_SIZE = TILE_WIDTH * TILE_HEIGHT
+
+COLOUR_SIZE = 2
+
 
 class PPU:
     """
@@ -47,6 +56,10 @@ class PPU:
         self.display_control = DisplayControlRegister()
         self.display_status = DisplayStatusRegister()
         self.vcount = 0
+
+        self.bg_control = [BackgroundControlRegister() for _ in range(NUM_BACKGROUNDS)]
+        self.bg_offset_h = [0] * NUM_BACKGROUNDS
+        self.bg_offset_v = [0] * NUM_BACKGROUNDS
 
         self.palram = array("B", [0] * MemoryRegion.PALRAM_SIZE)
         self.vram = array("B", [0] * MemoryRegion.VRAM_SIZE)
@@ -105,18 +118,93 @@ class PPU:
 
     def render_background(self):
         video_mode = self.display_control.video_mode
+
         if video_mode == VideoMode.MODE_0:
-            pass
+            for priority in range(NUM_PRIORITY_LEVELS):
+                if self.display_control.display_bg_3 and self.bg_control[3].priority == priority:
+                    self.render_background_text(bg_num=3)
+                if self.display_control.display_bg_2 and self.bg_control[2].priority == priority:
+                    self.render_background_text(bg_num=2)
+                if self.display_control.display_bg_1 and self.bg_control[1].priority == priority:
+                    self.render_background_text(bg_num=1)
+                if self.display_control.display_bg_0 and self.bg_control[0].priority == priority:
+                    self.render_background_text(bg_num=0)
+
         elif video_mode == VideoMode.MODE_1:
-            pass
+            for priority in range(NUM_PRIORITY_LEVELS):
+                if self.display_control.display_bg_2 and self.bg_control[2].priority == priority:
+                    self.render_background_affine(bg_num=2)
+                if self.display_control.display_bg_1 and self.bg_control[1].priority == priority:
+                    self.render_background_text(bg_num=1)
+                if self.display_control.display_bg_0 and self.bg_control[0].priority == priority:
+                    self.render_background_text(bg_num=0)
+
         elif video_mode == VideoMode.MODE_2:
-            pass
+            for priority in range(NUM_PRIORITY_LEVELS):
+                if self.display_control.display_bg_3 and self.bg_control[3].priority == priority:
+                    self.render_background_affine(bg_num=3)
+                if self.display_control.display_bg_2 and self.bg_control[2].priority == priority:
+                    self.render_background_affine(bg_num=2)
+
         elif video_mode == VideoMode.MODE_3:
             self.render_background_bitmap(paletted=False, small=False)
+
         elif video_mode == VideoMode.MODE_4:
             self.render_background_bitmap(paletted=True, small=False)
+
         elif video_mode == VideoMode.MODE_5:
             self.render_background_bitmap(paletted=False, small=True)
+
+    def render_background_text(self, bg_num: int):
+        bg_control = self.bg_control[bg_num]
+
+        if bg_control.size == 0b00:
+            tile_map_rows, tile_map_cols = 32, 32
+        elif bg_control.size == 0b01:
+            tile_map_rows, tile_map_cols = 32, 64
+        elif bg_control.size == 0b10:
+            tile_map_rows, tile_map_cols = 64, 32
+        elif bg_control.size == 0b11:
+            tile_map_rows, tile_map_cols = 64, 64
+        else:
+            raise ValueError
+
+        rel_y = self.vcount + self.bg_offset_v[bg_num]
+        tile_y = rel_y // 8
+        pixel_y = rel_y % 8
+
+        for x in range(DISPLAY_WIDTH):
+            rel_x = x + self.bg_offset_h[bg_num]
+            tile_x = rel_x // 8
+            pixel_x = rel_x % 8
+
+            tile_map_address = bg_control.tile_map_block
+            tile_map_address += tile_y * tile_map_rows * 2
+            tile_map_address += tile_x * 2
+
+            tile_map_entry = array_read_16(self.vram, tile_map_address)
+            tile_num = get_bits(tile_map_entry, 0, 9)
+            tile_flip_h = get_bit(tile_map_entry, 10)
+            tile_flip_v = get_bit(tile_map_entry, 11)
+            palette_num = get_bits(tile_map_entry, 12, 15)
+
+            pixel_x_flipped = TILE_WIDTH - pixel_x - 1 if tile_flip_h else pixel_x
+            pixel_y_flipped = TILE_HEIGHT - pixel_y - 1 if tile_flip_v else pixel_y
+
+            palette_index = self._get_palette_index(
+                bg_control.tile_data_block,
+                tile_num,
+                pixel_x_flipped,
+                pixel_y_flipped,
+                bg_control.colour_256,
+                palette_num,
+            )
+
+            colour = self._get_palette_colour(palette_index)
+            self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
+
+    def render_background_affine(self, bg_num: int):
+        pass
 
     def render_background_bitmap(self, paletted, small):
         if self.display_control.display_bg_2:
@@ -128,11 +216,12 @@ class PPU:
             if paletted:
                 for x in range(display_width):
                     palette_index = self.vram[page_offset + display_width * self.vcount + x]
-                    colour = array_read_16(self.palram, palette_index * 2)
+                    colour = self._get_palette_colour(palette_index)
                     self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
             else:
                 for x in range(display_width):
-                    colour = array_read_16(self.vram, (display_width * self.vcount + x) * 2)
+                    vram_index = display_width * self.vcount + x
+                    colour = array_read_16(self.vram, vram_index * COLOUR_SIZE)
                     self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
 
     def render_objects(self):
@@ -158,7 +247,6 @@ class PPU:
         if not (obj_y <= self.vcount < obj_y + obj_h):
             return
 
-        tile_size = 64 if obj.colour_256 else 32
         tile_base_address = 0x10000 + obj.tile_index * 32
         tile_row_len = obj_w / 8 if self.display_control.obj_vram_dimension else 32
 
@@ -170,28 +258,52 @@ class PPU:
             tile_x = rel_x // 8
             tile_y = rel_y // 8
 
-            tile_offset = tile_y * tile_row_len + tile_x
-            tile_address = tile_base_address + tile_offset * tile_size
+            tile_index = tile_y * tile_row_len + tile_x
 
             pixel_x = rel_x % 8
             pixel_y = rel_y % 8
 
-            if obj.colour_256:
-                # 256-colour object. One byte per pixel, one palette with 256 colours
-                pixel_address = tile_address + pixel_y * 8 + pixel_x
-                palette_index = self.vram[pixel_address]
-            else:
-                # 16-colour object. Each byte represents two pixels.
+            palette_index = self._get_palette_index(
+                tile_base_address,
+                tile_index,
+                pixel_x,
+                pixel_y,
+                obj.colour_256,
+                obj.palette_num,
+            )
 
-                # Palette num selects one of 16 palettes, each palette having 16 colours
-                palette_index = obj.palette_num * 16
-
-                # Lower 4 bits are for the left pixel and upper 4 bits are for the right pixel
-                pixel_address = tile_address + pixel_y * 4 + pixel_x // 2
-                palette_index += (self.vram[pixel_address] >> ((pixel_x % 2) * 4)) & 0xF
-
-            colour = array_read_16(self.palram, palette_index * 2)
+            colour = self._get_palette_colour(palette_index)
             self.back_buffer[DISPLAY_WIDTH * self.vcount + obj_x + offset_x] = colour
+
+    def _get_palette_index(
+        self,
+        tile_base_address: int,
+        tile_index: int,
+        pixel_x: int,
+        pixel_y: int,
+        colour_256: bint,
+        palette_num: int,
+    ) -> int:
+        if colour_256:
+            # 256-colour object; one byte per pixel, one palette with 256 colours
+            pixel_address = tile_base_address
+            pixel_address += tile_index * TILE_SIZE + pixel_y * TILE_WIDTH + pixel_x
+            palette_index = self.vram[pixel_address]
+        else:
+            # 16-colour object; each byte represents two pixels
+
+            # Palette num selects one of 16 palettes, each palette having 16 colours
+            palette_index = palette_num * 16
+
+            # Lower 4 bits are for the left pixel and upper 4 bits are for the right pixel
+            pixel_address = tile_base_address
+            pixel_address += (tile_index * TILE_SIZE + pixel_y * TILE_WIDTH + pixel_x) // 2
+            palette_index += (self.vram[pixel_address] >> ((pixel_x % 2) * 4)) & 0xF
+
+        return palette_index
+
+    def _get_palette_colour(self, palette_index: int) -> int:
+        return array_read_16(self.palram, palette_index * COLOUR_SIZE)
 
 
 class VideoMode(IntEnum):
@@ -328,6 +440,47 @@ class DisplayStatusRegister:
     @vcount_trigger_value.setter
     def vcount_trigger_value(self, value: int):
         self.reg = (self.reg & 0xFF) | (value << 8)
+
+
+class BackgroundControlRegister:
+    def __init__(self):
+        self.reg = 0
+
+    @property
+    def priority(self) -> int:
+        return get_bits(self.reg, 0, 1)
+
+    @property
+    def tile_data_base_block(self) -> int:
+        return get_bits(self.reg, 2, 3)
+
+    @property
+    def tile_data_block(self) -> int:
+        return self.tile_data_base_block * 0x4000
+
+    @property
+    def mosaic(self) -> bint:
+        return get_bit(self.reg, 6)
+
+    @property
+    def colour_256(self) -> bint:
+        return get_bit(self.reg, 7)
+
+    @property
+    def tile_map_base_block(self) -> int:
+        return get_bits(self.reg, 8, 12)
+
+    @property
+    def tile_map_block(self) -> int:
+        return self.tile_map_base_block * 0x800
+
+    @property
+    def wraparound(self) -> bint:
+        return get_bit(self.reg, 13)
+
+    @property
+    def size(self) -> int:
+        return get_bits(self.reg, 14, 15)
 
 
 class ObjectMode(IntEnum):
