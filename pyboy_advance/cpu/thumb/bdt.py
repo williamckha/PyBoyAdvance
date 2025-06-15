@@ -58,6 +58,10 @@ def thumb_multiple_load_store(cpu: CPU, instr: int):
 def thumb_push_pop_registers(cpu: CPU, instr: int):
     reg_list = get_bits(instr, 0, 8)
     opcode = get_bit(instr, 11)
+
+    cpu.advance_pc_thumb()
+    cpu.prefetch_access_type = MemoryAccess.NON_SEQUENTIAL
+
     if opcode:
         thumb_pop_registers(cpu, reg_list)
     else:
