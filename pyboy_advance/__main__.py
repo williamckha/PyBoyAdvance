@@ -11,8 +11,8 @@ def main():
     parser.add_argument("--skip-bios", action="store_true")
     args = parser.parse_args()
 
-    gba = PyBoyAdvance(args.rom, args.bios, skip_bios=args.skip_bios)
-    gba.run()
+    pyboy_advance = PyBoyAdvance(args.rom, args.bios, skip_bios=args.skip_bios)
+    pyboy_advance.run()
 
 
 if __name__ == "__main__":

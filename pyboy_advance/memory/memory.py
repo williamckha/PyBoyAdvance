@@ -242,10 +242,10 @@ class Memory:
             array_write_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
 
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
-            raise NotImplementedError
+            pass
 
         elif region == MemoryRegion.SRAM_REGION:
-            raise NotImplementedError
+            pass
 
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
@@ -279,10 +279,10 @@ class Memory:
             array_write_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
 
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
-            raise NotImplementedError
+            pass
 
         elif region == MemoryRegion.SRAM_REGION:
-            raise NotImplementedError
+            pass
 
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
@@ -332,10 +332,10 @@ class Memory:
             pass
 
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
-            raise NotImplementedError
+            pass
 
         elif region == MemoryRegion.SRAM_REGION:
-            raise NotImplementedError
+            pass
 
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")

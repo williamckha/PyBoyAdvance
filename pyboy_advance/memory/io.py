@@ -1,13 +1,20 @@
 from pyboy_advance.interrupt_controller import InterruptController
+from pyboy_advance.keypad import Keypad
 from pyboy_advance.memory.constants import IOAddress
 from pyboy_advance.ppu.ppu import PPU
 from pyboy_advance.utils import get_bit
 
 
 class IO:
-    def __init__(self, interrupt_controller: InterruptController, ppu: PPU):
+    def __init__(
+        self,
+        interrupt_controller: InterruptController,
+        ppu: PPU,
+        keypad: Keypad,
+    ):
         self.interrupt_controller = interrupt_controller
         self.ppu = ppu
+        self.keypad = keypad
 
     def read_32(self, address: int) -> int:
         lower_bits = self.read_16(address)
@@ -30,6 +37,9 @@ class IO:
             return self.ppu.bg_control[2].reg
         elif address == IOAddress.REG_BG3CNT:
             return self.ppu.bg_control[3].reg
+
+        elif address == IOAddress.REG_KEY:
+            return self.keypad.keys
 
         elif address == IOAddress.REG_IE:
             return self.interrupt_controller.interrupt_enable

@@ -1,9 +1,28 @@
 from __future__ import annotations
 
 import functools
-from enum import IntFlag
+from enum import IntFlag, auto
 
 from pyboy_advance.scheduler import Scheduler
+
+
+class Interrupt(IntFlag):
+    # fmt: off
+    VBLANK      = auto()
+    HBLANK      = auto()
+    VCOUNT      = auto()
+    TIMER_0     = auto()
+    TIMER_1     = auto()
+    TIMER_2     = auto()
+    TIMER_3     = auto()
+    SERIAL      = auto()
+    DMA_0       = auto()
+    DMA_1       = auto()
+    DMA_2       = auto()
+    DMA_3       = auto()
+    KEYPAD      = auto()
+    GAMEPAK     = auto()
+    # fmt: on
 
 
 class InterruptController:
@@ -76,21 +95,3 @@ class InterruptController:
 
     def _update_irq_line(self, new_irq_line):
         self.irq_line = new_irq_line
-
-
-class Interrupt(IntFlag):
-    VBLANK = 1
-    HBLANK = 2
-    VCOUNT = 4
-    TIMER_0 = 8
-    TIMER_1 = 16
-    TIMER_2 = 32
-    TIMER_3 = 64
-    SERIAL = 128
-    DMA_0 = 256
-    DMA_1 = 512
-    DMA_2 = 1024
-    DMA_3 = 2048
-    KEYPAD = 4096
-    GAMEPAK = 8192
-

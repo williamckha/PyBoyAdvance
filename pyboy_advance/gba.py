@@ -1,22 +1,22 @@
 import os
-import time
 
-from pyboy_advance.app.window import Window
 from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.cpu.registers import BankIndex
 from pyboy_advance.interrupt_controller import InterruptController
+from pyboy_advance.keypad import Keypad, Key
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
 from pyboy_advance.memory.memory import Memory
 from pyboy_advance.ppu.ppu import PPU
 from pyboy_advance.scheduler import Scheduler
+from pyboy_advance.app.window import Window, WindowEvent
 
 
 class PyBoyAdvance:
     def __init__(
         self,
         gamepak: GamePak | str | os.PathLike,
-        bios: str | os.PathLike | None,
+        bios: str | os.PathLike | None = None,
         skip_bios: bool = False,
     ):
         self.gamepak = (
@@ -32,7 +32,8 @@ class PyBoyAdvance:
         self.scheduler = Scheduler()
         self.interrupt_controller = InterruptController(self.scheduler)
         self.ppu = PPU(self.scheduler, self.interrupt_controller)
-        self.io = IO(self.interrupt_controller, self.ppu)
+        self.keypad = Keypad()
+        self.io = IO(self.interrupt_controller, self.ppu, self.keypad)
         self.memory = Memory(self.io, self.gamepak, bios_data)
         self.cpu = CPU(self.memory)
 
@@ -53,15 +54,18 @@ class PyBoyAdvance:
         self.scheduler.update(2)
 
     def run(self):
-        window = Window()
-
-        s = time.perf_counter()
-        while True:
-            self.step()
-            if self.scheduler.cycles % 280896 == 0:
-                # e = time.perf_counter()
-                # print(e - s)
-                # s = time.perf_counter()
-
-                window.get_events()
-                window.render(self.ppu.frame_buffer_ptr)
+        with Window() as window:
+            running = True
+            while running:
+                self.step()
+                if self.scheduler.cycles % 280896 == 0:
+                    for event in window.get_events():
+                        if event == WindowEvent.NONE:
+                            continue
+                        elif event == WindowEvent.QUIT:
+                            running = False
+                        elif event == WindowEvent.FULLSCREEN:
+                            window.fullscreen = not window.fullscreen
+                        else:
+                            self.keypad.process_window_event(event)
+                    window.render(self.ppu.frame_buffer_ptr)

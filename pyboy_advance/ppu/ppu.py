@@ -170,13 +170,13 @@ class PPU:
             raise ValueError
 
         rel_y = self.vcount + self.bg_offset_v[bg_num]
-        tile_y = rel_y // 8
-        pixel_y = rel_y % 8
+        tile_y = rel_y // TILE_HEIGHT
+        pixel_y = rel_y % TILE_HEIGHT
 
         for x in range(DISPLAY_WIDTH):
             rel_x = x + self.bg_offset_h[bg_num]
-            tile_x = rel_x // 8
-            pixel_x = rel_x % 8
+            tile_x = rel_x // TILE_WIDTH
+            pixel_x = rel_x % TILE_WIDTH
 
             tile_map_address = bg_control.tile_map_block
             tile_map_address += tile_y * tile_map_rows * 2
@@ -248,20 +248,20 @@ class PPU:
             return
 
         tile_base_address = 0x10000 + obj.tile_index * 32
-        tile_row_len = obj_w / 8 if self.display_control.obj_vram_dimension else 32
+        tile_row_len = obj_w // 8 if self.display_control.obj_vram_dimension else 32
 
         offset_y = self.vcount - obj_y
         for offset_x in range(0, obj_w):
             rel_x = obj_w - offset_x - 1 if obj_flip_h else offset_x
             rel_y = obj_y - offset_y - 1 if obj_flip_v else offset_y
 
-            tile_x = rel_x // 8
-            tile_y = rel_y // 8
+            tile_x = rel_x // TILE_WIDTH
+            tile_y = rel_y // TILE_HEIGHT
 
             tile_index = tile_y * tile_row_len + tile_x
 
-            pixel_x = rel_x % 8
-            pixel_y = rel_y % 8
+            pixel_x = rel_x % TILE_WIDTH
+            pixel_y = rel_y % TILE_HEIGHT
 
             palette_index = self._get_palette_index(
                 tile_base_address,
