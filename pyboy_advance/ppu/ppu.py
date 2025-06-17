@@ -170,12 +170,12 @@ class PPU:
             raise ValueError
 
         rel_y = self.vcount + self.bg_offset_v[bg_num]
-        tile_y = rel_y // TILE_HEIGHT
+        tile_y = (rel_y // TILE_HEIGHT) % tile_map_rows
         pixel_y = rel_y % TILE_HEIGHT
 
         for x in range(DISPLAY_WIDTH):
             rel_x = x + self.bg_offset_h[bg_num]
-            tile_x = rel_x // TILE_WIDTH
+            tile_x = (rel_x // TILE_WIDTH) % tile_map_cols
             pixel_x = rel_x % TILE_WIDTH
 
             tile_map_address = bg_control.tile_map_block
