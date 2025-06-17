@@ -19,7 +19,7 @@ class IO:
     def read_32(self, address: int) -> int:
         lower_bits = self.read_16(address)
         upper_bits = self.read_16(address + 2)
-        return (upper_bits << 8) | lower_bits
+        return (upper_bits << 16) | lower_bits
 
     def read_16(self, address: int) -> int:
         if address == IOAddress.REG_DISPCNT:
@@ -47,6 +47,7 @@ class IO:
             return self.interrupt_controller.interrupt_flags
         elif address == IOAddress.REG_IME:
             return self.interrupt_controller.interrupt_master_enable
+
         else:
             return 0
 
@@ -56,7 +57,7 @@ class IO:
 
     def write_32(self, address: int, value: int):
         self.write_16(address, value & 0xFFFF)
-        self.write_16(address + 2, (value >> 8) & 0xFFFF)
+        self.write_16(address + 2, (value >> 16) & 0xFFFF)
 
     def write_16(self, address: int, value: int):
         if address == IOAddress.REG_DISPCNT:
