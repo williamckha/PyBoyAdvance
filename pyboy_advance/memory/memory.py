@@ -144,9 +144,11 @@ class Memory:
         if region == MemoryRegion.BIOS_REGION:
             if address <= MemoryRegion.BIOS_END:
                 if not self.cpu or self.cpu.regs.pc <= MemoryRegion.BIOS_END:
-                    return array_read_16(self.bios, address & MemoryRegion.BIOS_MASK)
-                return (self.bios_last_opcode >> ((address & 2) << 3)) & 0xFFFF
-            return (self._read_unused_memory() >> ((address & 2) << 3)) & 0xFFFF
+                    self.bios_last_opcode = array_read_32(
+                        self.bios, address & ~0b11 & MemoryRegion.BIOS_MASK
+                    )
+                return (self.bios_last_opcode >> ((address & 0b11) * 8)) & 0xFFFF
+            return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFFFF
 
         elif region == MemoryRegion.EWRAM_REGION:
             return array_read_16(self.ewram, address & MemoryRegion.EWRAM_MASK)
@@ -174,7 +176,7 @@ class Memory:
             return self.gamepak.read_16(address)
 
         else:
-            return (self._read_unused_memory() >> ((address & 2) << 3)) & 0xFFFF
+            return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFFFF
 
     def _read_8_internal(self, address: int) -> int:
         region = address >> 24
@@ -182,9 +184,11 @@ class Memory:
         if region == MemoryRegion.BIOS_REGION:
             if address <= MemoryRegion.BIOS_END:
                 if not self.cpu or self.cpu.regs.pc <= MemoryRegion.BIOS_END:
-                    return self.bios[address & MemoryRegion.BIOS_MASK]
-                return (self.bios_last_opcode >> ((address & 3) << 3)) & 0xFF
-            return (self._read_unused_memory() >> ((address & 3) << 3)) & 0xFF
+                    self.bios_last_opcode = array_read_32(
+                        self.bios, address & ~0b11 & MemoryRegion.BIOS_MASK
+                    )
+                return (self.bios_last_opcode >> ((address & 0b11) * 8)) & 0xFF
+            return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFF
 
         elif region == MemoryRegion.EWRAM_REGION:
             return self.ewram[address & MemoryRegion.EWRAM_MASK]
@@ -212,7 +216,7 @@ class Memory:
             return self.gamepak.read_8(address)
 
         else:
-            return (self._read_unused_memory() >> ((address & 3) << 3)) & 0xFF
+            return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFF
 
     def _write_32_internal(self, address: int, value: int):
         address = address & ~0b11  # Align address to 4-byte boundary
@@ -242,10 +246,10 @@ class Memory:
             array_write_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
 
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
-            pass
+            print(f"Attempt to write to SRAM: {address:#010x}")
 
         elif region == MemoryRegion.SRAM_REGION:
-            pass
+            print(f"Attempt to write to SRAM: {address:#010x}")
 
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
@@ -279,10 +283,10 @@ class Memory:
             array_write_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
 
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
-            pass
+            print(f"Attempt to write to SRAM: {address:#010x}")
 
         elif region == MemoryRegion.SRAM_REGION:
-            pass
+            print(f"Attempt to write to SRAM: {address:#010x}")
 
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
@@ -332,10 +336,10 @@ class Memory:
             pass
 
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
-            pass
+            print(f"Attempt to write to SRAM: {address:#010x}")
 
         elif region == MemoryRegion.SRAM_REGION:
-            pass
+            print(f"Attempt to write to SRAM: {address:#010x}")
 
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
