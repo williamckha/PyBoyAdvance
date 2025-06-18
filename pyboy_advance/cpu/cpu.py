@@ -13,7 +13,8 @@ from pyboy_advance.cpu.constants import (
 )
 from pyboy_advance.cpu.registers import Registers, BankIndex
 from pyboy_advance.cpu.thumb.decode import thumb_decode
-from pyboy_advance.memory.memory import MemoryAccess, Memory
+from pyboy_advance.memory.memory import Memory
+from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import (
     get_bits,
     get_bit,
@@ -45,7 +46,7 @@ class CPU:
         self.regs.spsr.mode = CPUMode.SYSTEM
 
         self.memory = memory
-        self.memory.connect_cpu(self)
+        self.memory.cpu = self
 
         self.pipeline = [0xF0000000, 0xF0000000]
         self.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
@@ -156,9 +157,15 @@ class CPU:
 
         new_bank_index = BankIndex.from_cpu_mode(new_mode)
         self.regs.banked_spsr[new_bank_index].reg = self.regs.cpsr.reg
-        self.regs.banked_lr[new_bank_index] = add_int32_to_uint32(
-            self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else -2
-        )
+
+        if vector == ExceptionVector.SWI or vector == ExceptionVector.UNDEFINED_INSTRUCTION:
+            self.regs.banked_lr[new_bank_index] = add_int32_to_uint32(
+                self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else -2
+            )
+        elif vector != ExceptionVector.RESET:
+            self.regs.banked_lr[new_bank_index] = add_int32_to_uint32(
+                self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else 0
+            )
 
         self.switch_mode(new_mode)
 

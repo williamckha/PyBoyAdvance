@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from pyboy_advance.cpu.constants import CPUMode
 from pyboy_advance.cpu.registers import ProgramStatusRegister
-from pyboy_advance.memory.memory import MemoryAccess
+from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import get_bits, get_bit, ror_32
 
 if TYPE_CHECKING:

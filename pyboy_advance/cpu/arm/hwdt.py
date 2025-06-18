@@ -4,7 +4,7 @@ from enum import IntEnum
 from typing import TYPE_CHECKING
 
 from pyboy_advance.cpu.registers import Registers
-from pyboy_advance.memory.memory import MemoryAccess
+from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import get_bits, get_bit, add_int32_to_uint32
 
 if TYPE_CHECKING:

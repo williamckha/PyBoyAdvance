@@ -4,6 +4,7 @@ from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.cpu.registers import BankIndex
 from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.keypad import Keypad, Key
+from pyboy_advance.memory.dma import DMAController
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
 from pyboy_advance.memory.memory import Memory
@@ -30,11 +31,14 @@ class PyBoyAdvance:
             bios_data = b""
 
         self.scheduler = Scheduler()
+        self.memory = Memory(self.gamepak, bios_data)
+
         self.interrupt_controller = InterruptController(self.scheduler)
+        self.dma_controller = DMAController(self.scheduler, self.memory)
         self.ppu = PPU(self.scheduler, self.interrupt_controller)
         self.keypad = Keypad()
-        self.io = IO(self.interrupt_controller, self.ppu, self.keypad)
-        self.memory = Memory(self.io, self.gamepak, bios_data)
+        self.memory.io = IO(self.interrupt_controller, self.dma_controller, self.ppu, self.keypad)
+
         self.cpu = CPU(self.memory)
 
         if skip_bios:
@@ -50,7 +54,10 @@ class PyBoyAdvance:
         self.cpu.flush_pipeline()
 
     def step(self):
-        self.cpu.step()
+        if self.dma_controller.active:
+            self.dma_controller.perform_transfers()
+        else:
+            self.cpu.step()
         self.scheduler.update(2)
 
     def run(self):

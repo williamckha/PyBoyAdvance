@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pyboy_advance.cpu.constants import Condition
-from pyboy_advance.memory.memory import MemoryAccess
+from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import (
     get_bits,
     interpret_signed_12,

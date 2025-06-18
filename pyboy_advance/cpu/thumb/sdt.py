@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyboy_advance.memory.memory import MemoryAccess
+from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import get_bits, get_bit, add_uint32_to_uint32
 
 if TYPE_CHECKING:

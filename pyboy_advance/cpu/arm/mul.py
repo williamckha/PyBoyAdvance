@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
-from pyboy_advance.memory.memory import MemoryAccess
+from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import get_bit, get_bits, sign_32, interpret_signed_32, interpret_signed_64
 
 if TYPE_CHECKING:

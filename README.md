@@ -13,7 +13,7 @@ capabilities.
 
 # Getting started
 
-PyBoy Advance is written in "pure" Python and can be run with the standard CPython interpreter, but
+PyBoy Advance is written in pure Python and technically can be run with the standard CPython interpreter, but
 performance will be unacceptably slow. Instead, you will need to run PyBoy Advance with [PyPy](https://pypy.org/),
 a fast implementation of Python (see [Downloading and Installing PyPy](https://doc.pypy.org/en/stable/install.html)).
 
@@ -23,7 +23,7 @@ Install PyBoy Advance with `pip`:
 $ pypy -m pip install pyboy-advance
 ```
 
-You will need to provide a Game Boy Advance BIOS. An open source BIOS is
+You will need to provide a Game Boy Advance BIOS. Normatt's open source BIOS is supported and
 available [here](https://github.com/Nebuleon/ReGBA/blob/master/bios/gba_bios.bin).
 
 Launch PyBoy Advance from the terminal:

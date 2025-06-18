@@ -20,7 +20,7 @@ from pyboy_advance.cpu.arm.alu import (
 )
 from pyboy_advance.cpu.constants import CPUState, ShiftType
 from pyboy_advance.cpu.registers import Registers
-from pyboy_advance.memory.memory import MemoryAccess
+from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import (
     get_bits,
     get_bit,

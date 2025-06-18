@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from array import array
-from enum import Enum
 from typing import TYPE_CHECKING, Iterable
 
 from pyboy_advance.cpu.constants import CPUState
-from pyboy_advance.memory.constants import MemoryRegion
+from pyboy_advance.memory.constants import MemoryRegion, MemoryAccess
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
 from pyboy_advance.utils import (
@@ -23,15 +22,10 @@ if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
 
 
-class MemoryAccess(Enum):
-    NON_SEQUENTIAL = 0
-    SEQUENTIAL = 1
-
-
 class Memory:
-    def __init__(self, io: IO, gamepak: GamePak, bios: bytes | bytearray | Iterable[int]):
+    def __init__(self, gamepak: GamePak, bios: bytes | bytearray | Iterable[int]):
         self.cpu: CPU | None = None
-        self.io = io
+        self.io: IO | None = None
 
         # General Internal Memory
         self.bios = array("B", bios.ljust(MemoryRegion.BIOS_SIZE))
@@ -45,9 +39,6 @@ class Memory:
         # BIOS will return the most recently fetched BIOS opcode,
         # which is tracked by this variable
         self.bios_last_opcode = 0
-
-    def connect_cpu(self, cpu: CPU):
-        self.cpu = cpu
 
     @property
     def irq_line(self) -> bool:
@@ -132,7 +123,8 @@ class Memory:
             return self.gamepak.read_32(address)
 
         elif region == MemoryRegion.SRAM_REGION:
-            return self.gamepak.read_32(address)
+            print(f"Attempt to read SRAM: {address:#010x}")
+            return 0
 
         else:
             return self._read_unused_memory()
@@ -173,7 +165,8 @@ class Memory:
             return self.gamepak.read_16(address)
 
         elif region == MemoryRegion.SRAM_REGION:
-            return self.gamepak.read_16(address)
+            print(f"Attempt to read SRAM: {address:#010x}")
+            return 0
 
         else:
             return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFFFF
@@ -213,7 +206,8 @@ class Memory:
             return self.gamepak.read_8(address)
 
         elif region == MemoryRegion.SRAM_REGION:
-            return self.gamepak.read_8(address)
+            print(f"Attempt to read SRAM: {address:#010x}")
+            return 0
 
         else:
             return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFF
