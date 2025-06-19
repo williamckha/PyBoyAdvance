@@ -7,6 +7,7 @@ from pyboy_advance.cpu.constants import CPUState
 from pyboy_advance.memory.constants import MemoryRegion, MemoryAccess
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
+from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import (
     get_bit,
     array_read_16,
@@ -16,6 +17,7 @@ from pyboy_advance.utils import (
     ror_32,
     extend_sign_16,
     extend_sign_8,
+    get_bits,
 )
 
 if TYPE_CHECKING:
@@ -23,7 +25,13 @@ if TYPE_CHECKING:
 
 
 class Memory:
-    def __init__(self, gamepak: GamePak, bios: bytes | bytearray | Iterable[int]):
+    def __init__(
+        self,
+        scheduler: Scheduler,
+        gamepak: GamePak,
+        bios: bytes | bytearray | Iterable[int],
+    ):
+        self.scheduler = scheduler
         self.cpu: CPU | None = None
         self.io: IO | None = None
 
@@ -40,13 +48,16 @@ class Memory:
         # which is tracked by this variable
         self.bios_last_opcode = 0
 
+        self.wait_control = WaitstateControlRegister()
+
+        self._init_access_times()
+
     @property
     def irq_line(self) -> bool:
         return self.io.interrupt_controller.irq_line
 
     def read_32(self, address: int, access_type: MemoryAccess) -> int:
-        self._add_cycles(address, access_type)
-        return self._read_32_internal(address)
+        return self._read_32_internal(address, access_type)
 
     def read_32_ror(self, address: int, access_type: MemoryAccess) -> int:
         value = self.read_32(address, access_type)
@@ -54,8 +65,7 @@ class Memory:
         return ror_32(value, rotate)
 
     def read_16(self, address: int, access_type: MemoryAccess) -> int:
-        self._add_cycles(address, access_type)
-        return self._read_16_internal(address)
+        return self._read_16_internal(address, access_type)
 
     def read_16_signed(self, address: int, access_type: MemoryAccess) -> int:
         if get_bit(address, 0):
@@ -68,26 +78,24 @@ class Memory:
         return ror_32(value, rotate)
 
     def read_8(self, address: int, access_type: MemoryAccess) -> int:
-        self._add_cycles(address, access_type)
-        return self._read_8_internal(address)
+        return self._read_8_internal(address, access_type)
 
     def read_8_signed(self, address: int, access_type: MemoryAccess) -> int:
         value = self.read_8(address, access_type)
         return extend_sign_8(value)
 
     def write_32(self, address: int, value: int, access_type: MemoryAccess):
-        self._add_cycles(address, access_type)
-        self._write_32_internal(address, value)
+        self._write_32_internal(address, value, access_type)
 
     def write_16(self, address: int, value: int, access_type: MemoryAccess):
-        self._add_cycles(address, access_type)
-        self._write_16_internal(address, value)
+        self._write_16_internal(address, value, access_type)
 
     def write_8(self, address: int, value: int, access_type: MemoryAccess):
-        self._add_cycles(address, access_type)
-        self._write_8_internal(address, value)
+        self._write_8_internal(address, value, access_type)
 
-    def _read_32_internal(self, address: int) -> int:
+    def _read_32_internal(self, address: int, access_type: MemoryAccess) -> int:
+        self._idle_for_access(address, 4, access_type)
+
         address = address & ~0b11  # Align address to 4-byte boundary
         region = address >> 24
 
@@ -129,7 +137,9 @@ class Memory:
         else:
             return self._read_unused_memory()
 
-    def _read_16_internal(self, address: int) -> int:
+    def _read_16_internal(self, address: int, access_type: MemoryAccess) -> int:
+        self._idle_for_access(address, 2, access_type)
+
         address = address & ~0b1  # Align address to 2-byte boundary
         region = address >> 24
 
@@ -171,7 +181,9 @@ class Memory:
         else:
             return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFFFF
 
-    def _read_8_internal(self, address: int) -> int:
+    def _read_8_internal(self, address: int, access_type: MemoryAccess) -> int:
+        self._idle_for_access(address, 1, access_type)
+
         region = address >> 24
 
         if region == MemoryRegion.BIOS_REGION:
@@ -212,7 +224,9 @@ class Memory:
         else:
             return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFF
 
-    def _write_32_internal(self, address: int, value: int):
+    def _write_32_internal(self, address: int, value: int, access_type: MemoryAccess):
+        self._idle_for_access(address, 4, access_type)
+
         address = address & ~0b11  # Align address to 4-byte boundary
         region = address >> 24
 
@@ -248,7 +262,9 @@ class Memory:
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
 
-    def _write_16_internal(self, address: int, value: int):
+    def _write_16_internal(self, address: int, value: int, access_type: MemoryAccess):
+        self._idle_for_access(address, 2, access_type)
+
         address = address & ~0b1  # Align address to 2-byte boundary
         value = value & 0xFFFF
         region = address >> 24
@@ -285,7 +301,9 @@ class Memory:
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
 
-    def _write_8_internal(self, address: int, value: int):
+    def _write_8_internal(self, address: int, value: int, access_type: MemoryAccess):
+        self._idle_for_access(address, 1, access_type)
+
         value = value & 0xFF
         region = address >> 24
 
@@ -381,5 +399,122 @@ class Memory:
         """
         return MemoryRegion.VRAM_MASK_1 if get_bit(address, 16) else MemoryRegion.VRAM_MASK_2
 
-    def _add_cycles(self, address: int, access_type: MemoryAccess):
-        pass
+    def _init_access_times(self):
+        """
+        Source: GBATEK
+
+        Region        Bus   Read      Write     Cycles
+        =====================================================
+        BIOS ROM      32    8/16/32   -         1/1/1
+        Work RAM 32K  32    8/16/32   8/16/32   1/1/1
+        I/O           32    8/16/32   8/16/32   1/1/1
+        OAM           32    8/16/32   16/32     1/1/1 *
+        Work RAM 256K 16    8/16/32   8/16/32   3/3/6 **
+        Palette RAM   16    8/16/32   16/32     1/1/2 *
+        VRAM          16    8/16/32   16/32     1/1/2 *
+        GamePak ROM   16    8/16/32   -         5/5/8 **/***
+        GamePak Flash 16    8/16/32   16/32     5/5/8 **/***
+        GamePak SRAM  8     8         8         5     **
+
+        Timing Notes:
+
+          *   Plus 1 cycle if GBA accesses video memory at the same time.
+          **  Default waitstate settings, see System Control chapter.
+          *** Separate timings for sequential, and non-sequential accesses.
+
+        """
+        # fmt: off
+        self.access_time_32 = [[1] * 0x10 for _ in range(len(MemoryAccess))]
+        self.access_time_16 = [[1] * 0x10 for _ in range(len(MemoryAccess))]
+
+        self.access_time_32[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.EWRAM_REGION]  = 6
+        self.access_time_32[MemoryAccess.SEQUENTIAL][MemoryRegion.EWRAM_REGION]      = 6
+        self.access_time_16[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.EWRAM_REGION]  = 3
+        self.access_time_16[MemoryAccess.SEQUENTIAL][MemoryRegion.EWRAM_REGION]      = 3
+
+        self.access_time_32[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.PALRAM_REGION] = 2
+        self.access_time_32[MemoryAccess.SEQUENTIAL][MemoryRegion.PALRAM_REGION]     = 2
+
+        self.access_time_32[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.VRAM_REGION]   = 2
+        self.access_time_32[MemoryAccess.SEQUENTIAL][MemoryRegion.VRAM_REGION]       = 2
+
+        self.access_time_32[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.OAM_REGION]    = 2
+        self.access_time_32[MemoryAccess.SEQUENTIAL][MemoryRegion.OAM_REGION]        = 2
+
+        self.update_waitstates()
+        # fmt: on
+
+    def update_waitstates(self):
+        # fmt: off
+        self.access_time_16[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.GAMEPAK_0_REGION_1] = 1 + self.wait_control.ws0_non_seq
+        self.access_time_16[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.GAMEPAK_0_REGION_2] = 1 + self.wait_control.ws0_non_seq
+        self.access_time_16[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.GAMEPAK_1_REGION_1] = 1 + self.wait_control.ws1_non_seq
+        self.access_time_16[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.GAMEPAK_1_REGION_2] = 1 + self.wait_control.ws1_non_seq
+        self.access_time_16[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.GAMEPAK_2_REGION_1] = 1 + self.wait_control.ws2_non_seq
+        self.access_time_16[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.GAMEPAK_2_REGION_2] = 1 + self.wait_control.ws2_non_seq
+        self.access_time_16[MemoryAccess.NON_SEQUENTIAL][MemoryRegion.SRAM_REGION]        = 1 + self.wait_control.sram
+
+        self.access_time_16[MemoryAccess.SEQUENTIAL][MemoryRegion.GAMEPAK_0_REGION_1] = 1 + self.wait_control.ws0_seq
+        self.access_time_16[MemoryAccess.SEQUENTIAL][MemoryRegion.GAMEPAK_0_REGION_2] = 1 + self.wait_control.ws0_seq
+        self.access_time_16[MemoryAccess.SEQUENTIAL][MemoryRegion.GAMEPAK_1_REGION_1] = 1 + self.wait_control.ws1_seq
+        self.access_time_16[MemoryAccess.SEQUENTIAL][MemoryRegion.GAMEPAK_1_REGION_2] = 1 + self.wait_control.ws1_seq
+        self.access_time_16[MemoryAccess.SEQUENTIAL][MemoryRegion.GAMEPAK_2_REGION_1] = 1 + self.wait_control.ws2_seq
+        self.access_time_16[MemoryAccess.SEQUENTIAL][MemoryRegion.GAMEPAK_2_REGION_2] = 1 + self.wait_control.ws2_seq
+        self.access_time_16[MemoryAccess.SEQUENTIAL][MemoryRegion.SRAM_REGION]        = 1 + self.wait_control.sram
+        # fmt: on
+
+        for region in range(MemoryRegion.GAMEPAK_0_REGION_1, MemoryRegion.SRAM_REGION + 1):
+            self.access_time_32[MemoryAccess.NON_SEQUENTIAL][region] = (
+                self.access_time_16[MemoryAccess.NON_SEQUENTIAL][region]
+                + self.access_time_16[MemoryAccess.SEQUENTIAL][region]
+            )
+            self.access_time_32[MemoryAccess.SEQUENTIAL][region] = (
+                self.access_time_16[MemoryAccess.SEQUENTIAL][region] * 2
+            )
+
+    def _idle_for_access(self, address: int, size: int, access_type: MemoryAccess):
+        region = (address >> 24) & 0xF
+
+        cycles = (
+            self.access_time_32[access_type][region]
+            if size == 4
+            else self.access_time_16[access_type][region]
+        )
+
+        self.scheduler.idle(cycles)
+
+
+class WaitstateControlRegister:
+    NON_SEQUENTIAL_CYCLES = [4, 3, 2, 8]
+
+    def __init__(self):
+        self.reg = 0
+
+    @property
+    def sram(self):
+        return self.NON_SEQUENTIAL_CYCLES[get_bits(self.reg, 0, 1)]
+
+    @property
+    def ws0_non_seq(self):
+        return self.NON_SEQUENTIAL_CYCLES[get_bits(self.reg, 2, 3)]
+
+    @property
+    def ws0_seq(self):
+        return 1 if get_bit(self.reg, 4) else 2
+
+    @property
+    def ws1_non_seq(self):
+        return self.NON_SEQUENTIAL_CYCLES[get_bits(self.reg, 5, 6)]
+
+    @property
+    def ws1_seq(self):
+        return 1 if get_bit(self.reg, 7) else 4
+
+    @property
+    def ws2_non_seq(self):
+        return self.NON_SEQUENTIAL_CYCLES[get_bits(self.reg, 8, 9)]
+
+    @property
+    def ws2_seq(self):
+        return 1 if get_bit(self.reg, 10) else 8
+    

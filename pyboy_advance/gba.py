@@ -1,9 +1,10 @@
 import os
 
+from pyboy_advance.cpu.constants import ExceptionVector
 from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.cpu.registers import BankIndex
 from pyboy_advance.interrupt_controller import InterruptController
-from pyboy_advance.keypad import Keypad, Key
+from pyboy_advance.keypad import Keypad
 from pyboy_advance.memory.dma import DMAController
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
@@ -31,13 +32,19 @@ class PyBoyAdvance:
             bios_data = b""
 
         self.scheduler = Scheduler()
-        self.memory = Memory(self.gamepak, bios_data)
+        self.memory = Memory(self.scheduler, self.gamepak, bios_data)
 
         self.interrupt_controller = InterruptController(self.scheduler)
         self.dma_controller = DMAController(self.scheduler, self.memory)
         self.ppu = PPU(self.scheduler, self.interrupt_controller)
         self.keypad = Keypad()
-        self.memory.io = IO(self.interrupt_controller, self.dma_controller, self.ppu, self.keypad)
+        self.memory.io = IO(
+            self.memory,
+            self.interrupt_controller,
+            self.dma_controller,
+            self.ppu,
+            self.keypad,
+        )
 
         self.cpu = CPU(self.memory)
 
@@ -50,29 +57,36 @@ class PyBoyAdvance:
             self.cpu.regs.banked_sp[BankIndex.UNDEFINED] = 0x03007F00
             self.cpu.regs.sp = 0x03007F00
             self.cpu.regs.pc = 0x08000000
-
-        self.cpu.flush_pipeline()
+            self.cpu.flush_pipeline()
+        else:
+            self.cpu.interrupt(ExceptionVector.RESET)
 
     def step(self):
         if self.dma_controller.active:
             self.dma_controller.perform_transfers()
         else:
             self.cpu.step()
-        self.scheduler.update(2)
+        self.scheduler.process_events()
+
+    def frame(self):
+        end_time = self.scheduler.cycles + 280896
+        while self.scheduler.cycles < end_time:
+            self.step()
 
     def run(self):
         with Window() as window:
             running = True
             while running:
-                self.step()
-                if self.scheduler.cycles % 280896 == 0:
-                    for event in window.get_events():
-                        if event == WindowEvent.NONE:
-                            continue
-                        elif event == WindowEvent.QUIT:
-                            running = False
-                        elif event == WindowEvent.FULLSCREEN:
-                            window.fullscreen = not window.fullscreen
-                        else:
-                            self.keypad.process_window_event(event)
-                    window.render(self.ppu.frame_buffer_ptr)
+                self.frame()
+
+                for event in window.get_events():
+                    if event == WindowEvent.NONE:
+                        continue
+                    elif event == WindowEvent.QUIT:
+                        running = False
+                    elif event == WindowEvent.FULLSCREEN:
+                        window.fullscreen = not window.fullscreen
+                    else:
+                        self.keypad.process_window_event(event)
+
+                window.render(self.ppu.frame_buffer_ptr)

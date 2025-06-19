@@ -11,7 +11,7 @@ from pyboy_advance.cpu.constants import (
     ShiftType,
     ExceptionVector,
 )
-from pyboy_advance.cpu.registers import Registers, BankIndex
+from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.cpu.thumb.decode import thumb_decode
 from pyboy_advance.memory.memory import Memory
 from pyboy_advance.memory.constants import MemoryAccess
@@ -155,19 +155,18 @@ class CPU:
         else:
             raise ValueError
 
-        new_bank_index = BankIndex.from_cpu_mode(new_mode)
-        self.regs.banked_spsr[new_bank_index].reg = self.regs.cpsr.reg
+        cpsr_reg = self.regs.cpsr.reg
+        self.switch_mode(new_mode)
+        self.regs.spsr.reg = cpsr_reg
 
         if vector == ExceptionVector.SWI or vector == ExceptionVector.UNDEFINED_INSTRUCTION:
-            self.regs.banked_lr[new_bank_index] = add_int32_to_uint32(
+            self.regs.lr = add_int32_to_uint32(
                 self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else -2
             )
         elif vector != ExceptionVector.RESET:
-            self.regs.banked_lr[new_bank_index] = add_int32_to_uint32(
+            self.regs.lr = add_int32_to_uint32(
                 self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else 0
             )
-
-        self.switch_mode(new_mode)
 
         self.regs.cpsr.state = CPUState.ARM
         self.regs.cpsr.irq_disable = True

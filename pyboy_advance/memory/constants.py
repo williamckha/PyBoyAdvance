@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from enum import IntEnum, Enum
+from enum import IntEnum
 
 
-class MemoryAccess(Enum):
+class MemoryAccess(IntEnum):
     NON_SEQUENTIAL = 0
     SEQUENTIAL = 1
 
@@ -98,6 +98,8 @@ class IOAddress(IntEnum):
     REG_BG3HOFS = 0x0400001C
     REG_BG3VOFS = 0x0400001E
 
+    REG_SOUNDBIAS = 0x04000088
+
     REG_FIFO_A = 0x040000A0
     REG_FIFO_B = 0x040000A4
 
@@ -131,4 +133,7 @@ class IOAddress(IntEnum):
 
     REG_IE = 0x04000200
     REG_IF = 0x04000202
+    REG_WAITCNT = 0x04000204
     REG_IME = 0x04000208
+
+    REG_HALTCNT = 0x04000300

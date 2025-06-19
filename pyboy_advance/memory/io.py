@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.keypad import Keypad
 from pyboy_advance.memory.constants import IOAddress
@@ -5,19 +9,26 @@ from pyboy_advance.memory.dma import DMAController
 from pyboy_advance.ppu.ppu import PPU
 from pyboy_advance.utils import get_bit
 
+if TYPE_CHECKING:
+    from pyboy_advance.memory.memory import Memory
+
 
 class IO:
     def __init__(
         self,
+        memory: Memory,
         interrupt_controller: InterruptController,
         dma_controller: DMAController,
         ppu: PPU,
         keypad: Keypad,
     ):
+        self.memory = memory
         self.interrupt_controller = interrupt_controller
         self.dma_controller = dma_controller
         self.ppu = ppu
         self.keypad = keypad
+        self.reg_soundbias = 0
+        self.reg_haltcnt = 0
 
     def read_32(self, address: int) -> int:
         lower_bits = self.read_16(address)
@@ -41,6 +52,9 @@ class IO:
         elif address == IOAddress.REG_BG3CNT:
             return self.ppu.bg_control[3].reg
 
+        elif address == IOAddress.REG_SOUNDBIAS:
+            return self.reg_soundbias
+
         elif address == IOAddress.REG_DMA0CNT_H:
             return self.dma_controller.channels[0].control_reg
         elif address == IOAddress.REG_DMA1CNT_H:
@@ -57,8 +71,13 @@ class IO:
             return self.interrupt_controller.interrupt_enable
         elif address == IOAddress.REG_IF:
             return self.interrupt_controller.interrupt_flags
+        elif address == IOAddress.REG_WAITCNT:
+            return self.memory.wait_control.reg
         elif address == IOAddress.REG_IME:
             return self.interrupt_controller.interrupt_master_enable
+
+        elif address == IOAddress.REG_HALTCNT:
+            return self.reg_haltcnt
 
         else:
             return 0
@@ -104,6 +123,9 @@ class IO:
             self.ppu.bg_offset_h[3] = value
         elif address == IOAddress.REG_BG3VOFS:
             self.ppu.bg_offset_v[3] = value
+
+        elif address == IOAddress.REG_SOUNDBIAS:
+            self.reg_soundbias = value
 
         elif address == IOAddress.REG_DMA0SAD_L:
             self.dma_controller.channels[0].src_address &= 0xFFFF0000
@@ -175,8 +197,14 @@ class IO:
             self.interrupt_controller.interrupt_enable = value
         elif address == IOAddress.REG_IF:
             self.interrupt_controller.interrupt_flags = value
+        elif address == IOAddress.REG_WAITCNT:
+            self.memory.wait_control.reg = value
+            self.memory.update_waitstates()
         elif address == IOAddress.REG_IME:
             self.interrupt_controller.interrupt_master_enable = value
+
+        elif address == IOAddress.REG_HALTCNT:
+            self.reg_haltcnt = value
 
     def write_8(self, address: int, value: int):
         aligned_address = address & ~1

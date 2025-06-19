@@ -20,14 +20,10 @@ class Scheduler:
     def schedule(self, callback: Callable[[], None], time: int):
         heapq.heappush(self.events, Event(callback, self.cycles + time))
 
-    def update(self, cycles: int):
-        """
-        Update the number of cycles elapsed and process pending events
-
-        :param cycles: number of cycles elapsed since the last scheduler update
-        """
+    def idle(self, cycles: int = 1):
         self.cycles += cycles
 
-        if self.events and self.cycles >= self.events[0].time:
+    def process_events(self):
+        while self.events and self.cycles >= self.events[0].time:
             event = heapq.heappop(self.events)
             event.callback()
