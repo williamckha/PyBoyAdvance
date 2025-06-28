@@ -64,8 +64,10 @@ class IO:
         elif address == IOAddress.REG_DMA3CNT_H:
             return self.dma_controller.channels[3].control_reg
 
-        elif address == IOAddress.REG_KEY:
-            return self.keypad.keys
+        elif address == IOAddress.REG_KEYINPUT:
+            return self.keypad.key_input
+        elif address == IOAddress.REG_KEYCNT:
+            return self.keypad.key_control.reg
 
         elif address == IOAddress.REG_IE:
             return self.interrupt_controller.interrupt_enable
@@ -192,6 +194,9 @@ class IO:
             self.dma_controller.channels[3].count = value
         elif address == IOAddress.REG_DMA3CNT_H:
             self.dma_controller.channels[3].control_reg = value
+
+        elif address == IOAddress.REG_KEYCNT:
+            self.keypad.key_control.reg = value
 
         elif address == IOAddress.REG_IE:
             self.interrupt_controller.interrupt_enable = value

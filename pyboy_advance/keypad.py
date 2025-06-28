@@ -1,6 +1,8 @@
 from enum import IntFlag, auto
 
 from pyboy_advance.app.window import WindowEvent
+from pyboy_advance.interrupt_controller import InterruptController, Interrupt
+from pyboy_advance.utils import bint, get_bit, get_bits
 
 
 class Key(IntFlag):
@@ -19,15 +21,25 @@ class Key(IntFlag):
 
 
 class Keypad:
-    def __init__(self):
-        # Inputs are active low
-        self.keys = 0b1111111111
+    def __init__(self, interrupt_controller: InterruptController):
+        self.interrupt_controller = interrupt_controller
+
+        # Initialize all keys to "released" state (inputs are active low)
+        self.key_input = 0b1111111111
+
+        self.key_control = KeypadInterruptControlRegister()
 
     def press_key(self, key: Key):
-        self.keys &= ~key
+        self.key_input &= ~key
+
+        if self.key_control.irq_enable and self._evaluate_irq_condition():
+            self.interrupt_controller.signal(Interrupt.KEYPAD)
 
     def release_key(self, key: Key):
-        self.keys |= key
+        self.key_input |= key
+
+        if self.key_control.irq_enable and self._evaluate_irq_condition():
+            self.interrupt_controller.signal(Interrupt.KEYPAD)
 
     def process_window_event(self, event: WindowEvent):
         if event == WindowEvent.PRESS_BUTTON_A:
@@ -72,3 +84,28 @@ class Keypad:
             self.release_key(Key.SHOULDER_LEFT)
         else:
             raise ValueError(f"WindowEvent {event.name} is not a key event")
+
+    def _evaluate_irq_condition(self) -> bool:
+        if self.key_control.irq_if_all:
+            # Logical AND mode; interrupt requested if ALL of selected keys are pressed
+            return (~self.key_input & self.key_control.key_select) == self.key_control.key_select
+        else:
+            # Logical OR mode; interrupt requested if ANY of selected keys are pressed
+            return (~self.key_input & self.key_control.key_select) != 0
+
+
+class KeypadInterruptControlRegister:
+    def __init__(self):
+        self.reg = 0
+
+    @property
+    def key_select(self) -> int:
+        return get_bits(self.reg, 0, 9)
+
+    @property
+    def irq_enable(self) -> bint:
+        return get_bit(self.reg, 14)
+
+    @property
+    def irq_if_all(self) -> bint:
+        return get_bit(self.reg, 15)

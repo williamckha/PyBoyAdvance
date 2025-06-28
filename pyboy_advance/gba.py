@@ -37,7 +37,7 @@ class PyBoyAdvance:
         self.interrupt_controller = InterruptController(self.scheduler)
         self.dma_controller = DMAController(self.scheduler, self.memory)
         self.ppu = PPU(self.scheduler, self.interrupt_controller)
-        self.keypad = Keypad()
+        self.keypad = Keypad(self.interrupt_controller)
         self.memory.io = IO(
             self.memory,
             self.interrupt_controller,
