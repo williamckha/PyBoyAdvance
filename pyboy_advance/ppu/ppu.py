@@ -41,6 +41,12 @@ NUM_PRIORITY_LEVELS = 4
 TILE_WIDTH = TILE_HEIGHT = 8
 TILE_SIZE = TILE_WIDTH * TILE_HEIGHT
 
+TILE_MAP_ENTRY_SIZE = 2
+TILE_MAP_BLOCK_WIDTH = TILE_MAP_BLOCK_HEIGHT = 32
+TILE_MAP_BLOCK_SIZE = TILE_MAP_BLOCK_WIDTH * TILE_MAP_BLOCK_HEIGHT * TILE_MAP_ENTRY_SIZE
+
+TILE_SET_BLOCK_SIZE = TILE_MAP_BLOCK_SIZE * 8
+
 COLOUR_SIZE = 2
 
 
@@ -158,31 +164,48 @@ class PPU:
     def render_background_text(self, bg_num: int):
         bg_control = self.bg_control[bg_num]
 
-        if bg_control.size == 0b00:
-            tile_map_rows, tile_map_cols = 32, 32
-        elif bg_control.size == 0b01:
-            tile_map_rows, tile_map_cols = 32, 64
-        elif bg_control.size == 0b10:
-            tile_map_rows, tile_map_cols = 64, 32
-        elif bg_control.size == 0b11:
-            tile_map_rows, tile_map_cols = 64, 64
-        else:
-            raise ValueError
-
         rel_y = self.vcount + self.bg_offset_v[bg_num]
-        tile_y = (rel_y // TILE_HEIGHT) % tile_map_rows
+        tile_y = rel_y // TILE_HEIGHT
         pixel_y = rel_y % TILE_HEIGHT
 
         for x in range(DISPLAY_WIDTH):
             rel_x = x + self.bg_offset_h[bg_num]
-            tile_x = (rel_x // TILE_WIDTH) % tile_map_cols
+            tile_x = rel_x // TILE_WIDTH
             pixel_x = rel_x % TILE_WIDTH
 
-            tile_map_address = bg_control.tile_map_block
-            tile_map_address += tile_y * tile_map_rows * 2
-            tile_map_address += tile_x * 2
+            # Larger size backgrounds are accessed as (up to) 4 separate maps
+            # that are laid out as contiguous blocks in VRAM, pictured below.
+            # (each tile map block is 32 x 32 tiles in size)
+            #
+            # +-----------+-----------+-----------+-----------+
+            # |  32 x 32  |  64 x 32  |  32 x 64  |  64 x 64  |
+            # +-----------+-----------+-----------+-----------+
+            # |    [0]    |   [0][1]  |    [0]    |   [0][1]  |
+            # |           |           |    [1]    |   [2][3]  |
+            # +-----------+-----------+-----------+-----------+
+            #
+            # Hence, we must first find the tile map block we are currently in
+            # and then find the tile map entry inside that block.
 
-            tile_map_entry = array_read_16(self.vram, tile_map_address)
+            tile_map_block = bg_control.tile_map_block
+            if bg_control.size == 0b01:  # 64 x 32
+                if tile_x & TILE_MAP_BLOCK_WIDTH:
+                    tile_map_block += 1
+            elif bg_control.size == 0b10:  # 32 x 64
+                if tile_y & TILE_MAP_BLOCK_HEIGHT:
+                    tile_map_block += 1
+            elif bg_control.size == 0b11:  # 64 x 64
+                if tile_x & TILE_MAP_BLOCK_WIDTH:
+                    tile_map_block += 1
+                if tile_y & TILE_MAP_BLOCK_HEIGHT:
+                    tile_map_block += 2
+
+            tile_map_entry_address = (tile_y % TILE_MAP_BLOCK_HEIGHT) * TILE_MAP_BLOCK_WIDTH
+            tile_map_entry_address += tile_x % TILE_MAP_BLOCK_WIDTH
+            tile_map_entry_address *= TILE_MAP_ENTRY_SIZE
+            tile_map_entry_address += tile_map_block * TILE_MAP_BLOCK_SIZE
+
+            tile_map_entry = array_read_16(self.vram, tile_map_entry_address)
             tile_num = get_bits(tile_map_entry, 0, 9)
             tile_flip_h = get_bit(tile_map_entry, 10)
             tile_flip_v = get_bit(tile_map_entry, 11)
@@ -192,7 +215,7 @@ class PPU:
             pixel_y_flipped = TILE_HEIGHT - pixel_y - 1 if tile_flip_v else pixel_y
 
             palette_index = self._get_palette_index(
-                bg_control.tile_data_block,
+                bg_control.tile_set_block * TILE_SET_BLOCK_SIZE,
                 tile_num,
                 pixel_x_flipped,
                 pixel_y_flipped,
@@ -200,7 +223,7 @@ class PPU:
                 palette_num,
             )
 
-            colour = self._get_palette_colour(palette_index)
+            colour = array_read_16(self.palram, palette_index * COLOUR_SIZE)
             self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
 
     def render_background_affine(self, bg_num: int):
@@ -451,12 +474,8 @@ class BackgroundControlRegister:
         return get_bits(self.reg, 0, 1)
 
     @property
-    def tile_data_base_block(self) -> int:
+    def tile_set_block(self) -> int:
         return get_bits(self.reg, 2, 3)
-
-    @property
-    def tile_data_block(self) -> int:
-        return self.tile_data_base_block * 0x4000
 
     @property
     def mosaic(self) -> bint:
@@ -467,12 +486,8 @@ class BackgroundControlRegister:
         return get_bit(self.reg, 7)
 
     @property
-    def tile_map_base_block(self) -> int:
-        return get_bits(self.reg, 8, 12)
-
-    @property
     def tile_map_block(self) -> int:
-        return self.tile_map_base_block * 0x800
+        return get_bits(self.reg, 8, 12)
 
     @property
     def wraparound(self) -> bint:
