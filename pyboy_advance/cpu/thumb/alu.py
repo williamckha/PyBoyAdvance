@@ -205,7 +205,7 @@ def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):
 def thumb_load_address(cpu: CPU, instr: int):
     opcode = get_bit(instr, 11)
     rd = get_bits(instr, 8, 10)
-    offset = get_bits(instr, 0, 7) << 2
+    offset = get_bits(instr, 0, 7) * 4
 
     if opcode:
         # Load from SP
@@ -219,11 +219,8 @@ def thumb_load_address(cpu: CPU, instr: int):
 
 
 def thumb_add_offset_to_stack_pointer(cpu: CPU, instr: int):
-    offset = get_bits(instr, 0, 6)
-
-    negative = get_bit(instr, 7)
-    if negative:
-        offset = -offset
+    sign = -1 if get_bit(instr, 7) else 1
+    offset = sign * get_bits(instr, 0, 6) * 4
 
     cpu.regs.sp = add_int32_to_uint32(cpu.regs.sp, offset)
 
