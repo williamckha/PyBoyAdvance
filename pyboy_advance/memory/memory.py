@@ -118,14 +118,13 @@ class Memory:
             return self.io.read_32(address)
 
         elif region == MemoryRegion.PALRAM_REGION:
-            return array_read_32(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK)
+            return self.io.ppu.memory.read_32_palram(address)
 
         elif region == MemoryRegion.VRAM_REGION:
-            mask = self._get_vram_address_mask(address)
-            return array_read_32(self.io.ppu.vram, address & mask)
+            return self.io.ppu.memory.read_32_vram(address)
 
         elif region == MemoryRegion.OAM_REGION:
-            return array_read_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK)
+            return self.io.ppu.memory.read_32_oam(address)
 
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
             return self.gamepak.read_32(address)
@@ -162,14 +161,13 @@ class Memory:
             return self.io.read_16(address)
 
         elif region == MemoryRegion.PALRAM_REGION:
-            return array_read_16(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK)
+            return self.io.ppu.memory.read_16_palram(address)
 
         elif region == MemoryRegion.VRAM_REGION:
-            mask = self._get_vram_address_mask(address)
-            return array_read_16(self.io.ppu.vram, address & mask)
+            return self.io.ppu.memory.read_16_vram(address)
 
         elif region == MemoryRegion.OAM_REGION:
-            return array_read_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK)
+            return self.io.ppu.memory.read_16_oam(address)
 
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
             return self.gamepak.read_16(address)
@@ -205,14 +203,13 @@ class Memory:
             return self.io.read_8(address)
 
         elif region == MemoryRegion.PALRAM_REGION:
-            return self.io.ppu.palram[address & MemoryRegion.PALRAM_MASK]
+            return self.io.ppu.memory.read_8_palram(address)
 
         elif region == MemoryRegion.VRAM_REGION:
-            mask = self._get_vram_address_mask(address)
-            return self.io.ppu.vram[address & mask]
+            return self.io.ppu.memory.read_8_vram(address)
 
         elif region == MemoryRegion.OAM_REGION:
-            return self.io.ppu.oam[address & MemoryRegion.OAM_MASK]
+            return self.io.ppu.memory.read_8_oam(address)
 
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
             return self.gamepak.read_8(address)
@@ -244,14 +241,13 @@ class Memory:
             self.io.write_32(address, value)
 
         elif region == MemoryRegion.PALRAM_REGION:
-            array_write_32(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK, value)
+            self.io.ppu.memory.write_32_palram(address, value)
 
         elif region == MemoryRegion.VRAM_REGION:
-            mask = self._get_vram_address_mask(address)
-            array_write_32(self.io.ppu.vram, address & mask, value)
+            self.io.ppu.memory.write_32_vram(address, value)
 
         elif region == MemoryRegion.OAM_REGION:
-            array_write_32(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
+            self.io.ppu.memory.write_32_oam(address, value)
 
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
             print(f"Attempt to write to SRAM: {address:#010x}")
@@ -283,14 +279,13 @@ class Memory:
             self.io.write_16(address, value)
 
         elif region == MemoryRegion.PALRAM_REGION:
-            array_write_16(self.io.ppu.palram, address & MemoryRegion.PALRAM_MASK, value)
+            self.io.ppu.memory.write_16_palram(address, value)
 
         elif region == MemoryRegion.VRAM_REGION:
-            mask = self._get_vram_address_mask(address)
-            array_write_16(self.io.ppu.vram, address & mask, value)
+            self.io.ppu.memory.write_16_vram(address, value)
 
         elif region == MemoryRegion.OAM_REGION:
-            array_write_16(self.io.ppu.oam, address & MemoryRegion.OAM_MASK, value)
+            self.io.ppu.memory.write_16_oam(address, value)
 
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
             print(f"Attempt to write to SRAM: {address:#010x}")
@@ -321,27 +316,10 @@ class Memory:
             self.io.write_8(address, value)
 
         elif region == MemoryRegion.PALRAM_REGION:
-            # Writing a byte to PALRAM writes the value to both the upper and lower 8-bits
-            # of the addressed halfword
-            address = address & ~0b1  # Align address to 2-byte boundary
-            self.io.ppu.palram[address & MemoryRegion.PALRAM_MASK] = value
-            self.io.ppu.palram[(address + 1) & MemoryRegion.PALRAM_MASK] = value
+            self.io.ppu.memory.write_8_palram(address, value)
 
         elif region == MemoryRegion.VRAM_REGION:
-            # VRAM is split into BG and OBJ regions.
-            # Size of the BG region changes depending on whether we are in bitmap mode
-            video_mode = self.io.ppu.display_control.video_mode
-            bg_region_end = 0x14000 if video_mode.bitmapped else 0x10000
-
-            # Ignore attempts to write a byte into OBJ, but allow writes into BG
-            if address & 0x1FFFF < bg_region_end:
-                # Writing a byte to BG writes the value to both the upper and lower 8-bits
-                # of the addressed halfword
-                address = address & ~0b1  # Align address to 2-byte boundary
-                mask_1 = self._get_vram_address_mask(address)
-                mask_2 = self._get_vram_address_mask(address + 1)
-                self.io.ppu.vram[address & mask_1] = value
-                self.io.ppu.vram[(address + 1) & mask_2] = value
+            self.io.ppu.memory.write_8_vram(address, value)
 
         elif region == MemoryRegion.OAM_REGION:
             # Ignore attempts to write a byte into OAM
@@ -385,19 +363,6 @@ class Memory:
 
         else:
             return (self.cpu.pipeline[1] << 16) | self.cpu.pipeline[1]
-
-    @staticmethod
-    def _get_vram_address_mask(address: int) -> int:
-        """
-        Get the appropriate mask for the given VRAM address.
-
-        GBA VRAM is 96 KB (64K + 32K) but is mirrored in 128 KB steps
-        (64K + 32K + 32K, the two 32K blocks being mirrors of each other).
-
-        Hence, if the address is in the mirrored upper region (bit 16 set), we use
-        VRAM_MASK_1 to wrap it back into valid VRAM space. Otherwise, we use VRAM_MASK_2.
-        """
-        return MemoryRegion.VRAM_MASK_1 if get_bit(address, 16) else MemoryRegion.VRAM_MASK_2
 
     def _init_access_times(self):
         """

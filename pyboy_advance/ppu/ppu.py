@@ -5,13 +5,17 @@ from ctypes import c_void_p
 from enum import IntEnum
 
 from pyboy_advance.interrupt_controller import InterruptController, Interrupt
-from pyboy_advance.memory.constants import MemoryRegion
+from pyboy_advance.ppu.memory import VideoMemory
+from pyboy_advance.ppu.registers import (
+    VideoMode,
+    DisplayControlRegister,
+    DisplayStatusRegister,
+    BackgroundControlRegister,
+)
 from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import (
     get_bit,
     get_bits,
-    set_bit,
-    array_read_16,
     bint,
     interpret_signed_9,
 )
@@ -73,10 +77,7 @@ class PPU:
         self.bg_offset_h = [0] * NUM_BACKGROUNDS
         self.bg_offset_v = [0] * NUM_BACKGROUNDS
 
-        # TODO: access PALRAM, VRAM, and OAM using proper address mask
-        self.palram = array("B", [0] * MemoryRegion.PALRAM_SIZE)
-        self.vram = array("B", [0] * MemoryRegion.VRAM_SIZE)
-        self.oam = array("B", [0] * MemoryRegion.OAM_SIZE)
+        self.memory = VideoMemory(self.display_control)
 
         self.front_buffer = array("H", [0] * (DISPLAY_WIDTH * DISPLAY_HEIGHT))
         self.back_buffer = array("H", [0] * (DISPLAY_WIDTH * DISPLAY_HEIGHT))
@@ -212,7 +213,7 @@ class PPU:
             tile_map_entry_address *= TILE_MAP_ENTRY_SIZE
             tile_map_entry_address += tile_map_block * TILE_MAP_BLOCK_SIZE
 
-            tile_map_entry = array_read_16(self.vram, tile_map_entry_address)
+            tile_map_entry = self.memory.read_16_vram(tile_map_entry_address)
             tile_num = get_bits(tile_map_entry, 0, 9)
             tile_flip_h = get_bit(tile_map_entry, 10)
             tile_flip_v = get_bit(tile_map_entry, 11)
@@ -230,8 +231,9 @@ class PPU:
                 palette_num,
             )
 
-            colour = array_read_16(self.palram, palette_index * COLOUR_SIZE)
-            self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
+            if palette_index:
+                colour = self.memory.read_16_palram(palette_index * COLOUR_SIZE)
+                self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
 
     def render_background_affine(self, bg_num: int):
         pass
@@ -245,22 +247,25 @@ class PPU:
 
             if paletted:
                 for x in range(display_width):
-                    palette_index = self.vram[page_offset + display_width * self.vcount + x]
-                    colour = array_read_16(self.palram, palette_index * COLOUR_SIZE)
-                    self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
+                    palette_index = self.memory.read_8_vram(
+                        page_offset + display_width * self.vcount + x
+                    )
+                    if palette_index:
+                        colour = self.memory.read_16_palram(palette_index * COLOUR_SIZE)
+                        self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
             else:
                 for x in range(display_width):
                     vram_index = display_width * self.vcount + x
-                    colour = array_read_16(self.vram, vram_index * COLOUR_SIZE)
+                    colour = self.memory.read_16_vram(vram_index * COLOUR_SIZE)
                     self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
 
     def render_objects(self):
         for obj_index in range(MAX_NUM_OBJECTS - 1, -1, -1):
             obj_address = obj_index * OAM_ENTRY_SIZE
             obj = Object(
-                array_read_16(self.oam, obj_address),
-                array_read_16(self.oam, obj_address + 2),
-                array_read_16(self.oam, obj_address + 4),
+                self.memory.read_16_oam(obj_address),
+                self.memory.read_16_oam(obj_address + 2),
+                self.memory.read_16_oam(obj_address + 4),
             )
             self.render_object(obj)
 
@@ -310,8 +315,11 @@ class PPU:
                 obj.palette_num,
             )
 
-            colour = array_read_16(self.palram, OBJ_PALETTE_OFFSET + palette_index * COLOUR_SIZE)
-            self.back_buffer[DISPLAY_WIDTH * self.vcount + win_x] = colour
+            if palette_index:
+                colour = self.memory.read_16_palram(
+                    OBJ_PALETTE_OFFSET + palette_index * COLOUR_SIZE
+                )
+                self.back_buffer[DISPLAY_WIDTH * self.vcount + win_x] = colour
 
     def _get_palette_index(
         self,
@@ -326,188 +334,22 @@ class PPU:
             # 256-colour object; one byte per pixel, one palette with 256 colours
             pixel_address = tile_base_address
             pixel_address += tile_index * TILE_SIZE + pixel_y * TILE_WIDTH + pixel_x
-            palette_index = self.vram[pixel_address]
+            palette_index = self.memory.read_8_vram(pixel_address)
         else:
             # 16-colour object; each byte represents two pixels
-
-            # Palette num selects one of 16 palettes, each palette having 16 colours
-            palette_index = palette_num * 16
 
             # Lower 4 bits are for the left pixel and upper 4 bits are for the right pixel
             pixel_address = tile_base_address
             pixel_address += (tile_index * TILE_SIZE + pixel_y * TILE_WIDTH + pixel_x) // 2
-            palette_index += (self.vram[pixel_address] >> ((pixel_x % 2) * 4)) & 0xF
+            palette_index = (self.memory.read_8_vram(pixel_address) >> ((pixel_x % 2) * 4)) & 0xF
+
+            if palette_index == 0:
+                return 0x8000
+
+            # Palette num selects one of 16 palettes, each palette having 16 colours
+            palette_index += palette_num * 16
 
         return palette_index
-
-
-class VideoMode(IntEnum):
-    MODE_0 = 0
-    MODE_1 = 1
-    MODE_2 = 2
-    MODE_3 = 3
-    MODE_4 = 4
-    MODE_5 = 5
-
-    @classmethod
-    def _missing_(cls, value):
-        if value == 6 or value == 7:
-            return cls.MODE_5
-
-    @property
-    def bitmapped(self):
-        return self in [VideoMode.MODE_3, VideoMode.MODE_4, VideoMode.MODE_5]
-
-
-class DisplayControlRegister:
-    def __init__(self):
-        self.reg = 0
-
-    @property
-    def video_mode(self) -> VideoMode:
-        return VideoMode(get_bits(self.reg, 0, 2))
-
-    @property
-    def page_select(self) -> bint:
-        return get_bit(self.reg, 4)
-
-    @property
-    def hblank_interval_free(self) -> bint:
-        return get_bit(self.reg, 5)
-
-    @property
-    def obj_vram_dimension(self) -> bint:
-        return get_bit(self.reg, 6)
-
-    @property
-    def force_blank(self) -> bint:
-        return get_bit(self.reg, 7)
-
-    @property
-    def display_bg_0(self) -> bint:
-        return get_bit(self.reg, 8)
-
-    @property
-    def display_bg_1(self) -> bint:
-        return get_bit(self.reg, 9)
-
-    @property
-    def display_bg_2(self) -> bint:
-        return get_bit(self.reg, 10)
-
-    @property
-    def display_bg_3(self) -> bint:
-        return get_bit(self.reg, 11)
-
-    @property
-    def display_obj(self) -> bint:
-        return get_bit(self.reg, 12)
-
-    @property
-    def display_window_0(self) -> bint:
-        return get_bit(self.reg, 13)
-
-    @property
-    def display_window_1(self) -> bint:
-        return get_bit(self.reg, 14)
-
-    @property
-    def display_obj_window(self) -> bint:
-        return get_bit(self.reg, 15)
-
-
-class DisplayStatusRegister:
-    def __init__(self):
-        self.reg = 0
-
-    @property
-    def vblank_status(self) -> bint:
-        return get_bit(self.reg, 0)
-
-    @vblank_status.setter
-    def vblank_status(self, value: bint):
-        self.reg = set_bit(self.reg, 0, value)
-
-    @property
-    def hblank_status(self) -> bint:
-        return get_bit(self.reg, 1)
-
-    @hblank_status.setter
-    def hblank_status(self, value: bint):
-        self.reg = set_bit(self.reg, 1, value)
-
-    @property
-    def vcount_trigger_status(self) -> bint:
-        return get_bit(self.reg, 2)
-
-    @vcount_trigger_status.setter
-    def vcount_trigger_status(self, value: bint):
-        self.reg = set_bit(self.reg, 2, value)
-
-    @property
-    def vblank_irq(self) -> bint:
-        return get_bit(self.reg, 3)
-
-    @vblank_irq.setter
-    def vblank_irq(self, value: bint):
-        self.reg = set_bit(self.reg, 3, value)
-
-    @property
-    def hblank_irq(self) -> bint:
-        return get_bit(self.reg, 4)
-
-    @hblank_irq.setter
-    def hblank_irq(self, value: bint):
-        self.reg = set_bit(self.reg, 4, value)
-
-    @property
-    def vcount_irq(self) -> bint:
-        return get_bit(self.reg, 5)
-
-    @vcount_irq.setter
-    def vcount_irq(self, value: bint):
-        self.reg = set_bit(self.reg, 5, value)
-
-    @property
-    def vcount_trigger_value(self) -> int:
-        return get_bits(self.reg, 8, 15)
-
-    @vcount_trigger_value.setter
-    def vcount_trigger_value(self, value: int):
-        self.reg = (self.reg & 0xFF) | (value << 8)
-
-
-class BackgroundControlRegister:
-    def __init__(self):
-        self.reg = 0
-
-    @property
-    def priority(self) -> int:
-        return get_bits(self.reg, 0, 1)
-
-    @property
-    def tile_set_block(self) -> int:
-        return get_bits(self.reg, 2, 3)
-
-    @property
-    def mosaic(self) -> bint:
-        return get_bit(self.reg, 6)
-
-    @property
-    def colour_256(self) -> bint:
-        return get_bit(self.reg, 7)
-
-    @property
-    def tile_map_block(self) -> int:
-        return get_bits(self.reg, 8, 12)
-
-    @property
-    def wraparound(self) -> bint:
-        return get_bit(self.reg, 13)
-
-    @property
-    def size(self) -> int:
-        return get_bits(self.reg, 14, 15)
 
 
 class ObjectMode(IntEnum):
