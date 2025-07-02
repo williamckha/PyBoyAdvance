@@ -48,6 +48,10 @@ def sign_12(num: int) -> bint:
     return get_bit(num, 11)
 
 
+def sign_9(num: int) -> bint:
+    return get_bit(num, 8)
+
+
 def sign_8(num: int) -> bint:
     return get_bit(num, 7)
 
@@ -78,6 +82,10 @@ def interpret_signed_23(num: int) -> int:
 
 def interpret_signed_12(num: int) -> int:
     return (num - (1 << 12)) if sign_12(num) else num
+
+
+def interpret_signed_9(num: int) -> int:
+    return (num - (1 << 9)) if sign_9(num) else num
 
 
 def interpret_signed_8(num: int) -> int:

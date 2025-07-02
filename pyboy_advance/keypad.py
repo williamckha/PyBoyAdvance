@@ -25,7 +25,9 @@ class Keypad:
         self.interrupt_controller = interrupt_controller
 
         # Initialize all keys to "released" state (inputs are active low)
-        self.key_input = 0b1111111111
+        self.key_input = 0
+        for key in Key:
+            self.key_input |= key
 
         self.key_control = KeypadInterruptControlRegister()
 

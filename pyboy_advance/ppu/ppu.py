@@ -13,6 +13,7 @@ from pyboy_advance.utils import (
     set_bit,
     array_read_16,
     bint,
+    interpret_signed_9,
 )
 
 DISPLAY_WIDTH = 240
@@ -49,6 +50,11 @@ TILE_SET_BLOCK_SIZE = TILE_MAP_BLOCK_SIZE * 8
 
 COLOUR_SIZE = 2
 
+OBJ_TILE_SET_OFFSET = 0x10000
+OBJ_PALETTE_OFFSET = 0x200
+
+VRAM_PAGE_OFFSET = 0xA000
+
 
 class PPU:
     """
@@ -67,6 +73,7 @@ class PPU:
         self.bg_offset_h = [0] * NUM_BACKGROUNDS
         self.bg_offset_v = [0] * NUM_BACKGROUNDS
 
+        # TODO: access PALRAM, VRAM, and OAM using proper address mask
         self.palram = array("B", [0] * MemoryRegion.PALRAM_SIZE)
         self.vram = array("B", [0] * MemoryRegion.VRAM_SIZE)
         self.oam = array("B", [0] * MemoryRegion.OAM_SIZE)
@@ -86,8 +93,8 @@ class PPU:
         self.display_status.hblank_status = True
 
         if self.vcount < DISPLAY_HEIGHT:
-            self.render_objects()
             self.render_background()
+            self.render_objects()
 
         if self.display_status.hblank_irq:
             self.interrupt_controller.signal(Interrupt.HBLANK)
@@ -231,7 +238,7 @@ class PPU:
 
     def render_background_bitmap(self, paletted, small):
         if self.display_control.display_bg_2:
-            page_offset = 0xA000 if self.display_control.display_frame_select else 0
+            page_offset = VRAM_PAGE_OFFSET if self.display_control.page_select else 0
 
             display_width = SMALL_DISPLAY_WIDTH if small else DISPLAY_WIDTH
             display_height = SMALL_DISPLAY_HEIGHT if small else DISPLAY_HEIGHT
@@ -239,7 +246,7 @@ class PPU:
             if paletted:
                 for x in range(display_width):
                     palette_index = self.vram[page_offset + display_width * self.vcount + x]
-                    colour = self._get_palette_colour(palette_index)
+                    colour = array_read_16(self.palram, palette_index * COLOUR_SIZE)
                     self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
             else:
                 for x in range(display_width):
@@ -264,30 +271,38 @@ class PPU:
         if self.display_control.video_mode.bitmapped and obj.tile_index < 512:
             return
 
-        obj_x, obj_y, (obj_w, obj_h) = obj.x, obj.y, obj.size
+        obj_x = interpret_signed_9(obj.x)
+        obj_y = obj.y
+        obj_w, obj_h = obj.size
         obj_flip_h, obj_flip_v = obj.flip_horizontal, obj.flip_vertical
 
-        if not (obj_y <= self.vcount < obj_y + obj_h):
+        if obj_y + obj_h > 256:
+            obj_y -= 256
+
+        if self.vcount < obj_y or self.vcount >= obj_y + obj_h:
             return
 
-        tile_base_address = 0x10000 + obj.tile_index * 32
-        tile_row_len = obj_w // 8 if self.display_control.obj_vram_dimension else 32
+        tile_row_len = obj_w // TILE_WIDTH if self.display_control.obj_vram_dimension else 32
 
         offset_y = self.vcount - obj_y
+        rel_y = obj_y - offset_y - 1 if obj_flip_v else offset_y
+
         for offset_x in range(0, obj_w):
+            win_x = obj_x + offset_x
+            if win_x < 0 or win_x >= DISPLAY_WIDTH:
+                continue
+
             rel_x = obj_w - offset_x - 1 if obj_flip_h else offset_x
-            rel_y = obj_y - offset_y - 1 if obj_flip_v else offset_y
 
             tile_x = rel_x // TILE_WIDTH
             tile_y = rel_y // TILE_HEIGHT
-
-            tile_index = tile_y * tile_row_len + tile_x
+            tile_index = obj.tile_index + tile_y * tile_row_len + tile_x
 
             pixel_x = rel_x % TILE_WIDTH
             pixel_y = rel_y % TILE_HEIGHT
 
             palette_index = self._get_palette_index(
-                tile_base_address,
+                OBJ_TILE_SET_OFFSET,
                 tile_index,
                 pixel_x,
                 pixel_y,
@@ -295,8 +310,8 @@ class PPU:
                 obj.palette_num,
             )
 
-            colour = self._get_palette_colour(palette_index)
-            self.back_buffer[DISPLAY_WIDTH * self.vcount + obj_x + offset_x] = colour
+            colour = array_read_16(self.palram, OBJ_PALETTE_OFFSET + palette_index * COLOUR_SIZE)
+            self.back_buffer[DISPLAY_WIDTH * self.vcount + win_x] = colour
 
     def _get_palette_index(
         self,
@@ -324,9 +339,6 @@ class PPU:
             palette_index += (self.vram[pixel_address] >> ((pixel_x % 2) * 4)) & 0xF
 
         return palette_index
-
-    def _get_palette_colour(self, palette_index: int) -> int:
-        return array_read_16(self.palram, palette_index * COLOUR_SIZE)
 
 
 class VideoMode(IntEnum):
@@ -356,7 +368,7 @@ class DisplayControlRegister:
         return VideoMode(get_bits(self.reg, 0, 2))
 
     @property
-    def display_frame_select(self) -> bint:
+    def page_select(self) -> bint:
         return get_bit(self.reg, 4)
 
     @property
@@ -529,7 +541,7 @@ class Object:
 
     @property
     def x(self) -> int:
-        return get_bits(self.attr_1, 0, 7)
+        return get_bits(self.attr_1, 0, 8)
 
     @property
     def y(self) -> int:

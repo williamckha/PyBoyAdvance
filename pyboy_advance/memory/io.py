@@ -110,21 +110,21 @@ class IO:
             self.ppu.bg_control[3].reg = value
 
         elif address == IOAddress.REG_BG0HOFS:
-            self.ppu.bg_offset_h[0] = value
+            self.ppu.bg_offset_h[0] = value & 0x3FF
         elif address == IOAddress.REG_BG0VOFS:
-            self.ppu.bg_offset_v[0] = value
+            self.ppu.bg_offset_v[0] = value & 0x3FF
         elif address == IOAddress.REG_BG1HOFS:
-            self.ppu.bg_offset_h[1] = value
+            self.ppu.bg_offset_h[1] = value & 0x3FF
         elif address == IOAddress.REG_BG1VOFS:
-            self.ppu.bg_offset_v[1] = value
+            self.ppu.bg_offset_v[1] = value & 0x3FF
         elif address == IOAddress.REG_BG2HOFS:
-            self.ppu.bg_offset_h[2] = value
+            self.ppu.bg_offset_h[2] = value & 0x3FF
         elif address == IOAddress.REG_BG2VOFS:
-            self.ppu.bg_offset_v[2] = value
+            self.ppu.bg_offset_v[2] = value & 0x3FF
         elif address == IOAddress.REG_BG3HOFS:
-            self.ppu.bg_offset_h[3] = value
+            self.ppu.bg_offset_h[3] = value & 0x3FF
         elif address == IOAddress.REG_BG3VOFS:
-            self.ppu.bg_offset_v[3] = value
+            self.ppu.bg_offset_v[3] = value & 0x3FF
 
         elif address == IOAddress.REG_SOUNDBIAS:
             self.reg_soundbias = value
