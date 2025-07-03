@@ -86,7 +86,7 @@ class PPU:
         self.front_buffer = array("H", [0] * (DISPLAY_WIDTH * DISPLAY_HEIGHT))
         self.back_buffer = array("H", [0] * (DISPLAY_WIDTH * DISPLAY_HEIGHT))
         self.front_buffer_ptr = c_void_p(self.front_buffer.buffer_info()[0])
-        self.back_buffer_ptr = c_void_p(self.front_buffer.buffer_info()[0])
+        self.back_buffer_ptr = c_void_p(self.back_buffer.buffer_info()[0])
 
         self.scheduler.schedule(self.hblank_start, CYCLES_HDRAW)
 

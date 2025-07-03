@@ -5,7 +5,7 @@ from enum import Enum, auto
 
 import sdl2.ext
 
-from pyboy_advance.ppu.ppu import DISPLAY_HEIGHT, DISPLAY_WIDTH
+from pyboy_advance.ppu.ppu import DISPLAY_HEIGHT, DISPLAY_WIDTH, COLOUR_SIZE
 
 
 class Window:
@@ -73,7 +73,12 @@ class Window:
         return self._events
 
     def render(self, frame_buffer_ptr: c_void_p):
-        sdl2.SDL_UpdateTexture(self.sdl_texture_buffer, None, frame_buffer_ptr, DISPLAY_WIDTH * 2)
+        sdl2.SDL_UpdateTexture(
+            self.sdl_texture_buffer,
+            None,
+            frame_buffer_ptr,
+            DISPLAY_WIDTH * COLOUR_SIZE,
+        )
         sdl2.SDL_RenderClear(self.sdl_renderer)
         sdl2.SDL_RenderCopy(self.sdl_renderer, self.sdl_texture_buffer, None, None)
         sdl2.SDL_RenderPresent(self.sdl_renderer)
