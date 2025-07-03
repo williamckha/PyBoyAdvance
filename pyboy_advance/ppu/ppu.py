@@ -39,9 +39,7 @@ SMALL_DISPLAY_HEIGHT = 128
 MAX_NUM_OBJECTS = 128
 OAM_ENTRY_SIZE = 8
 
-NUM_BACKGROUNDS = 4
-
-NUM_PRIORITY_LEVELS = 4
+NUM_BACKGROUNDS = NUM_PRIORITIES = 4
 
 TILE_WIDTH = TILE_HEIGHT = 8
 TILE_SIZE = TILE_WIDTH * TILE_HEIGHT
@@ -53,6 +51,8 @@ TILE_MAP_BLOCK_SIZE = TILE_MAP_BLOCK_WIDTH * TILE_MAP_BLOCK_HEIGHT * TILE_MAP_EN
 TILE_SET_BLOCK_SIZE = TILE_MAP_BLOCK_SIZE * 8
 
 COLOUR_SIZE = 2
+
+TRANSPARENT_COLOUR = 0x8000
 
 OBJ_TILE_SET_OFFSET = 0x10000
 OBJ_PALETTE_OFFSET = 0x200
@@ -79,6 +79,10 @@ class PPU:
 
         self.memory = VideoMemory(self.display_control)
 
+        self.bg_scanline = [array("H", [0] * DISPLAY_WIDTH) for _ in range(NUM_BACKGROUNDS)]
+        self.obj_scanline = [array("H", [0] * DISPLAY_WIDTH) for _ in range(NUM_PRIORITIES)]
+        self.scanline = array("H", [0] * DISPLAY_WIDTH)
+
         self.front_buffer = array("H", [0] * (DISPLAY_WIDTH * DISPLAY_HEIGHT))
         self.back_buffer = array("H", [0] * (DISPLAY_WIDTH * DISPLAY_HEIGHT))
         self.front_buffer_ptr = c_void_p(self.front_buffer.buffer_info()[0])
@@ -94,8 +98,13 @@ class PPU:
         self.display_status.hblank_status = True
 
         if self.vcount < DISPLAY_HEIGHT:
-            self.render_background()
-            self.render_objects()
+            self._init_layers()
+
+            if not self.display_control.force_blank:
+                self._render_backgrounds()
+                self._render_objects()
+
+            self._merge_layers()
 
         if self.display_status.hblank_irq:
             self.interrupt_controller.signal(Interrupt.HBLANK)
@@ -130,46 +139,48 @@ class PPU:
 
         self.scheduler.schedule(self.hblank_start, CYCLES_HDRAW)
 
-    def render_background(self):
+    def _init_layers(self):
+        backdrop_colour = 0 if self.display_control.force_blank else self.memory.read_16_palram(0)
+        for x in range(DISPLAY_WIDTH):
+            self.scanline[x] = backdrop_colour
+
+        for scanline in self.bg_scanline:
+            for x in range(DISPLAY_WIDTH):
+                scanline[x] = TRANSPARENT_COLOUR
+
+        for scanline in self.obj_scanline:
+            for x in range(DISPLAY_WIDTH):
+                scanline[x] = TRANSPARENT_COLOUR
+
+    def _render_backgrounds(self):
         video_mode = self.display_control.video_mode
 
         if video_mode == VideoMode.MODE_0:
-            for priority in range(NUM_PRIORITY_LEVELS):
-                if self.display_control.display_bg_3 and self.bg_control[3].priority == priority:
-                    self.render_background_text(bg_num=3)
-                if self.display_control.display_bg_2 and self.bg_control[2].priority == priority:
-                    self.render_background_text(bg_num=2)
-                if self.display_control.display_bg_1 and self.bg_control[1].priority == priority:
-                    self.render_background_text(bg_num=1)
-                if self.display_control.display_bg_0 and self.bg_control[0].priority == priority:
-                    self.render_background_text(bg_num=0)
+            for bg_num in range(NUM_BACKGROUNDS):
+                self._render_background_text(bg_num)
 
         elif video_mode == VideoMode.MODE_1:
-            for priority in range(NUM_PRIORITY_LEVELS):
-                if self.display_control.display_bg_2 and self.bg_control[2].priority == priority:
-                    self.render_background_affine(bg_num=2)
-                if self.display_control.display_bg_1 and self.bg_control[1].priority == priority:
-                    self.render_background_text(bg_num=1)
-                if self.display_control.display_bg_0 and self.bg_control[0].priority == priority:
-                    self.render_background_text(bg_num=0)
+            self._render_background_affine(bg_num=2)
+            self._render_background_text(bg_num=1)
+            self._render_background_text(bg_num=0)
 
         elif video_mode == VideoMode.MODE_2:
-            for priority in range(NUM_PRIORITY_LEVELS):
-                if self.display_control.display_bg_3 and self.bg_control[3].priority == priority:
-                    self.render_background_affine(bg_num=3)
-                if self.display_control.display_bg_2 and self.bg_control[2].priority == priority:
-                    self.render_background_affine(bg_num=2)
+            self._render_background_affine(bg_num=3)
+            self._render_background_affine(bg_num=2)
 
         elif video_mode == VideoMode.MODE_3:
-            self.render_background_bitmap(paletted=False, small=False)
+            self._render_background_bitmap(paletted=False, small=False)
 
         elif video_mode == VideoMode.MODE_4:
-            self.render_background_bitmap(paletted=True, small=False)
+            self._render_background_bitmap(paletted=True, small=False)
 
         elif video_mode == VideoMode.MODE_5:
-            self.render_background_bitmap(paletted=False, small=True)
+            self._render_background_bitmap(paletted=False, small=True)
 
-    def render_background_text(self, bg_num: int):
+    def _render_background_text(self, bg_num: int):
+        if not self.display_control.display_bg(bg_num):
+            return
+
         bg_control = self.bg_control[bg_num]
 
         rel_y = self.vcount + self.bg_offset_v[bg_num]
@@ -233,33 +244,39 @@ class PPU:
 
             if palette_index:
                 colour = self.memory.read_16_palram(palette_index * COLOUR_SIZE)
-                self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
+                self.bg_scanline[bg_num][x] = colour
 
-    def render_background_affine(self, bg_num: int):
-        pass
+    def _render_background_affine(self, bg_num: int):
+        if not self.display_control.display_bg(bg_num):
+            return
 
-    def render_background_bitmap(self, paletted, small):
-        if self.display_control.display_bg_2:
-            page_offset = VRAM_PAGE_OFFSET if self.display_control.page_select else 0
+    def _render_background_bitmap(self, paletted, small):
+        if not self.display_control.display_bg(2):
+            return
 
-            display_width = SMALL_DISPLAY_WIDTH if small else DISPLAY_WIDTH
-            display_height = SMALL_DISPLAY_HEIGHT if small else DISPLAY_HEIGHT
+        page_offset = VRAM_PAGE_OFFSET if self.display_control.page_select else 0
 
-            if paletted:
-                for x in range(display_width):
-                    palette_index = self.memory.read_8_vram(
-                        page_offset + display_width * self.vcount + x
-                    )
-                    if palette_index:
-                        colour = self.memory.read_16_palram(palette_index * COLOUR_SIZE)
-                        self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
-            else:
-                for x in range(display_width):
-                    vram_index = display_width * self.vcount + x
-                    colour = self.memory.read_16_vram(vram_index * COLOUR_SIZE)
-                    self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = colour
+        display_width = SMALL_DISPLAY_WIDTH if small else DISPLAY_WIDTH
+        display_height = SMALL_DISPLAY_HEIGHT if small else DISPLAY_HEIGHT
 
-    def render_objects(self):
+        if paletted:
+            for x in range(display_width):
+                palette_index = self.memory.read_8_vram(
+                    page_offset + display_width * self.vcount + x
+                )
+                if palette_index:
+                    colour = self.memory.read_16_palram(palette_index * COLOUR_SIZE)
+                    self.bg_scanline[2][x] = colour
+        else:
+            for x in range(display_width):
+                vram_index = display_width * self.vcount + x
+                colour = self.memory.read_16_vram(vram_index * COLOUR_SIZE)
+                self.bg_scanline[2][x] = colour
+
+    def _render_objects(self):
+        if not self.display_control.display_obj:
+            return
+
         for obj_index in range(MAX_NUM_OBJECTS - 1, -1, -1):
             obj_address = obj_index * OAM_ENTRY_SIZE
             obj = Object(
@@ -267,12 +284,14 @@ class PPU:
                 self.memory.read_16_oam(obj_address + 2),
                 self.memory.read_16_oam(obj_address + 4),
             )
-            self.render_object(obj)
+            self._render_object(obj)
 
-    def render_object(self, obj: Object):
+    def _render_object(self, obj: Object):
         if obj.disabled:
             return
 
+        # Because the BG section of VRAM gets extended in bitmapped modes (hence
+        # making the OBJ section smaller), attempts to use tiles 0-511 are ignored
         if self.display_control.video_mode.bitmapped and obj.tile_index < 512:
             return
 
@@ -319,7 +338,28 @@ class PPU:
                 colour = self.memory.read_16_palram(
                     OBJ_PALETTE_OFFSET + palette_index * COLOUR_SIZE
                 )
-                self.back_buffer[DISPLAY_WIDTH * self.vcount + win_x] = colour
+                self.obj_scanline[obj.priority][win_x] = colour
+
+    def _merge_layers(self):
+        for priority in range(NUM_PRIORITIES - 1, -1, -1):
+            for bg_num in range(NUM_BACKGROUNDS - 1, -1, -1):
+                if (
+                    self.display_control.display_bg(bg_num)
+                    and self.bg_control[bg_num].priority == priority
+                ):
+                    self._merge_layer(self.bg_scanline[bg_num])
+
+            if self.display_control.display_obj:
+                self._merge_layer(self.obj_scanline[priority])
+
+        for x in range(DISPLAY_WIDTH):
+            self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = self.scanline[x]
+
+    def _merge_layer(self, scanline):
+        for x in range(DISPLAY_WIDTH):
+            colour = scanline[x]
+            if colour != TRANSPARENT_COLOUR:
+                self.scanline[x] = colour
 
     def _get_palette_index(
         self,
@@ -344,7 +384,7 @@ class PPU:
             palette_index = (self.memory.read_8_vram(pixel_address) >> ((pixel_x % 2) * 4)) & 0xF
 
             if palette_index == 0:
-                return 0x8000
+                return 0
 
             # Palette num selects one of 16 palettes, each palette having 16 colours
             palette_index += palette_num * 16

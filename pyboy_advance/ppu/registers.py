@@ -47,21 +47,8 @@ class DisplayControlRegister:
     def force_blank(self) -> bint:
         return get_bit(self.reg, 7)
 
-    @property
-    def display_bg_0(self) -> bint:
-        return get_bit(self.reg, 8)
-
-    @property
-    def display_bg_1(self) -> bint:
-        return get_bit(self.reg, 9)
-
-    @property
-    def display_bg_2(self) -> bint:
-        return get_bit(self.reg, 10)
-
-    @property
-    def display_bg_3(self) -> bint:
-        return get_bit(self.reg, 11)
+    def display_bg(self, bg_num: int) -> bint:
+        return get_bit(self.reg, 8 + bg_num)
 
     @property
     def display_obj(self) -> bint:
