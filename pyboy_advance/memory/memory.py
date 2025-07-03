@@ -4,6 +4,7 @@ from array import array
 from typing import TYPE_CHECKING, Iterable
 
 from pyboy_advance.cpu.constants import CPUState
+from pyboy_advance.interrupt_controller import PowerDownMode
 from pyboy_advance.memory.constants import MemoryRegion, MemoryAccess
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
@@ -55,6 +56,14 @@ class Memory:
     @property
     def irq_line(self) -> bool:
         return self.io.interrupt_controller.irq_line
+
+    @property
+    def power_down_mode(self) -> PowerDownMode:
+        return self.io.interrupt_controller.power_down_mode
+
+    @power_down_mode.setter
+    def power_down_mode(self, mode: PowerDownMode):
+        self.io.interrupt_controller.power_down_mode = mode
 
     def read_32(self, address: int, access_type: MemoryAccess) -> int:
         return self._read_32_internal(address, access_type)

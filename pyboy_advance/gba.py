@@ -46,7 +46,7 @@ class PyBoyAdvance:
             self.keypad,
         )
 
-        self.cpu = CPU(self.memory)
+        self.cpu = CPU(self.scheduler, self.memory)
 
         if skip_bios:
             self.cpu.regs.banked_sp[BankIndex.SYSTEM_USER] = 0x03007F00

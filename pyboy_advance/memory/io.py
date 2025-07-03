@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyboy_advance.interrupt_controller import InterruptController
+from pyboy_advance.interrupt_controller import InterruptController, PowerDownMode
 from pyboy_advance.keypad import Keypad
 from pyboy_advance.memory.constants import IOAddress
 from pyboy_advance.memory.dma import DMAController
@@ -28,7 +28,6 @@ class IO:
         self.ppu = ppu
         self.keypad = keypad
         self.reg_soundbias = 0
-        self.reg_haltcnt = 0
 
     def read_32(self, address: int) -> int:
         lower_bits = self.read_16(address)
@@ -77,9 +76,6 @@ class IO:
             return self.memory.wait_control.reg
         elif address == IOAddress.REG_IME:
             return self.interrupt_controller.interrupt_master_enable
-
-        elif address == IOAddress.REG_HALTCNT:
-            return self.reg_haltcnt
 
         else:
             return 0
@@ -209,7 +205,7 @@ class IO:
             self.interrupt_controller.interrupt_master_enable = value
 
         elif address == IOAddress.REG_HALTCNT:
-            self.reg_haltcnt = value
+            self.memory.power_down_mode = PowerDownMode(get_bit(value, 15) + 1)
 
     def write_8(self, address: int, value: int):
         aligned_address = address & ~1

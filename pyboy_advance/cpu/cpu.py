@@ -11,10 +11,12 @@ from pyboy_advance.cpu.constants import (
     ShiftType,
     ExceptionVector,
 )
+from pyboy_advance.interrupt_controller import PowerDownMode
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.cpu.thumb.decode import thumb_decode
 from pyboy_advance.memory.memory import Memory
 from pyboy_advance.memory.constants import MemoryAccess
+from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import (
     get_bits,
     get_bit,
@@ -40,7 +42,9 @@ class CPU:
     https://problemkaputt.de/gbatek.htm#armcpureference
     """
 
-    def __init__(self, memory: Memory):
+    def __init__(self, scheduler: Scheduler, memory: Memory):
+        self.scheduler = scheduler
+
         self.regs = Registers()
         self.regs.cpsr.mode = CPUMode.SYSTEM
         self.regs.spsr.mode = CPUMode.SYSTEM
@@ -55,10 +59,14 @@ class CPU:
         if self.memory.irq_line and not self.regs.cpsr.irq_disable:
             self.interrupt(ExceptionVector.IRQ)
 
-        if self.regs.cpsr.state == CPUState.ARM:
-            self.step_arm()
-        else:
-            self.step_thumb()
+        if self.memory.power_down_mode == PowerDownMode.NONE:
+            if self.regs.cpsr.state == CPUState.ARM:
+                self.step_arm()
+            else:
+                self.step_thumb()
+
+        elif self.memory.power_down_mode == PowerDownMode.HALT:
+            self.scheduler.idle_until_next_event()
 
     def step_arm(self):
         instruction = self.pipeline[0]

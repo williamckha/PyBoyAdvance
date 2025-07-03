@@ -23,6 +23,12 @@ class Scheduler:
     def idle(self, cycles: int = 1):
         self.cycles += cycles
 
+    def idle_until_next_event(self):
+        if self.events and self.events[0].time > self.cycles:
+            self.idle(self.events[0].time - self.cycles)
+        else:
+            self.idle()
+
     def process_events(self):
         while self.events and self.cycles >= self.events[0].time:
             event = heapq.heappop(self.events)

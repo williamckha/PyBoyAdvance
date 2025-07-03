@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools
-from enum import IntFlag, auto
+from enum import IntFlag, auto, IntEnum
 
 from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import bint
@@ -27,6 +27,12 @@ class Interrupt(IntFlag):
     # fmt: on
 
 
+class PowerDownMode(IntEnum):
+    NONE = 0
+    HALT = 1
+    STOP = 2
+
+
 class InterruptController:
     WRITE_INTERRUPT_REGISTERS_DELAY = 1
     UPDATE_IRQ_LINE_DELAY = 2
@@ -44,6 +50,8 @@ class InterruptController:
 
         self.irq_line = False
 
+        self.power_down_mode = PowerDownMode.NONE
+
     @property
     def interrupt_enable(self) -> int:
         return self._interrupt_enable
@@ -59,7 +67,7 @@ class InterruptController:
 
     @interrupt_flags.setter
     def interrupt_flags(self, value: int):
-        self._pending_interrupt_flags = value & Interrupt.ALL
+        self._pending_interrupt_flags &= ~value
         self._schedule_write_interrupt_registers()
 
     @property
@@ -87,8 +95,11 @@ class InterruptController:
         self._interrupt_master_enable = self._pending_interrupt_master_enable
 
         interrupt_available = self._interrupt_enable & self._interrupt_flags
-        new_irq_line = interrupt_available and self._interrupt_master_enable
 
+        if interrupt_available and self.power_down_mode == PowerDownMode.HALT:
+            self.power_down_mode = PowerDownMode.NONE
+
+        new_irq_line = interrupt_available and self._interrupt_master_enable
         if new_irq_line != self.irq_line:
             self.scheduler.schedule(
                 functools.partial(self._update_irq_line, new_irq_line),
