@@ -5,7 +5,7 @@ from enum import Enum, auto
 
 import sdl2.ext
 
-from pyboy_advance.ppu.ppu import DISPLAY_HEIGHT, DISPLAY_WIDTH, COLOUR_SIZE
+from pyboy_advance.ppu.constants import DISPLAY_WIDTH, DISPLAY_HEIGHT, COLOUR_SIZE
 
 
 class Window:

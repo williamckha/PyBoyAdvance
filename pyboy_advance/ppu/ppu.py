@@ -5,6 +5,7 @@ from ctypes import c_void_p
 from enum import IntEnum
 
 from pyboy_advance.interrupt_controller import InterruptController, Interrupt
+from pyboy_advance.ppu.constants import *
 from pyboy_advance.ppu.memory import VideoMemory
 from pyboy_advance.ppu.registers import (
     VideoMode,
@@ -19,45 +20,6 @@ from pyboy_advance.utils import (
     bint,
     interpret_signed_9,
 )
-
-DISPLAY_WIDTH = 240
-DISPLAY_HEIGHT = 160
-
-HBLANK_PIXELS = 68
-VBLANK_LINES = 68
-
-DISPLAY_FULL_WIDTH = DISPLAY_WIDTH + HBLANK_PIXELS
-DISPLAY_FULL_HEIGHT = DISPLAY_HEIGHT + VBLANK_LINES
-
-CYCLES_PIXEL = 4
-CYCLES_HDRAW = DISPLAY_WIDTH * CYCLES_PIXEL
-CYCLES_HBLANK = HBLANK_PIXELS * CYCLES_PIXEL
-
-SMALL_DISPLAY_WIDTH = 160
-SMALL_DISPLAY_HEIGHT = 128
-
-MAX_NUM_OBJECTS = 128
-OAM_ENTRY_SIZE = 8
-
-NUM_BACKGROUNDS = NUM_PRIORITIES = 4
-
-TILE_WIDTH = TILE_HEIGHT = 8
-TILE_SIZE = TILE_WIDTH * TILE_HEIGHT
-
-TILE_MAP_ENTRY_SIZE = 2
-TILE_MAP_BLOCK_WIDTH = TILE_MAP_BLOCK_HEIGHT = 32
-TILE_MAP_BLOCK_SIZE = TILE_MAP_BLOCK_WIDTH * TILE_MAP_BLOCK_HEIGHT * TILE_MAP_ENTRY_SIZE
-
-TILE_SET_BLOCK_SIZE = TILE_MAP_BLOCK_SIZE * 8
-
-COLOUR_SIZE = 2
-
-TRANSPARENT_COLOUR = 0x8000
-
-OBJ_TILE_SET_OFFSET = 0x10000
-OBJ_PALETTE_OFFSET = 0x200
-
-VRAM_PAGE_OFFSET = 0xA000
 
 
 class PPU:
