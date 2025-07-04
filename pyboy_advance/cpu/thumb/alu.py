@@ -18,6 +18,7 @@ from pyboy_advance.cpu.arm.alu import (
     arm_alu_and,
     arm_alu_eor,
 )
+from pyboy_advance.cpu.arm.mul import arm_multiply_idle
 from pyboy_advance.cpu.constants import CPUState, ShiftType
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.memory.constants import MemoryAccess
@@ -122,10 +123,13 @@ def thumb_alu(cpu: CPU, instr: int):
     def execute_shift(shift_type: ShiftType):
         shift = op2 & 0xFF
         result, carry = cpu.compute_shift(op1, shift_type, shift, immediate=False)
+
         cpu.regs[rd] = result
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd])
         cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
         cpu.regs.cpsr.carry_flag = carry
+
+        cpu.scheduler.idle()
 
     opcode = get_bits(instr, 6, 9)
     if opcode == ThumbALUOpcode.AND:
@@ -158,6 +162,7 @@ def thumb_alu(cpu: CPU, instr: int):
         cpu.regs[rd] = (op1 * op2) & 0xFFFFFFFF
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd])
         cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
+        arm_multiply_idle(cpu, op1, signed=True)
     elif opcode == ThumbALUOpcode.BIC:
         arm_alu_bic(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.MVN:

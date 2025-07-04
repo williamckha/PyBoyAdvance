@@ -52,6 +52,8 @@ def arm_single_data_transfer(cpu: CPU, instr: int):
 
         cpu.regs[rd] = value
 
+        cpu.scheduler.idle()
+
         if rd == Registers.PC:
             cpu.flush_pipeline()
 

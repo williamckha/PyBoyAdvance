@@ -27,5 +27,7 @@ def arm_single_data_swap(cpu: CPU, instr: int):
         cpu.memory.write_32(cpu.regs[base_reg], cpu.regs[src_reg], MemoryAccess.NON_SEQUENTIAL)
         cpu.regs[dst_reg] = temp
 
+    cpu.scheduler.idle()
+
     cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL

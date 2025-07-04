@@ -109,3 +109,6 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
     # into the mode we were in before the transfer.
     elif psr_and_force_user_bit:
         cpu.switch_mode(original_mode)
+
+    if load_store_bit:
+        cpu.scheduler.idle()

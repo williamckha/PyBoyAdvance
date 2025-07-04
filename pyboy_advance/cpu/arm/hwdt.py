@@ -61,6 +61,8 @@ def arm_halfword_data_transfer(cpu: CPU, instr: int):
         elif opcode == DataTransferOpcode.LDRSH:
             cpu.regs[rd] = cpu.memory.read_16_signed(effective_address, MemoryAccess.NON_SEQUENTIAL)
 
+        cpu.scheduler.idle()
+
         if rd == Registers.PC:
             cpu.flush_pipeline()
 

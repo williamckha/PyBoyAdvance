@@ -119,7 +119,7 @@ class DMAChannel:
                 self.scheduler.schedule(self.activate, 2)
 
         elif old_enable and not self._control_reg.enable:  # DMA cancelled
-            print("cancel")
+            pass
 
     @property
     def count(self) -> int:

@@ -28,7 +28,10 @@ def arm_multiply(cpu: CPU, instr: int):
     accumulate = get_bit(instr, 21)
     set_cond_codes = get_bit(instr, 20)
 
+    arm_multiply_idle(cpu, cpu.regs[rs], signed=True)
+
     if accumulate:
+        cpu.scheduler.idle()
         cpu.regs[rd] = (cpu.regs[rm] * cpu.regs[rs] + cpu.regs[rn]) & 0xFFFFFFFF
     else:
         cpu.regs[rd] = (cpu.regs[rm] * cpu.regs[rs]) & 0xFFFFFFFF
@@ -52,16 +55,32 @@ def arm_multiply_long(cpu: CPU, instr: int):
     opcode = get_bits(instr, 21, 22)
     set_cond_codes = get_bit(instr, 20)
 
+    cpu.scheduler.idle()
+
     if opcode == MultiplyLongOpcode.UMULL:
+        arm_multiply_idle(cpu, cpu.regs[rs], signed=False)
+
         result = cpu.regs[rm] * cpu.regs[rs]
+
     elif opcode == MultiplyLongOpcode.UMLAL:
+        arm_multiply_idle(cpu, cpu.regs[rs], signed=False)
+        cpu.scheduler.idle()
+
         result = (cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo]
         result += cpu.regs[rm] * cpu.regs[rs]
+
     elif opcode == MultiplyLongOpcode.SMULL:
+        arm_multiply_idle(cpu, cpu.regs[rs], signed=True)
+
         result = interpret_signed_32(cpu.regs[rm]) * interpret_signed_32(cpu.regs[rs])
+
     elif opcode == MultiplyLongOpcode.SMLAL:
+        arm_multiply_idle(cpu, cpu.regs[rs], signed=True)
+        cpu.scheduler.idle()
+
         result = interpret_signed_64((cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo])
         result += interpret_signed_32(cpu.regs[rm]) * interpret_signed_32(cpu.regs[rs])
+
     else:
         raise ValueError
 
@@ -74,3 +93,22 @@ def arm_multiply_long(cpu: CPU, instr: int):
 
     cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
+
+
+def arm_multiply_idle(cpu: CPU, rs: int, signed: bool):
+    """
+    Idle for the number of cycles it takes to execute a multiply instruction.
+    The number of cycles depends on how many MSBs of the Rs operand are
+    "all 0" (if unsigned) or "all 0 or all 1" (if signed).
+    """
+
+    cycles = 1
+    mask = 0xFFFFFF00
+    while mask != 0:
+        rs &= mask
+        if rs == 0 or (signed and rs == mask):
+            break
+        cycles += 1
+        mask <<= 8
+
+    cpu.scheduler.idle(cycles)

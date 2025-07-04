@@ -62,6 +62,7 @@ def arm_alu(cpu: CPU, instr: int):
             # Advance PC by 4 so that cpu.regs.pc returns PC + 12
             cpu.advance_pc_arm()
             early_advance_pc = True
+            cpu.scheduler.idle()
         else:
             # Otherwise, the operand should be PC + 8
             # (which is what cpu.regs.pc returns normally).
