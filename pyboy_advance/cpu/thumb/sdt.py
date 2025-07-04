@@ -10,6 +10,11 @@ if TYPE_CHECKING:
 
 
 def thumb_pc_relative_load(cpu: CPU, instr: int):
+    """
+    Execute a THUMB.6 instruction
+    (load from memory with PC-relative offset)
+    """
+
     rd = get_bits(instr, 8, 10)  # Source/destination reg
 
     offset = get_bits(instr, 0, 7) << 2
@@ -23,9 +28,14 @@ def thumb_pc_relative_load(cpu: CPU, instr: int):
 
 
 def thumb_load_store_register_offset(cpu: CPU, instr: int):
-    ro = get_bits(instr, 6, 8)
-    rb = get_bits(instr, 3, 5)
-    rd = get_bits(instr, 0, 2)
+    """
+    Execute a THUMB.7 instruction
+    (load/store from/into memory with register offset)
+    """
+
+    ro = get_bits(instr, 6, 8)  # Offset reg
+    rb = get_bits(instr, 3, 5)  # Base reg
+    rd = get_bits(instr, 0, 2)  # Source/destination reg
 
     address = add_uint32_to_uint32(cpu.regs[rb], cpu.regs[ro])
 
@@ -46,9 +56,14 @@ def thumb_load_store_register_offset(cpu: CPU, instr: int):
 
 
 def thumb_load_store_sign_extended(cpu: CPU, instr: int):
-    ro = get_bits(instr, 6, 8)
-    rb = get_bits(instr, 3, 5)
-    rd = get_bits(instr, 0, 2)
+    """
+    Execute a THUMB.8 instruction
+    (load/store sign-extended byte/halfword from/into memory with register offset)
+    """
+
+    ro = get_bits(instr, 6, 8)  # Offset reg
+    rb = get_bits(instr, 3, 5)  # Base reg
+    rd = get_bits(instr, 0, 2)  # Source/destination reg
 
     address = add_uint32_to_uint32(cpu.regs[rb], cpu.regs[ro])
 
@@ -70,8 +85,13 @@ def thumb_load_store_sign_extended(cpu: CPU, instr: int):
 
 
 def thumb_load_store_immediate_offset(cpu: CPU, instr: int):
-    rb = get_bits(instr, 3, 5)
-    rd = get_bits(instr, 0, 2)
+    """
+    Execute a THUMB.9 instruction
+    (load/store from/into memory with immediate offset)
+    """
+
+    rb = get_bits(instr, 3, 5)  # Base reg
+    rd = get_bits(instr, 0, 2)  # Source/destination reg
 
     opcode = get_bits(instr, 11, 12)
     offset = (get_bits(instr, 6, 10) << 2) if opcode in (0, 1) else get_bits(instr, 6, 10)
@@ -93,6 +113,11 @@ def thumb_load_store_immediate_offset(cpu: CPU, instr: int):
 
 
 def thumb_load_store_halfword(cpu: CPU, instr: int):
+    """
+    Execute a THUMB.10 instruction
+    (load/store halfword from/into memory with immediate offset)
+    """
+
     rb = get_bits(instr, 3, 5)  # Base reg
     rd = get_bits(instr, 0, 2)  # Source/destination reg
 
@@ -112,6 +137,11 @@ def thumb_load_store_halfword(cpu: CPU, instr: int):
 
 
 def thumb_sp_relative_load_store(cpu: CPU, instr: int):
+    """
+    Execute a THUMB.11 instruction
+    (load/store from/into memory with SP-relative offset)
+    """
+
     rd = get_bits(instr, 8, 10)  # Source/destination reg
 
     offset = get_bits(instr, 0, 7) << 2

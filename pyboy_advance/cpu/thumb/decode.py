@@ -9,7 +9,7 @@ from pyboy_advance.cpu.thumb.alu import (
     thumb_alu,
     thumb_high_reg_branch_exchange,
     thumb_add_offset_to_stack_pointer,
-    thumb_load_address,
+    thumb_get_address,
 )
 from pyboy_advance.cpu.thumb.bdt import (
     thumb_multiple_load_store,
@@ -34,9 +34,9 @@ if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import InstructionHandler
 
 THUMB_PATTERNS: list[tuple[int, int, InstructionHandler]] = [
-    # ==========================================================
-    # Mask       Value       Handler
-    # ==========================================================
+    # ---------+-----------+------------------------------------
+    # Mask     | Value     | Handler
+    # ---------+-----------+------------------------------------
     (0b11111111, 0b11011111, thumb_software_interrupt),
     (0b11111000, 0b11100000, thumb_unconditional_branch),
     (0b11110000, 0b11010000, thumb_conditional_branch),
@@ -44,7 +44,7 @@ THUMB_PATTERNS: list[tuple[int, int, InstructionHandler]] = [
     (0b11110000, 0b11000000, thumb_multiple_load_store),
     (0b11110110, 0b10110100, thumb_push_pop_registers),
     (0b11111111, 0b10110000, thumb_add_offset_to_stack_pointer),
-    (0b11110000, 0b10100000, thumb_load_address),
+    (0b11110000, 0b10100000, thumb_get_address),
     (0b11110000, 0b10010000, thumb_sp_relative_load_store),
     (0b11110000, 0b10000000, thumb_load_store_halfword),
     (0b11100000, 0b01100000, thumb_load_store_immediate_offset),

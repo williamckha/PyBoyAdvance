@@ -35,6 +35,7 @@ class IO:
         return (upper_bits << 16) | lower_bits
 
     def read_16(self, address: int) -> int:
+        # Display Control Registers
         if address == IOAddress.REG_DISPCNT:
             return self.ppu.display_control.reg
         elif address == IOAddress.REG_DISPSTAT:
@@ -42,6 +43,7 @@ class IO:
         elif address == IOAddress.REG_VCOUNT:
             return self.ppu.vcount
 
+        # Background Control Registers
         elif address == IOAddress.REG_BG0CNT:
             return self.ppu.bg_control[0].reg
         elif address == IOAddress.REG_BG1CNT:
@@ -51,9 +53,11 @@ class IO:
         elif address == IOAddress.REG_BG3CNT:
             return self.ppu.bg_control[3].reg
 
+        # Sound Control Registers
         elif address == IOAddress.REG_SOUNDBIAS:
             return self.reg_soundbias
 
+        # DMA Control Registers
         elif address == IOAddress.REG_DMA0CNT_H:
             return self.dma_controller.channels[0].control_reg
         elif address == IOAddress.REG_DMA1CNT_H:
@@ -63,11 +67,13 @@ class IO:
         elif address == IOAddress.REG_DMA3CNT_H:
             return self.dma_controller.channels[3].control_reg
 
+        # Keypad Registers
         elif address == IOAddress.REG_KEYINPUT:
             return self.keypad.key_input
         elif address == IOAddress.REG_KEYCNT:
             return self.keypad.key_control.reg
 
+        # Interrupt Registers
         elif address == IOAddress.REG_IE:
             return self.interrupt_controller.interrupt_enable
         elif address == IOAddress.REG_IF:
@@ -89,6 +95,7 @@ class IO:
         self.write_16(address + 2, (value >> 16) & 0xFFFF)
 
     def write_16(self, address: int, value: int):
+        # Display Control Registers
         if address == IOAddress.REG_DISPCNT:
             self.ppu.display_control.reg = value
         elif address == IOAddress.REG_DISPSTAT:
@@ -96,6 +103,7 @@ class IO:
         elif address == IOAddress.REG_VCOUNT:
             self.ppu.vcount = value
 
+        # Background Control Registers
         elif address == IOAddress.REG_BG0CNT:
             self.ppu.bg_control[0].reg = value
         elif address == IOAddress.REG_BG1CNT:
@@ -105,6 +113,7 @@ class IO:
         elif address == IOAddress.REG_BG3CNT:
             self.ppu.bg_control[3].reg = value
 
+        # Background Offset Registers
         elif address == IOAddress.REG_BG0HOFS:
             self.ppu.bg_offset_h[0] = value & 0x3FF
         elif address == IOAddress.REG_BG0VOFS:
@@ -122,9 +131,11 @@ class IO:
         elif address == IOAddress.REG_BG3VOFS:
             self.ppu.bg_offset_v[3] = value & 0x3FF
 
+        # Sound Control Registers
         elif address == IOAddress.REG_SOUNDBIAS:
             self.reg_soundbias = value
 
+        # DMA Source/Destination Registers
         elif address == IOAddress.REG_DMA0SAD_L:
             self.dma_controller.channels[0].src_address &= 0xFFFF0000
             self.dma_controller.channels[0].src_address |= value
@@ -174,6 +185,7 @@ class IO:
             self.dma_controller.channels[3].dst_address &= 0xFFFF
             self.dma_controller.channels[3].dst_address |= value << 16
 
+        # DMA Control Registers
         elif address == IOAddress.REG_DMA0CNT_L:
             self.dma_controller.channels[0].count = value
         elif address == IOAddress.REG_DMA0CNT_H:
@@ -191,9 +203,11 @@ class IO:
         elif address == IOAddress.REG_DMA3CNT_H:
             self.dma_controller.channels[3].control_reg = value
 
+        # Keypad Registers
         elif address == IOAddress.REG_KEYCNT:
             self.keypad.key_control.reg = value
 
+        # Interrupt Registers
         elif address == IOAddress.REG_IE:
             self.interrupt_controller.interrupt_enable = value
         elif address == IOAddress.REG_IF:
@@ -203,7 +217,6 @@ class IO:
             self.memory.update_waitstates()
         elif address == IOAddress.REG_IME:
             self.interrupt_controller.interrupt_master_enable = value
-
         elif address == IOAddress.REG_HALTCNT:
             self.memory.power_down_mode = PowerDownMode(get_bit(value, 15) + 1)
 

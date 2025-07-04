@@ -8,7 +8,7 @@ class MemoryAccess(IntEnum):
     SEQUENTIAL = 1
 
 
-class MemoryRegion:
+class MemoryRegion(IntEnum):
     BIOS_START = 0x00000000
     BIOS_END = 0x00003FFF
     BIOS_REGION = BIOS_START >> 24
@@ -80,15 +80,18 @@ class MemoryRegion:
 
 
 class IOAddress(IntEnum):
+    # Display Control Registers
     REG_DISPCNT = 0x04000000
     REG_DISPSTAT = 0x04000004
     REG_VCOUNT = 0x04000006
 
+    # Background Control Registers
     REG_BG0CNT = 0x04000008
     REG_BG1CNT = 0x0400000A
     REG_BG2CNT = 0x0400000C
     REG_BG3CNT = 0x0400000E
 
+    # Background Offset Registers
     REG_BG0HOFS = 0x04000010
     REG_BG0VOFS = 0x04000012
     REG_BG1HOFS = 0x04000014
@@ -98,11 +101,12 @@ class IOAddress(IntEnum):
     REG_BG3HOFS = 0x0400001C
     REG_BG3VOFS = 0x0400001E
 
+    # Sound Control Registers
     REG_SOUNDBIAS = 0x04000088
-
     REG_FIFO_A = 0x040000A0
     REG_FIFO_B = 0x040000A4
 
+    # DMA Source/Destination Registers
     REG_DMA0SAD_L = 0x040000B0
     REG_DMA0SAD_H = 0x040000B2
     REG_DMA0DAD_L = 0x040000B4
@@ -120,6 +124,7 @@ class IOAddress(IntEnum):
     REG_DMA3DAD_L = 0x040000D8
     REG_DMA3DAD_H = 0x040000DA
 
+    # DMA Control Registers
     REG_DMA0CNT_L = 0x040000B8
     REG_DMA0CNT_H = 0x040000BA
     REG_DMA1CNT_L = 0x040000C4
@@ -129,12 +134,13 @@ class IOAddress(IntEnum):
     REG_DMA3CNT_L = 0x040000DC
     REG_DMA3CNT_H = 0x040000DE
 
+    # Keypad Registers
     REG_KEYINPUT = 0x04000130
     REG_KEYCNT = 0x04000132
 
+    # Interrupt Registers
     REG_IE = 0x04000200
     REG_IF = 0x04000202
     REG_WAITCNT = 0x04000204
     REG_IME = 0x04000208
-
     REG_HALTCNT = 0x04000300

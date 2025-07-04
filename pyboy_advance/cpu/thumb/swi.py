@@ -9,4 +9,6 @@ if TYPE_CHECKING:
 
 
 def thumb_software_interrupt(cpu: CPU, instr: int):
+    """Execute a THUMB.17 instruction (software interrupt)"""
+
     cpu.interrupt(ExceptionVector.SWI)

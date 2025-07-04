@@ -407,7 +407,7 @@ class ObjectShape(IntEnum):
 class Object:
     """
     Corresponds to an OAM entry representing an object (moveable sprite).
-    Each entry consist of three 16-bit attributes.
+    Each entry consists of three 16-bit attributes.
     """
 
     SIZES = [

@@ -15,9 +15,11 @@ if TYPE_CHECKING:
 
 
 def thumb_multiple_load_store(cpu: CPU, instr: int):
+    """Execute a THUMB.15 instruction (multiple load/store)"""
+
     reg_list = get_bits(instr, 0, 7)
-    rb = get_bits(instr, 8, 10)
-    address = cpu.regs[rb]
+    base_reg = get_bits(instr, 8, 10)
+    address = cpu.regs[base_reg]
 
     cpu.advance_pc_thumb()
     cpu.prefetch_access_type = MemoryAccess.NON_SEQUENTIAL
@@ -26,18 +28,18 @@ def thumb_multiple_load_store(cpu: CPU, instr: int):
 
     if reg_list == 0:
         if load:
-            cpu.regs.pc = cpu.memory.read_32(cpu.regs[rb], MemoryAccess.NON_SEQUENTIAL)
+            cpu.regs.pc = cpu.memory.read_32(cpu.regs[base_reg], MemoryAccess.NON_SEQUENTIAL)
             cpu.flush_pipeline()
         else:
-            cpu.memory.write_32(cpu.regs[rb], cpu.regs.pc, MemoryAccess.NON_SEQUENTIAL)
-        cpu.regs[rb] = add_uint32_to_uint32(cpu.regs[rb], 0x40)
+            cpu.memory.write_32(cpu.regs[base_reg], cpu.regs.pc, MemoryAccess.NON_SEQUENTIAL)
+        cpu.regs[base_reg] = add_uint32_to_uint32(cpu.regs[base_reg], 0x40)
         return
 
     count = sum(get_bit(instr, reg) for reg in range(8)) * 4
     access_type = MemoryAccess.NON_SEQUENTIAL
 
     if load:
-        cpu.regs[rb] = add_uint32_to_uint32(cpu.regs[rb], count)
+        cpu.regs[base_reg] = add_uint32_to_uint32(cpu.regs[base_reg], count)
         cpu.scheduler.idle()
 
         for reg in range(8):
@@ -53,11 +55,13 @@ def thumb_multiple_load_store(cpu: CPU, instr: int):
                 address = add_uint32_to_uint32(address, 4)
                 access_type = MemoryAccess.SEQUENTIAL
                 if first:
-                    cpu.regs[rb] = add_uint32_to_uint32(cpu.regs[rb], count)
+                    cpu.regs[base_reg] = add_uint32_to_uint32(cpu.regs[base_reg], count)
                     first = False
 
 
 def thumb_push_pop_registers(cpu: CPU, instr: int):
+    """Execute a THUMB.14 instruction (push/pop registers to the stack)"""
+
     reg_list = get_bits(instr, 0, 8)
     opcode = get_bit(instr, 11)
 
@@ -71,6 +75,15 @@ def thumb_push_pop_registers(cpu: CPU, instr: int):
 
 
 def thumb_push_registers(cpu: CPU, reg_list: int):
+    """
+    Push the specified registers to the stack.
+
+    :param cpu:      The CPU executing this instruction.
+    :param reg_list: A 9-bit wide bitfield specifying which registers to push.
+                     Bits 0-7 correspond to registers R0-R7 and bit 8 corresponds
+                     to LR (R14).
+    """
+
     if reg_list == 0:
         cpu.regs.sp = add_int32_to_uint32(cpu.regs.sp, -0x40)
         cpu.memory.write_32(cpu.regs.sp, cpu.regs.pc, MemoryAccess.NON_SEQUENTIAL)
@@ -88,6 +101,15 @@ def thumb_push_registers(cpu: CPU, reg_list: int):
 
 
 def thumb_pop_registers(cpu: CPU, reg_list: int):
+    """
+    Pop the specified registers off the stack.
+
+    :param cpu:      The CPU executing this instruction.
+    :param reg_list: A 9-bit wide bitfield specifying which registers to pop.
+                     Bits 0-7 correspond to registers R0-R7 and bit 8 corresponds
+                     to PC (R15).
+    """
+
     if reg_list == 0:
         cpu.regs.pc = cpu.memory.read_32(cpu.regs.sp, MemoryAccess.NON_SEQUENTIAL)
         cpu.regs.sp = add_uint32_to_uint32(cpu.regs.sp, 0x40)

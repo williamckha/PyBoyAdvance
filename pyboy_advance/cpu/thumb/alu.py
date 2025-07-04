@@ -54,6 +54,8 @@ class ThumbALUOpcode(IntEnum):
 
 
 def thumb_move_shifted_register(cpu: CPU, instr: int):
+    """Execute a THUMB.1 instruction (move shifted register)"""
+
     rs = get_bits(instr, 3, 5)  # Source reg
     rd = get_bits(instr, 0, 2)  # Destination reg
 
@@ -72,6 +74,8 @@ def thumb_move_shifted_register(cpu: CPU, instr: int):
 
 
 def thumb_add_subtract(cpu: CPU, instr: int):
+    """Execute a THUMB.2 instruction (add/subtract)"""
+
     rs = get_bits(instr, 3, 5)  # Source reg
     rd = get_bits(instr, 0, 2)  # Destination reg
 
@@ -95,6 +99,8 @@ def thumb_add_subtract(cpu: CPU, instr: int):
 
 
 def thumb_move_compare_add_subtract(cpu: CPU, instr: int):
+    """Execute a THUMB.3 instruction (move/compare/add/subtract immediate)"""
+
     rd = get_bits(instr, 8, 10)  # Destination reg
 
     opcode = get_bits(instr, 11, 12)
@@ -114,6 +120,8 @@ def thumb_move_compare_add_subtract(cpu: CPU, instr: int):
 
 
 def thumb_alu(cpu: CPU, instr: int):
+    """Execute a THUMB.4 instruction (miscellaneous ALU operations)"""
+
     rs = get_bits(instr, 3, 5)
     rd = get_bits(instr, 0, 2)
 
@@ -173,6 +181,8 @@ def thumb_alu(cpu: CPU, instr: int):
 
 
 def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):
+    """Execute a THUMB.5 instruction (high register operations or branch exchange)"""
+
     rs = (get_bit(instr, 6) << 3) | get_bits(instr, 3, 5)
     rd = (get_bit(instr, 7) << 3) | get_bits(instr, 0, 2)
 
@@ -207,7 +217,9 @@ def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
 
 
-def thumb_load_address(cpu: CPU, instr: int):
+def thumb_get_address(cpu: CPU, instr: int):
+    """Execute a THUMB.12 instruction (get address relative to SP/PC)"""
+
     opcode = get_bit(instr, 11)
     rd = get_bits(instr, 8, 10)
     offset = get_bits(instr, 0, 7) * 4
@@ -224,6 +236,8 @@ def thumb_load_address(cpu: CPU, instr: int):
 
 
 def thumb_add_offset_to_stack_pointer(cpu: CPU, instr: int):
+    """Execute a THUMB.13 instruction (add offset to SP)"""
+    
     sign = -1 if get_bit(instr, 7) else 1
     offset = sign * get_bits(instr, 0, 6) * 4
 
