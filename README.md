@@ -9,8 +9,8 @@ PyBoy Advance is a Game Boy Advance emulator written in Python.
 There are already plenty of fantastic GBA emulators out in the wild,
 most written in languages far better suited than Python for emulator development.
 This project is not meant to compete with those emulators nor match their
-capabilities. In fact, PyBoy Advance is rather crap (and slow!) by comparison. My goal with PyBoy Advance is to offer a
-highly readable implementation of a GBA emulator for educational purposes.
+capabilities. In fact, PyBoy Advance is rather crap (and slow!) by comparison. I work on this project purely for fun,
+and my end goal is to offer a highly readable implementation of a GBA emulator for educational purposes.
 
 ## Getting started
 

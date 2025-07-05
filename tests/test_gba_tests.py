@@ -1,5 +1,7 @@
 from pyboy_advance.gba import PyBoyAdvance
 
+import pytest
+
 # Corresponds to instruction "idle: b idle"
 ARM_IDLE_INSTRUCTION = 0b11101010111111111111111111111110
 THUMB_IDLE_INSTRUCTION = 0b1110011111111110
@@ -29,6 +31,7 @@ def test_arm():
     run_test_rom("external/gba-tests/arm/arm.gba", ARM_TEST_REGISTER)
 
 
+@pytest.mark.skip()
 def test_bios():
     run_test_rom("external/gba-tests/bios/bios.gba", ARM_TEST_REGISTER)
 

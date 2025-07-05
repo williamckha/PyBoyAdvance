@@ -34,5 +34,12 @@ include = ["pyboy_advance**"]
 [project.scripts]
 pyboy_advance = "pyboy_advance.__main__:main"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore:Using SDL2 binaries from pysdl2-dll.*",
+    "ignore:pysdl2-dll is installed as source-only.*"
+]
+
 [tool.ruff]
 line-length = 100
