@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import IntEnum
 
+from pyboy_advance.ppu.constants import LayerType, WindowIndex
 from pyboy_advance.utils import get_bits, bint, get_bit, set_bit
 
 
@@ -54,17 +55,8 @@ class DisplayControlRegister:
     def display_obj(self) -> bint:
         return get_bit(self.reg, 12)
 
-    @property
-    def display_window_0(self) -> bint:
-        return get_bit(self.reg, 13)
-
-    @property
-    def display_window_1(self) -> bint:
-        return get_bit(self.reg, 14)
-
-    @property
-    def display_obj_window(self) -> bint:
-        return get_bit(self.reg, 15)
+    def display_window(self, window: WindowIndex) -> bint:
+        return get_bit(self.reg, 13 + window)
 
 
 class DisplayStatusRegister:
@@ -159,3 +151,15 @@ class BackgroundControlRegister:
     @property
     def size(self) -> int:
         return get_bits(self.reg, 14, 15)
+
+
+class WindowControlRegister:
+    def __init__(self):
+        self.reg = 0
+
+    def display_layer(self, layer_type: LayerType) -> bint:
+        return get_bit(self.reg, layer_type)
+
+    @property
+    def enable_blending(self) -> bint:
+        return get_bit(self.reg, 5)

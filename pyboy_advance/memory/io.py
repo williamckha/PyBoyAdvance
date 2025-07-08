@@ -6,6 +6,7 @@ from pyboy_advance.interrupt_controller import InterruptController, PowerDownMod
 from pyboy_advance.keypad import Keypad
 from pyboy_advance.memory.constants import IOAddress
 from pyboy_advance.memory.dma import DMAController
+from pyboy_advance.ppu.constants import WindowIndex
 from pyboy_advance.ppu.ppu import PPU
 from pyboy_advance.utils import get_bit
 
@@ -52,6 +53,16 @@ class IO:
             return self.ppu.bg_control[2].reg
         elif address == IOAddress.REG_BG3CNT:
             return self.ppu.bg_control[3].reg
+
+        # Window Registers
+        elif address == IOAddress.REG_WININ:
+            win_in = self.ppu.window_control[WindowIndex.WIN_0].reg
+            win_in |= self.ppu.window_control[WindowIndex.WIN_1].reg << 8
+            return win_in
+        elif address == IOAddress.REG_WINOUT:
+            win_out = self.ppu.window_control[WindowIndex.WIN_OUT].reg
+            win_out |= self.ppu.window_control[WindowIndex.WIN_OBJ].reg << 8
+            return win_out
 
         # Sound Control Registers
         elif address == IOAddress.REG_SOUNDBIAS:
@@ -130,6 +141,26 @@ class IO:
             self.ppu.bg_offset_h[3] = value & 0x3FF
         elif address == IOAddress.REG_BG3VOFS:
             self.ppu.bg_offset_v[3] = value & 0x3FF
+
+        # Window Registers
+        elif address == IOAddress.REG_WIN0H:
+            self.ppu.window_h_min[0] = (value >> 8) & 0xFF
+            self.ppu.window_h_max[0] = value & 0xFF
+        elif address == IOAddress.REG_WIN1H:
+            self.ppu.window_h_min[1] = (value >> 8) & 0xFF
+            self.ppu.window_h_max[1] = value & 0xFF
+        elif address == IOAddress.REG_WIN0V:
+            self.ppu.window_v_min[0] = (value >> 8) & 0xFF
+            self.ppu.window_v_max[0] = value & 0xFF
+        elif address == IOAddress.REG_WIN1V:
+            self.ppu.window_v_min[1] = (value >> 8) & 0xFF
+            self.ppu.window_v_max[1] = value & 0xFF
+        elif address == IOAddress.REG_WININ:
+            self.ppu.window_control[WindowIndex.WIN_0].reg = value & 0x3F
+            self.ppu.window_control[WindowIndex.WIN_1].reg = (value >> 8) & 0x3F
+        elif address == IOAddress.REG_WINOUT:
+            self.ppu.window_control[WindowIndex.WIN_OUT].reg = value & 0x3F
+            self.ppu.window_control[WindowIndex.WIN_OBJ].reg = (value >> 8) & 0x3F
 
         # Sound Control Registers
         elif address == IOAddress.REG_SOUNDBIAS:
@@ -226,7 +257,7 @@ class IO:
         old_value = self.read_16(aligned_address)
         new_value = (
             (old_value & 0x00FF) | (value << 8)
-            if get_bit(value, 0)
+            if get_bit(address, 0)
             else (old_value & 0xFF00) | value
         )
 

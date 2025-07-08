@@ -101,6 +101,14 @@ class IOAddress(IntEnum):
     REG_BG3HOFS = 0x0400001C
     REG_BG3VOFS = 0x0400001E
 
+    # Window Registers
+    REG_WIN0H = 0x04000040
+    REG_WIN1H = 0x04000042
+    REG_WIN0V = 0x04000044
+    REG_WIN1V = 0x04000046
+    REG_WININ = 0x04000048
+    REG_WINOUT = 0x0400004A
+
     # Sound Control Registers
     REG_SOUNDBIAS = 0x04000088
     REG_FIFO_A = 0x040000A0

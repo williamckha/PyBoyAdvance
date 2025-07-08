@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from array import array
 from ctypes import c_void_p
-from enum import IntEnum
 
 from pyboy_advance.interrupt_controller import InterruptController, Interrupt
 from pyboy_advance.ppu.constants import *
@@ -12,6 +11,7 @@ from pyboy_advance.ppu.registers import (
     DisplayControlRegister,
     DisplayStatusRegister,
     BackgroundControlRegister,
+    WindowControlRegister,
 )
 from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import (
@@ -39,6 +39,24 @@ class PPU:
         self.bg_offset_h = [0] * NUM_BACKGROUNDS
         self.bg_offset_v = [0] * NUM_BACKGROUNDS
 
+        self.window_v_min = [0] * NUM_PRIMARY_WINDOWS
+        self.window_v_max = [0] * NUM_PRIMARY_WINDOWS
+        self.window_h_min = [0] * NUM_PRIMARY_WINDOWS
+        self.window_h_max = [0] * NUM_PRIMARY_WINDOWS
+
+        self.window_control = {
+            WindowIndex.WIN_0: WindowControlRegister(),
+            WindowIndex.WIN_1: WindowControlRegister(),
+            WindowIndex.WIN_OBJ: WindowControlRegister(),
+            WindowIndex.WIN_OUT: WindowControlRegister(),
+        }
+
+        self.window_mask = {
+            WindowIndex.WIN_0: array("H", [0] * DISPLAY_WIDTH),
+            WindowIndex.WIN_1: array("H", [0] * DISPLAY_WIDTH),
+            WindowIndex.WIN_OBJ: array("H", [0] * DISPLAY_WIDTH),
+        }
+
         self.memory = VideoMemory(self.display_control)
 
         self.bg_scanline = [array("H", [0] * DISPLAY_WIDTH) for _ in range(NUM_BACKGROUNDS)]
@@ -61,6 +79,7 @@ class PPU:
 
         if self.vcount < DISPLAY_HEIGHT:
             self._init_layers()
+            self._calc_window_masks()
 
             if not self.display_control.force_blank:
                 self._render_backgrounds()
@@ -241,12 +260,13 @@ class PPU:
 
         for obj_index in range(MAX_NUM_OBJECTS - 1, -1, -1):
             obj_address = obj_index * OAM_ENTRY_SIZE
-            obj = Object(
-                self.memory.read_16_oam(obj_address),
-                self.memory.read_16_oam(obj_address + 2),
-                self.memory.read_16_oam(obj_address + 4),
+            self._render_object(
+                Object(
+                    self.memory.read_16_oam(obj_address),
+                    self.memory.read_16_oam(obj_address + 2),
+                    self.memory.read_16_oam(obj_address + 4),
+                )
             )
-            self._render_object(obj)
 
     def _render_object(self, obj: Object):
         if obj.disabled:
@@ -297,10 +317,13 @@ class PPU:
             )
 
             if palette_index:
-                colour = self.memory.read_16_palram(
-                    OBJ_PALETTE_OFFSET + palette_index * COLOUR_SIZE
-                )
-                self.obj_scanline[obj.priority][win_x] = colour
+                if obj.mode == ObjectMode.WINDOW:
+                    self.window_mask[WindowIndex.WIN_OBJ][win_x] = 1
+                else:
+                    colour = self.memory.read_16_palram(
+                        OBJ_PALETTE_OFFSET + palette_index * COLOUR_SIZE
+                    )
+                    self.obj_scanline[obj.priority][win_x] = colour
 
     def _merge_layers(self):
         for priority in range(NUM_PRIORITIES - 1, -1, -1):
@@ -309,19 +332,69 @@ class PPU:
                     self.display_control.display_bg(bg_num)
                     and self.bg_control[bg_num].priority == priority
                 ):
-                    self._merge_layer(self.bg_scanline[bg_num])
+                    self._merge_layer(self.bg_scanline[bg_num], LayerType(bg_num))
 
             if self.display_control.display_obj:
-                self._merge_layer(self.obj_scanline[priority])
+                self._merge_layer(self.obj_scanline[priority], LayerType.OBJ)
 
         for x in range(DISPLAY_WIDTH):
             self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = self.scanline[x]
 
-    def _merge_layer(self, scanline):
+    def _merge_layer(self, scanline, layer_type: LayerType):
+        windowing_enabled = (
+            self.display_control.display_window(WindowIndex.WIN_0)
+            or self.display_control.display_window(WindowIndex.WIN_1)
+            or self.display_control.display_window(WindowIndex.WIN_OBJ)
+        )
+
         for x in range(DISPLAY_WIDTH):
+            if windowing_enabled:
+                window_control = self._get_window_for_pixel(x)
+                if not window_control.display_layer(layer_type):
+                    continue
+
             colour = scanline[x]
             if colour != TRANSPARENT_COLOUR:
                 self.scanline[x] = colour
+
+    def _calc_window_masks(self):
+        for window in (WindowIndex.WIN_0, WindowIndex.WIN_1):
+            window_mask = self.window_mask[window]
+
+            h_min = self.window_h_min[window]
+            h_max = self.window_h_max[window]
+            v_min = self.window_v_min[window]
+            v_max = self.window_v_max[window]
+
+            inside_v_bounds = (
+                v_min <= self.vcount < v_max
+                if v_min <= v_max
+                else (self.vcount < v_max or self.vcount >= v_min)
+            )
+
+            if not self.display_control.display_window(window) or not inside_v_bounds:
+                for x in range(DISPLAY_WIDTH):
+                    window_mask[x] = 0
+            else:
+                if h_min <= h_max:
+                    for x in range(DISPLAY_WIDTH):
+                        window_mask[x] = h_min <= x < h_max
+                else:
+                    for x in range(DISPLAY_WIDTH):
+                        window_mask[x] = x < h_max or x >= h_min
+
+        for x in range(DISPLAY_WIDTH):
+            self.window_mask[WindowIndex.WIN_OBJ][x] = 0
+
+    def _get_window_for_pixel(self, x):
+        if self.window_mask[WindowIndex.WIN_0][x]:
+            return self.window_control[WindowIndex.WIN_0]
+        elif self.window_mask[WindowIndex.WIN_1][x]:
+            return self.window_control[WindowIndex.WIN_1]
+        elif self.window_mask[WindowIndex.WIN_OBJ][x]:
+            return self.window_control[WindowIndex.WIN_OBJ]
+        else:
+            return self.window_control[WindowIndex.WIN_OUT]
 
     def _get_palette_index(
         self,

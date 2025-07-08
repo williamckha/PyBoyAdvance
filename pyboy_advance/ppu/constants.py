@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from enum import IntEnum
+
 DISPLAY_WIDTH = 240
 DISPLAY_HEIGHT = 160
 
@@ -36,4 +38,19 @@ VRAM_PAGE_OFFSET = 0xA000
 
 NUM_BACKGROUNDS = NUM_PRIORITIES = 4
 
+NUM_PRIMARY_WINDOWS = 2
 
+
+class LayerType(IntEnum):
+    BG_0 = 0
+    BG_1 = 1
+    BG_2 = 2
+    BG_3 = 3
+    OBJ = 4
+
+
+class WindowIndex(IntEnum):
+    WIN_0 = 0
+    WIN_1 = 1
+    WIN_OBJ = 2
+    WIN_OUT = 3
