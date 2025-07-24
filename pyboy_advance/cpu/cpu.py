@@ -287,7 +287,7 @@ class CPU:
 
         elif shift_type == ShiftType.ROR:
             # ROR by n where n is greater than 32 will give the same result and carry out
-            # as ROR by n-32; therefore repeatedly subtract 32 from n until the amount is
+            # as ROR by n-32; therefore, repeatedly subtract 32 from n until the amount is
             # in the range 1 to 32.
             if shift_amount > 32:
                 shift_amount = ((shift_amount - 1) % 32) + 1

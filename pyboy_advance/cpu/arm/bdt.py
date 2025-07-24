@@ -46,7 +46,7 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
         # Up: add offset to base
         final_address = add_int32_to_uint32(base, reg_list_count * 4)
     else:
-        # Down; subtract offset from base
+        # Down: subtract offset from base
         final_address = add_int32_to_uint32(base, reg_list_count * -4)
 
         # Move base to the final address and increment from there,
@@ -104,7 +104,7 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
         # The pipeline also needs to be flushed since PC was changed
         cpu.flush_pipeline()
 
-    # Otherwise, the S bit indicates a User Bank Transfer, so if its ON then we
+    # Otherwise, the S bit indicates a User Bank Transfer, so if it's ON then we
     # must have switched into user mode earlier. Hence, we need to switch back
     # into the mode we were in before the transfer.
     elif psr_and_force_user_bit:

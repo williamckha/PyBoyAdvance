@@ -18,6 +18,7 @@ class VideoMode(IntEnum):
     def _missing_(cls, value):
         if value == 6 or value == 7:
             return cls.MODE_5
+        return None
 
     @property
     def bitmapped(self):
