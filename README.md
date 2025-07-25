@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/pyboy_advance.svg" alt="PyBoy Advance" width="240">
+  <img src="https://raw.githubusercontent.com/williamckha/PyBoyAdvance/master/assets/pyboy_advance.svg" alt="PyBoy Advance" width="240">
 </p>
 
 ---
@@ -45,7 +45,7 @@ emulator.run()
 ## Screenshots
 
 <p align="center">
-  <img src="assets/screenshot_kirby.png" alt="Screenshot of PyBoy Advance running Kirby: Nightmare in Dream Land" width="400">
+  <img src="https://raw.githubusercontent.com/williamckha/PyBoyAdvance/master/assets/screenshot_kirby.png" alt="Screenshot of PyBoy Advance running Kirby: Nightmare in Dream Land" width="400">
 </p>
 
 ## Acknowledgements
