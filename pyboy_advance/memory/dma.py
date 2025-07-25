@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from pyboy_advance.interrupt_controller import Interrupt
 from pyboy_advance.memory.constants import IOAddress, MemoryAccess
-from pyboy_advance.scheduler import Scheduler
+from pyboy_advance.scheduler import Scheduler, EventTrigger
 from pyboy_advance.utils import get_bits, bint, get_bit, set_bit
 
 if TYPE_CHECKING:
@@ -75,6 +75,8 @@ class DMAChannel:
 
     INTERRUPT = [Interrupt.DMA_0, Interrupt.DMA_1, Interrupt.DMA_2, Interrupt.DMA_3]
 
+    TRANSFER_DELAY = 2
+
     def __init__(self, channel_id: int, scheduler: Scheduler, memory: Memory):
         self.channel_id = channel_id
         self.scheduler = scheduler
@@ -90,6 +92,8 @@ class DMAChannel:
         self._internal_src = 0
         self._internal_dst = 0
         self._internal_count = 0
+
+        self._event = None
 
     @property
     def control_reg(self) -> int:
@@ -116,10 +120,21 @@ class DMAChannel:
                 self._internal_count = DMAChannel.COUNT_MASK[self.channel_id] + 1
 
             if self._control_reg.start_timing == DMAStartTiming.IMMEDIATELY:
-                self.scheduler.schedule(self.activate, 2)
+                self._event = self.scheduler.schedule(self.activate, DMAChannel.TRANSFER_DELAY)
+            elif self._control_reg.start_timing == DMAStartTiming.VBLANK:
+                self._event = self.scheduler.schedule(
+                    self.activate, DMAChannel.TRANSFER_DELAY, EventTrigger.VBLANK
+                )
+            elif self._control_reg.start_timing == DMAStartTiming.HBLANK:
+                self._event = self.scheduler.schedule(
+                    self.activate, DMAChannel.TRANSFER_DELAY, EventTrigger.HBLANK
+                )
 
         elif old_enable and not self._control_reg.enable:  # DMA cancelled
-            pass
+            if self._event:
+                self._event.cancelled = False
+                self._event = None
+            self.pending = False
 
     @property
     def count(self) -> int:
@@ -166,7 +181,7 @@ class DMAChannel:
         else:
             raise ValueError
 
-        dst_adj = self._control_reg.src_address_adjustment
+        dst_adj = self._control_reg.dst_address_adjustment
         if self.fifo:
             dst_step = 0
         elif dst_adj == DMAAddressAdjustment.INCREMENT:
@@ -197,16 +212,26 @@ class DMAChannel:
         if self._control_reg.irq_when_done:
             self.memory.io.interrupt_controller.signal(DMAChannel.INTERRUPT[self.channel_id])
 
+        self.pending = False
+
         if self._control_reg.repeat:
             if dst_adj == DMAAddressAdjustment.INCREMENT_RELOAD:
                 self._internal_dst = self._dst
+
+            if self._control_reg.start_timing == DMAStartTiming.VBLANK:
+                self._event = self.scheduler.schedule(
+                    self.activate, DMAChannel.TRANSFER_DELAY, EventTrigger.VBLANK
+                )
+            elif self._control_reg.start_timing == DMAStartTiming.HBLANK:
+                self._event = self.scheduler.schedule(
+                    self.activate, DMAChannel.TRANSFER_DELAY, EventTrigger.HBLANK
+                )
         else:
             self._control_reg.enable = False
 
-        self.pending = False
-
     def activate(self):
-        self.pending = True
+        if self._control_reg.enable:
+            self.pending = True
 
 
 class DMAController:

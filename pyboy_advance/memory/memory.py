@@ -61,10 +61,6 @@ class Memory:
     def power_down_mode(self) -> PowerDownMode:
         return self.io.interrupt_controller.power_down_mode
 
-    @power_down_mode.setter
-    def power_down_mode(self, mode: PowerDownMode):
-        self.io.interrupt_controller.power_down_mode = mode
-
     def read_32(self, address: int, access_type: MemoryAccess) -> int:
         return self._read_32_internal(address, access_type)
 

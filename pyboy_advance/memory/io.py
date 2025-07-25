@@ -249,7 +249,7 @@ class IO:
         elif address == IOAddress.REG_IME:
             self.interrupt_controller.interrupt_master_enable = value
         elif address == IOAddress.REG_HALTCNT:
-            self.memory.power_down_mode = PowerDownMode(get_bit(value, 15) + 1)
+            self.interrupt_controller.power_down_mode = PowerDownMode(get_bit(value, 15) + 1)
 
     def write_8(self, address: int, value: int):
         aligned_address = address & ~1

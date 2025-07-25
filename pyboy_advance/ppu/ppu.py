@@ -13,7 +13,7 @@ from pyboy_advance.ppu.registers import (
     BackgroundControlRegister,
     WindowControlRegister,
 )
-from pyboy_advance.scheduler import Scheduler
+from pyboy_advance.scheduler import Scheduler, EventTrigger
 from pyboy_advance.utils import (
     get_bit,
     get_bits,
@@ -87,6 +87,8 @@ class PPU:
 
             self._merge_layers()
 
+            self.scheduler.trigger(EventTrigger.HBLANK)
+
         if self.display_status.hblank_irq:
             self.interrupt_controller.signal(Interrupt.HBLANK)
 
@@ -114,6 +116,8 @@ class PPU:
 
             if self.display_status.vblank_irq:
                 self.interrupt_controller.signal(Interrupt.VBLANK)
+
+            self.scheduler.trigger(EventTrigger.VBLANK)
 
         if self.display_status.vcount_irq and self.display_status.vcount_trigger_status:
             self.interrupt_controller.signal(Interrupt.VCOUNT)
