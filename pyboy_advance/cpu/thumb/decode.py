@@ -37,30 +37,30 @@ THUMB_PATTERNS: list[tuple[int, int, InstructionHandler]] = [
     # ---------+-----------+------------------------------------
     # Mask     | Value     | Handler
     # ---------+-----------+------------------------------------
-    (0b11111111, 0b11011111, thumb_software_interrupt),
-    (0b11111000, 0b11100000, thumb_unconditional_branch),
-    (0b11110000, 0b11010000, thumb_conditional_branch),
-    (0b11110000, 0b11110000, thumb_long_branch_with_link),
-    (0b11110000, 0b11000000, thumb_multiple_load_store),
-    (0b11110110, 0b10110100, thumb_push_pop_registers),
-    (0b11111111, 0b10110000, thumb_add_offset_to_stack_pointer),
-    (0b11110000, 0b10100000, thumb_get_address),
-    (0b11110000, 0b10010000, thumb_sp_relative_load_store),
-    (0b11110000, 0b10000000, thumb_load_store_halfword),
-    (0b11100000, 0b01100000, thumb_load_store_immediate_offset),
-    (0b11110010, 0b01010000, thumb_load_store_register_offset),
-    (0b11110010, 0b01010010, thumb_load_store_sign_extended),
-    (0b11111000, 0b01001000, thumb_pc_relative_load),
-    (0b11111100, 0b01000100, thumb_high_reg_branch_exchange),
-    (0b11111100, 0b01000000, thumb_alu),
-    (0b11100000, 0b00100000, thumb_move_compare_add_subtract),
-    (0b11111000, 0b00011000, thumb_add_subtract),
-    (0b11100000, 0b00000000, thumb_move_shifted_register),
+    (0b1111_1111, 0b1101_1111, thumb_software_interrupt),
+    (0b1111_1000, 0b1110_0000, thumb_unconditional_branch),
+    (0b1111_0000, 0b1101_0000, thumb_conditional_branch),
+    (0b1111_0000, 0b1111_0000, thumb_long_branch_with_link),
+    (0b1111_0000, 0b1100_0000, thumb_multiple_load_store),
+    (0b1111_0110, 0b1011_0100, thumb_push_pop_registers),
+    (0b1111_1111, 0b1011_0000, thumb_add_offset_to_stack_pointer),
+    (0b1111_0000, 0b1010_0000, thumb_get_address),
+    (0b1111_0000, 0b1001_0000, thumb_sp_relative_load_store),
+    (0b1111_0000, 0b1000_0000, thumb_load_store_halfword),
+    (0b1110_0000, 0b0110_0000, thumb_load_store_immediate_offset),
+    (0b1111_0010, 0b0101_0000, thumb_load_store_register_offset),
+    (0b1111_0010, 0b0101_0010, thumb_load_store_sign_extended),
+    (0b1111_1000, 0b0100_1000, thumb_pc_relative_load),
+    (0b1111_1100, 0b0100_0100, thumb_high_reg_branch_exchange),
+    (0b1111_1100, 0b0100_0000, thumb_alu),
+    (0b1110_0000, 0b0010_0000, thumb_move_compare_add_subtract),
+    (0b1111_1000, 0b0001_1000, thumb_add_subtract),
+    (0b1110_0000, 0b0000_0000, thumb_move_shifted_register),
 ]
 
-THUMB_LUT: list[InstructionHandler | None] = [None] * 256
+THUMB_LUT: list[InstructionHandler | None] = [None] * (2**8)
 
-for opcode in range(256):
+for opcode in range(2**8):
     for mask, value, handler in THUMB_PATTERNS:
         if (opcode & mask) == value:
             THUMB_LUT[opcode] = handler
