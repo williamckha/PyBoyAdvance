@@ -12,6 +12,9 @@ This project is not meant to compete with those emulators nor match their
 capabilities. In fact, PyBoy Advance is rather crap (and slow!) by comparison. I work on this project purely for fun, 
 with my end goal being to offer a highly readable implementation of a GBA emulator for educational purposes.
 
+>[!WARNING]
+> This is experimental software and under heavy development. Some GBA hardware features are not yet implemented and many games do not function properly. 
+
 ## Getting started
 
 PyBoy Advance is written in pure Python and technically can be run with the standard CPython interpreter, but
