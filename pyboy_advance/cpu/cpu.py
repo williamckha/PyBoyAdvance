@@ -77,26 +77,10 @@ class CPU:
 
         cond = Condition(get_bits(instruction, 28, 31))
         if self.check_condition(cond):
-            if __debug__:
-                print(
-                    "Executing <{0:#010x}> {1:032b} {2}".format(
-                        (self.regs.pc - 8),
-                        instruction,
-                        instruction_handler.__name__,
-                    )
-                )
-
             instruction_handler(self, instruction)
         else:
             # Skip instruction since condition was not met
-            if __debug__:
-                print(
-                    "Skipping  <{0:#010x}> {1:032b} {2}".format(
-                        (self.regs.pc - 8),
-                        instruction,
-                        instruction_handler.__name__,
-                    )
-                )
+            pass
 
             self.advance_pc_arm()
             self.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -107,16 +91,6 @@ class CPU:
         self.pipeline[1] = self.memory.read_16(self.regs.pc, self.next_fetch_access)
 
         instruction_handler = thumb_decode(instruction)
-
-        if __debug__:
-            print(
-                "Executing <{0:#010x}> {1:032b} {2}".format(
-                    (self.regs.pc - 4),
-                    instruction,
-                    instruction_handler.__name__,
-                )
-            )
-
         instruction_handler(self, instruction)
 
     def advance_pc_arm(self):
