@@ -487,4 +487,3 @@ class WaitstateControlRegister:
     @property
     def ws2_seq(self):
         return 1 if get_bit(self.reg, 10) else 8
-    

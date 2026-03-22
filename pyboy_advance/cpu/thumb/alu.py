@@ -237,7 +237,7 @@ def thumb_get_address(cpu: CPU, instr: int):
 
 def thumb_add_offset_to_stack_pointer(cpu: CPU, instr: int):
     """Execute a THUMB.13 instruction (add offset to SP)"""
-    
+
     sign = -1 if get_bit(instr, 7) else 1
     offset = sign * get_bits(instr, 0, 6) * 4
 
