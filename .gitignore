@@ -33,3 +33,8 @@ var/
 # IntelliJ IDEA files
 .idea/
 *.iml
+
+/pyboy_advance/**/*.c
+/pyboy_advance/**/*.h
+/pyboy_advance/**/*.html
+/pyboy_advance/**/*.so
