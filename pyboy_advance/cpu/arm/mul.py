@@ -4,7 +4,7 @@ from enum import IntEnum
 from typing import TYPE_CHECKING
 
 from pyboy_advance.memory.constants import MemoryAccess
-from pyboy_advance.utils import get_bit, get_bits, sign_32, interpret_signed_32, interpret_signed_64
+from pyboy_advance.utils import get_bit, get_bits, sign_32, extend_sign_32
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -72,14 +72,14 @@ def arm_multiply_long(cpu: CPU, instr: int):
     elif opcode == MultiplyLongOpcode.SMULL:
         arm_multiply_idle(cpu, cpu.regs[rs], signed=True)
 
-        result = interpret_signed_32(cpu.regs[rm]) * interpret_signed_32(cpu.regs[rs])
+        result = extend_sign_32(cpu.regs[rm]) * extend_sign_32(cpu.regs[rs])
 
     elif opcode == MultiplyLongOpcode.SMLAL:
         arm_multiply_idle(cpu, cpu.regs[rs], signed=True)
         cpu.scheduler.idle()
 
-        result = interpret_signed_64((cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo])
-        result += interpret_signed_32(cpu.regs[rm]) * interpret_signed_32(cpu.regs[rs])
+        result = (cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo]
+        result += extend_sign_32(cpu.regs[rm]) * extend_sign_32(cpu.regs[rs])
 
     else:
         raise ValueError

@@ -24,10 +24,6 @@ def set_bit(num: int, i: int, bit: bint) -> int:
     return (num & ~(1 << i)) | (bit << i)
 
 
-def sign_64(num: int) -> bint:
-    return get_bit(num, 64)
-
-
 def sign_32(num: int) -> bint:
     return get_bit(num, 31)
 
@@ -56,44 +52,44 @@ def sign_8(num: int) -> bint:
     return get_bit(num, 7)
 
 
+def extend_sign_32(num: int) -> int:
+    extension = 0xFFFFFFFF00000000
+    return num | extension if sign_32(num) else num
+
+
+def extend_sign_24(num: int) -> int:
+    extension = 0xFF000000
+    return num | extension if sign_24(num) else num
+
+
+def extend_sign_23(num: int) -> int:
+    extension = 0xFF800000
+    return num | extension if sign_23(num) else num
+
+
 def extend_sign_16(num: int) -> int:
-    return num | 0xFFFF0000 if sign_16(num) else num
+    extension = 0xFFFF0000
+    return num | extension if sign_16(num) else num
+
+
+def extend_sign_12(num: int) -> int:
+    extension = 0xFFFFF000
+    return num | extension if sign_12(num) else num
+
+
+def extend_sign_9(num: int) -> int:
+    extension = 0xFFFFFE00
+    return num | extension if sign_9(num) else num
 
 
 def extend_sign_8(num: int) -> int:
-    return num | 0xFFFFFF00 if sign_8(num) else num
+    extension = 0xFFFFFF00
+    return num | extension if sign_8(num) else num
 
 
-def interpret_signed_64(num: int) -> int:
-    return (num - (1 << 64)) if sign_64(num) else num
-
-
-def interpret_signed_32(num: int) -> int:
-    return (num - (1 << 32)) if sign_32(num) else num
-
-
-def interpret_signed_24(num: int) -> int:
-    return (num - (1 << 24)) if sign_24(num) else num
-
-
-def interpret_signed_23(num: int) -> int:
-    return (num - (1 << 23)) if sign_23(num) else num
-
-
-def interpret_signed_12(num: int) -> int:
-    return (num - (1 << 12)) if sign_12(num) else num
-
-
-def interpret_signed_9(num: int) -> int:
-    return (num - (1 << 9)) if sign_9(num) else num
-
-
-def interpret_signed_8(num: int) -> int:
-    return (num - (1 << 8)) if sign_8(num) else num
-
-
-def add_32(op1_uint: int, op2_uint: int) -> int:
-    return (op1_uint + op2_uint) & 0xFFFFFFFF
+def add_32(op1: int, op2: int) -> int:
+    mask = 0xFFFFFFFF
+    return (op1 + op2) & mask
 
 
 def ror_32(num: int, amount: int) -> int:
@@ -104,7 +100,8 @@ def ror_32(num: int, amount: int) -> int:
     :param amount: number of bits to rotate to the right (must be <= 32)
     :return: num rotated right by amount bits
     """
-    return ((num >> amount) | (num << (32 - amount))) & 0xFFFFFFFF
+    mask = 0xFFFFFFFF
+    return ((num >> amount) | (num << (32 - amount))) & mask
 
 
 def array_read_32(arr: array, address: int) -> int:

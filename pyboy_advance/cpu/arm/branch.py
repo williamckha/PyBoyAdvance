@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pyboy_advance.cpu.constants import CPUState
-from pyboy_advance.utils import interpret_signed_24, get_bit, add_32
+from pyboy_advance.utils import extend_sign_24, get_bit, add_32
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 def arm_branch(cpu: CPU, instr: int):
     """Execute a Branch or Branch and Link instruction"""
 
-    offset = interpret_signed_24((instr & 0xFFFFFF)) * 4
+    offset = extend_sign_24((instr & 0xFFFFFF)) * 4
     link_flag = get_bit(instr, 24)
 
     if link_flag:

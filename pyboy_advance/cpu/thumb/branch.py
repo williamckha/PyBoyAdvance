@@ -6,11 +6,11 @@ from pyboy_advance.cpu.constants import Condition
 from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import (
     get_bits,
-    interpret_signed_12,
-    interpret_signed_8,
+    extend_sign_12,
+    extend_sign_8,
     get_bit,
     add_32,
-    interpret_signed_23,
+    extend_sign_23,
 )
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 def thumb_unconditional_branch(cpu: CPU, instr: int):
     """Execute a THUMB.18 instruction (unconditional branch)"""
 
-    offset = interpret_signed_12(get_bits(instr, 0, 10) << 1)
+    offset = extend_sign_12(get_bits(instr, 0, 10) << 1)
     cpu.regs.pc = add_32(cpu.regs.pc, offset)
     cpu.flush_pipeline()
 
@@ -29,7 +29,7 @@ def thumb_conditional_branch(cpu: CPU, instr: int):
     """Execute a THUMB.16 instruction (conditional branch)"""
 
     condition = Condition(get_bits(instr, 8, 11))
-    offset = interpret_signed_8(get_bits(instr, 0, 7)) * 2
+    offset = extend_sign_8(get_bits(instr, 0, 7)) * 2
 
     if cpu.check_condition(condition):
         cpu.regs.pc = add_32(cpu.regs.pc, offset)
@@ -49,7 +49,7 @@ def thumb_long_branch_with_link(cpu: CPU, instr: int):
 
     is_first_opcode = not get_bit(instr, 11)
     if is_first_opcode:
-        address_upper_bits = interpret_signed_23(get_bits(instr, 0, 10) << 12)
+        address_upper_bits = extend_sign_23(get_bits(instr, 0, 10) << 12)
         cpu.regs.lr = add_32(cpu.regs.pc, address_upper_bits)
         cpu.advance_pc_thumb()
         cpu.next_fetch_access = MemoryAccess.SEQUENTIAL

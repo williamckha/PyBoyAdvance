@@ -18,7 +18,9 @@ from pyboy_advance.utils import (
     get_bit,
     get_bits,
     bint,
-    interpret_signed_9,
+    sign_32,
+    add_32,
+    extend_sign_9,
 )
 
 
@@ -281,7 +283,7 @@ class PPU:
         if self.display_control.video_mode.bitmapped and obj.tile_index < 512:
             return
 
-        obj_x = interpret_signed_9(obj.x)
+        obj_x = extend_sign_9(obj.x)
         obj_y = obj.y
         obj_w, obj_h = obj.size
         obj_flip_h, obj_flip_v = obj.flip_horizontal, obj.flip_vertical
@@ -298,8 +300,8 @@ class PPU:
         rel_y = obj_y - offset_y - 1 if obj_flip_v else offset_y
 
         for offset_x in range(0, obj_w):
-            win_x = obj_x + offset_x
-            if win_x < 0 or win_x >= DISPLAY_WIDTH:
+            win_x = add_32(obj_x, offset_x)
+            if sign_32(win_x) or win_x >= DISPLAY_WIDTH:
                 continue
 
             rel_x = obj_w - offset_x - 1 if obj_flip_h else offset_x

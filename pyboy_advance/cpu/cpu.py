@@ -22,7 +22,7 @@ from pyboy_advance.utils import (
     get_bit,
     ror_32,
     add_32,
-    interpret_signed_32,
+    extend_sign_32,
     bint,
 )
 
@@ -141,13 +141,9 @@ class CPU:
         self.regs.spsr.reg = cpsr_reg
 
         if vector == ExceptionVector.SWI or vector == ExceptionVector.UNDEFINED_INSTRUCTION:
-            self.regs.lr = add_32(
-                self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else -2
-            )
+            self.regs.lr = add_32(self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else -2)
         elif vector != ExceptionVector.RESET:
-            self.regs.lr = add_32(
-                self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else 0
-            )
+            self.regs.lr = add_32(self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else 0)
 
         self.regs.cpsr.state = CPUState.ARM
         self.regs.cpsr.irq_disable = True
@@ -256,7 +252,7 @@ class CPU:
                 result = 0xFFFFFFFF if carry_out else 0
             else:
                 carry_out = get_bit(value, shift_amount - 1)
-                result = (interpret_signed_32(value) >> shift_amount) & 0xFFFFFFFF
+                result = (extend_sign_32(value) >> shift_amount) & 0xFFFFFFFF
 
         elif shift_type == ShiftType.ROR:
             # ROR by n where n is greater than 32 will give the same result and carry out
