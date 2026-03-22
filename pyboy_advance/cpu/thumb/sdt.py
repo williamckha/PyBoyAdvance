@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pyboy_advance.memory.constants import MemoryAccess
-from pyboy_advance.utils import get_bits, get_bit, add_uint32_to_uint32
+from pyboy_advance.utils import get_bits, get_bit, add_32
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -18,7 +18,7 @@ def thumb_pc_relative_load(cpu: CPU, instr: int):
     rd = get_bits(instr, 8, 10)  # Source/destination reg
 
     offset = get_bits(instr, 0, 7) << 2
-    address = add_uint32_to_uint32(cpu.regs.pc & ~2, offset)
+    address = add_32(cpu.regs.pc & ~2, offset)
 
     cpu.regs[rd] = cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL)
     cpu.scheduler.idle()
@@ -37,7 +37,7 @@ def thumb_load_store_register_offset(cpu: CPU, instr: int):
     rb = get_bits(instr, 3, 5)  # Base reg
     rd = get_bits(instr, 0, 2)  # Source/destination reg
 
-    address = add_uint32_to_uint32(cpu.regs[rb], cpu.regs[ro])
+    address = add_32(cpu.regs[rb], cpu.regs[ro])
 
     opcode = get_bits(instr, 10, 11)
     if opcode == 0:  # STR
@@ -65,7 +65,7 @@ def thumb_load_store_sign_extended(cpu: CPU, instr: int):
     rb = get_bits(instr, 3, 5)  # Base reg
     rd = get_bits(instr, 0, 2)  # Source/destination reg
 
-    address = add_uint32_to_uint32(cpu.regs[rb], cpu.regs[ro])
+    address = add_32(cpu.regs[rb], cpu.regs[ro])
 
     opcode = get_bits(instr, 10, 11)
     if opcode == 0:  # STRH
@@ -95,7 +95,7 @@ def thumb_load_store_immediate_offset(cpu: CPU, instr: int):
 
     opcode = get_bits(instr, 11, 12)
     offset = (get_bits(instr, 6, 10) << 2) if opcode in (0, 1) else get_bits(instr, 6, 10)
-    address = add_uint32_to_uint32(cpu.regs[rb], offset)
+    address = add_32(cpu.regs[rb], offset)
 
     if opcode == 0:  # STR
         cpu.memory.write_32(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
@@ -122,7 +122,7 @@ def thumb_load_store_halfword(cpu: CPU, instr: int):
     rd = get_bits(instr, 0, 2)  # Source/destination reg
 
     offset = get_bits(instr, 6, 10) << 1
-    address = add_uint32_to_uint32(cpu.regs[rb], offset)
+    address = add_32(cpu.regs[rb], offset)
 
     opcode = get_bit(instr, 11)
     if opcode:  # LDRH
@@ -145,7 +145,7 @@ def thumb_sp_relative_load_store(cpu: CPU, instr: int):
     rd = get_bits(instr, 8, 10)  # Source/destination reg
 
     offset = get_bits(instr, 0, 7) << 2
-    address = add_uint32_to_uint32(cpu.regs.sp, offset)
+    address = add_32(cpu.regs.sp, offset)
 
     opcode = get_bit(instr, 11)
     if opcode:  # LDR

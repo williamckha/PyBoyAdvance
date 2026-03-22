@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.memory.constants import MemoryAccess
-from pyboy_advance.utils import get_bits, get_bit, add_int32_to_uint32
+from pyboy_advance.utils import get_bits, get_bit, add_32
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
@@ -40,7 +40,7 @@ def arm_halfword_data_transfer(cpu: CPU, instr: int):
     )
 
     base = cpu.regs[rn]
-    address = add_int32_to_uint32(base, offset if up_down_bit else -offset)
+    address = add_32(base, offset if up_down_bit else -offset)
     effective_address = address if pre_post_bit else base
 
     cpu.advance_pc_arm()

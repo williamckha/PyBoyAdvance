@@ -92,12 +92,8 @@ def interpret_signed_8(num: int) -> int:
     return (num - (1 << 8)) if sign_8(num) else num
 
 
-def add_uint32_to_uint32(op1_uint: int, op2_uint: int) -> int:
+def add_32(op1_uint: int, op2_uint: int) -> int:
     return (op1_uint + op2_uint) & 0xFFFFFFFF
-
-
-def add_int32_to_uint32(op_uint: int, op_int: int) -> int:
-    return (op_uint + op_int) % 0x100000000
 
 
 def ror_32(num: int, amount: int) -> int:

@@ -21,10 +21,9 @@ from pyboy_advance.utils import (
     get_bits,
     get_bit,
     ror_32,
-    add_uint32_to_uint32,
+    add_32,
     interpret_signed_32,
     bint,
-    add_int32_to_uint32,
 )
 
 logger = logging.getLogger(__name__)
@@ -94,10 +93,10 @@ class CPU:
         instruction_handler(self, instruction)
 
     def advance_pc_arm(self):
-        self.regs.pc = add_uint32_to_uint32(self.regs.pc, ARM_PC_INCREMENT)
+        self.regs.pc = add_32(self.regs.pc, ARM_PC_INCREMENT)
 
     def advance_pc_thumb(self):
-        self.regs.pc = add_uint32_to_uint32(self.regs.pc, THUMB_PC_INCREMENT)
+        self.regs.pc = add_32(self.regs.pc, THUMB_PC_INCREMENT)
 
     def flush_pipeline(self):
         if self.regs.cpsr.state == CPUState.ARM:
@@ -142,11 +141,11 @@ class CPU:
         self.regs.spsr.reg = cpsr_reg
 
         if vector == ExceptionVector.SWI or vector == ExceptionVector.UNDEFINED_INSTRUCTION:
-            self.regs.lr = add_int32_to_uint32(
+            self.regs.lr = add_32(
                 self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else -2
             )
         elif vector != ExceptionVector.RESET:
-            self.regs.lr = add_int32_to_uint32(
+            self.regs.lr = add_32(
                 self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else 0
             )
 

@@ -26,8 +26,7 @@ from pyboy_advance.utils import (
     get_bits,
     get_bit,
     sign_32,
-    add_uint32_to_uint32,
-    add_int32_to_uint32,
+    add_32,
 )
 
 if TYPE_CHECKING:
@@ -189,7 +188,7 @@ def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):
     opcode = get_bits(instr, 8, 9)
 
     if opcode == 0:  # ADD
-        cpu.regs[rd] = add_uint32_to_uint32(cpu.regs[rd], cpu.regs[rs])
+        cpu.regs[rd] = add_32(cpu.regs[rd], cpu.regs[rs])
         if rd == Registers.PC:
             cpu.flush_pipeline()
             return
@@ -226,10 +225,10 @@ def thumb_get_address(cpu: CPU, instr: int):
 
     if opcode:
         # Load from SP
-        cpu.regs[rd] = add_uint32_to_uint32(cpu.regs.sp, offset)
+        cpu.regs[rd] = add_32(cpu.regs.sp, offset)
     else:
         # Load from PC
-        cpu.regs[rd] = add_uint32_to_uint32(cpu.regs.pc & ~2, offset)
+        cpu.regs[rd] = add_32(cpu.regs.pc & ~2, offset)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -241,7 +240,7 @@ def thumb_add_offset_to_stack_pointer(cpu: CPU, instr: int):
     sign = -1 if get_bit(instr, 7) else 1
     offset = sign * get_bits(instr, 0, 6) * 4
 
-    cpu.regs.sp = add_int32_to_uint32(cpu.regs.sp, offset)
+    cpu.regs.sp = add_32(cpu.regs.sp, offset)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
