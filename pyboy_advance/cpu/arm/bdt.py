@@ -33,10 +33,10 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
     # If the reg list is empty, PC is loaded/stored and base is
     # incremented as if all regs were transferred
     if reg_list_count == 0:
-        reg_list = set_bit(reg_list, Registers.PC, True)
+        reg_list = set_bit(reg_list, cpu.regs.PC, True)
         reg_list_count = 16
 
-    pc_in_reg_list = get_bit(reg_list, Registers.PC)
+    pc_in_reg_list = get_bit(reg_list, cpu.regs.PC)
 
     base = cpu.regs[base_reg]
 

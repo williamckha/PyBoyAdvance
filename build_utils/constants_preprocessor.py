@@ -68,8 +68,14 @@ def generate_constants_pyx(py_file_path: str | os.PathLike) -> str | os.PathLike
             pyx_lines.append(f"    {const_name} = {const_value}")
         pyx_lines.append("")
 
-    base, _ = os.path.splitext(py_file_path)
+    base = py_file_path.split(".", 1)[0]
+
+    pxd_path = base + ".pxd"
+    with open(pxd_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(pyx_lines) + "\n")
+
     pyx_path = base + ".pyx"
     with open(pyx_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(pyx_lines) + "\n")
+        f.write("")
+
     return pyx_path

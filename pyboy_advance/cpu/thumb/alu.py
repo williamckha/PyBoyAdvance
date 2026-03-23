@@ -189,7 +189,7 @@ def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):
 
     if opcode == 0:  # ADD
         cpu.regs[rd] = add_32(cpu.regs[rd], cpu.regs[rs])
-        if rd == Registers.PC:
+        if rd == cpu.regs.PC:
             cpu.flush_pipeline()
             return
 
@@ -198,7 +198,7 @@ def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):
 
     elif opcode == 2:  # MOV
         cpu.regs[rd] = cpu.regs[rs]
-        if rd == Registers.PC:
+        if rd == cpu.regs.PC:
             cpu.flush_pipeline()
             return
 

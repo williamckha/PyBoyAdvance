@@ -40,3 +40,6 @@ var/
 /pyboy_advance/**/*.so
 /pyboy_advance/**/*.build.py
 /pyboy_advance/**/*.build.pyx
+/pyboy_advance/**/*.build.pxd
+/pyboy_advance/**/constants.pyx
+/pyboy_advance/**/constants.pxd

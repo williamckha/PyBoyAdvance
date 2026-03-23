@@ -63,7 +63,7 @@ def arm_halfword_data_transfer(cpu: CPU, instr: int):
 
         cpu.scheduler.idle()
 
-        if rd == Registers.PC:
+        if rd == cpu.regs.PC:
             cpu.flush_pipeline()
 
     else:  # Store
