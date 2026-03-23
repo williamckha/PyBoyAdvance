@@ -1,3 +1,5 @@
+import ast
+import logging
 import multiprocessing
 import os
 import platform
@@ -5,7 +7,7 @@ import sys
 from multiprocessing import cpu_count
 import numpy as np
 
-from setuptools import Extension, setup
+from setuptools import Extension, setup, Command
 
 CYTHON = platform.python_implementation() == "CPython"
 ROOT_DIR = "pyboy_advance"
@@ -101,7 +103,7 @@ class build_ext(_build_ext):
 
 
 def prep_pxd_py_files():
-    ignore_py_files = ["__main__.py", "manager_gen.py", "opcodes_gen.py", "conftest.py"]
+    ignore_py_files = ["__main__.py", "conftest.py", "constants.py"]
     # Cython doesn't trigger a recompile on .py files, where only the .pxd file has changed. So we fix this here.
     # We also yield the py_files that have a .pxd file, as we feed these into the cythonize call.
     for root, dirs, files in os.walk(ROOT_DIR):
@@ -115,9 +117,97 @@ def prep_pxd_py_files():
                         os.utime(py_file)
 
 
+class GenerateConstantsPyxCommand(Command):
+    description = "Generate .pyx files from Python files containing enums and constants"
+
+    CONSTANTS_PY_FILES = [
+        f"{ROOT_DIR}/cpu/constants.py",
+        f"{ROOT_DIR}/memory/constants.py",
+        f"{ROOT_DIR}/ppu/constants.py",
+    ]
+
+    def initialize_options(self):
+        return
+
+    def finalize_options(self):
+        return
+
+    def run(self):
+        for file_path in self.CONSTANTS_PY_FILES:
+            if os.path.isfile(file_path):
+                pyx_path = self.generate_constants_pyx(file_path)
+                if pyx_path:
+                    self.announce(f"Generated: {pyx_path}", level=logging.INFO)
+                else:
+                    self.warn(f"Failed to generate .pyx for: {file_path}")
+            else:
+                self.warn(f"File not found: {file_path}")
+
+    def generate_constants_pyx(self, py_file_path):
+        """
+        Generate a .pyx file from a Python file containing enums and constants.
+        IntEnum/IntFlag/Enum definitions are converted to named cpdef enum definitions.
+        Global constants are placed in an anonymous cdef enum.
+        """
+        try:
+            with open(py_file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            tree = ast.parse(content)
+
+            pyx_lines = [
+                f"# This file was auto-generated using `setup.py generate_constants_pyx`",
+                f"# Generated from {py_file_path}",
+                f"",
+            ]
+
+            global_constants = []
+
+            for node in tree.body:
+                if isinstance(node, ast.ClassDef):
+                    # Convert IntEnum/IntFlag/Enum classes to cdef enum definitions
+                    bases = [base.id for base in node.bases if isinstance(base, ast.Name)]
+                    if not any(base in ("IntEnum", "IntFlag", "Enum") for base in bases):
+                        continue
+
+                    pyx_lines.append(f"cpdef enum {node.name}:")
+
+                    for item in node.body:
+                        if isinstance(item, ast.Assign):
+                            if len(item.targets) == 1 and isinstance(item.targets[0], ast.Name):
+                                member_name = item.targets[0].id
+                                if isinstance(item.value, ast.Constant):
+                                    member_value = item.value.value
+                                    pyx_lines.append(f"    {member_name} = {member_value}")
+
+                    pyx_lines.append("")
+
+                elif isinstance(node, ast.Assign):
+                    # Collect global constants
+                    if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+                        member_name = node.targets[0].id
+                        if isinstance(node.value, ast.Constant):
+                            member_value = node.value.value
+                            global_constants.append((member_name, member_value))
+
+            if global_constants:
+                pyx_lines.append("cdef enum:")
+                for const_name, const_value in global_constants:
+                    pyx_lines.append(f"    {const_name} = {const_value}")
+                pyx_lines.append("")
+
+            pyx_path = py_file_path.replace(".py", ".pyx")
+            with open(pyx_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(pyx_lines) + "\n")
+            return pyx_path
+        except Exception as e:
+            self.announce(f"Could not generate pyx for {py_file_path}: {e}")
+
+
 setup(
     cmdclass={
         "build_ext": build_ext,
+        "generate_constants_pyx": GenerateConstantsPyxCommand,
     },
     ext_modules=[Extension("", [""])],  # Added to trigger a binary wheel
 )

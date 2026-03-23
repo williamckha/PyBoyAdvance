@@ -59,7 +59,7 @@ class PyBoyAdvance:
             self.cpu.regs.pc = 0x08000000
             self.cpu.flush_pipeline()
         else:
-            self.cpu.interrupt(ExceptionVector.RESET)
+            self.cpu.interrupt(ExceptionVector.EV_RESET)
 
     def step(self):
         if self.dma_controller.active:

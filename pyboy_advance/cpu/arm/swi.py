@@ -11,4 +11,4 @@ if TYPE_CHECKING:
 def arm_software_interrupt(cpu: CPU, instr: int):
     """Execute a Software Interrupt instruction (SWI)"""
 
-    cpu.interrupt(ExceptionVector.SWI)
+    cpu.interrupt(ExceptionVector.EV_SWI)
