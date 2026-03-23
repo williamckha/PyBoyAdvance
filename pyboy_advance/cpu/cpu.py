@@ -55,16 +55,20 @@ class CPU:
         self.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
     def step(self):
-        if self.memory.irq_line and not self.regs.cpsr.irq_disable:
+        irq_line = self.memory.io.interrupt_controller.irq_line
+
+        if irq_line and not self.regs.cpsr.irq_disable:
             self.interrupt(ExceptionVector.EV_IRQ)
 
-        if self.memory.power_down_mode == PowerDownMode.NONE:
+        power_down_mode = self.memory.io.interrupt_controller.power_down_mode
+
+        if power_down_mode == PowerDownMode.NONE:
             if self.regs.cpsr.state == CPUState.ARM:
                 self.step_arm()
             else:
                 self.step_thumb()
 
-        elif self.memory.power_down_mode == PowerDownMode.HALT:
+        elif power_down_mode == PowerDownMode.HALT:
             self.scheduler.idle_until_next_event()
 
     def step_arm(self):

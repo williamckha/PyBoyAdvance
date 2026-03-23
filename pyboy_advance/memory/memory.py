@@ -53,14 +53,6 @@ class Memory:
 
         self._init_access_times()
 
-    @property
-    def irq_line(self) -> bool:
-        return self.io.interrupt_controller.irq_line
-
-    @property
-    def power_down_mode(self) -> PowerDownMode:
-        return self.io.interrupt_controller.power_down_mode
-
     def read_32(self, address: int, access_type: MemoryAccess) -> int:
         return self._read_32_internal(address, access_type)
 

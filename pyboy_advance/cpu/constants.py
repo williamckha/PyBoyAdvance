@@ -53,5 +53,14 @@ class ExceptionVector(IntEnum):
     EV_FIQ = 0x1C
 
 
+class BankIndex(IntEnum):
+    BANK_SYSTEM_USER = 0
+    BANK_FIQ = 1
+    BANK_IRQ = 2
+    BANK_SWI = 3
+    BANK_ABORT = 4
+    BANK_UNDEFINED = 5
+
+
 ARM_PC_INCREMENT = 4
 THUMB_PC_INCREMENT = 2

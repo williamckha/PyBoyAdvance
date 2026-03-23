@@ -38,3 +38,5 @@ var/
 /pyboy_advance/**/*.h
 /pyboy_advance/**/*.html
 /pyboy_advance/**/*.so
+/pyboy_advance/**/*.build.py
+/pyboy_advance/**/*.build.pyx

@@ -1,8 +1,7 @@
 import os
 
-from pyboy_advance.cpu.constants import ExceptionVector
+from pyboy_advance.cpu.constants import ExceptionVector, BankIndex
 from pyboy_advance.cpu.cpu import CPU
-from pyboy_advance.cpu.registers import BankIndex
 from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.keypad import Keypad
 from pyboy_advance.memory.dma import DMAController
@@ -49,12 +48,12 @@ class PyBoyAdvance:
         self.cpu = CPU(self.scheduler, self.memory)
 
         if skip_bios:
-            self.cpu.regs.banked_sp[BankIndex.SYSTEM_USER] = 0x03007F00
-            self.cpu.regs.banked_sp[BankIndex.FIQ] = 0x03007F00
-            self.cpu.regs.banked_sp[BankIndex.IRQ] = 0x03007FA0
-            self.cpu.regs.banked_sp[BankIndex.SWI] = 0x03007FE0
-            self.cpu.regs.banked_sp[BankIndex.ABORT] = 0x03007F00
-            self.cpu.regs.banked_sp[BankIndex.UNDEFINED] = 0x03007F00
+            self.cpu.regs.banked_sp[BankIndex.BANK_SYSTEM_USER] = 0x03007F00
+            self.cpu.regs.banked_sp[BankIndex.BANK_FIQ] = 0x03007F00
+            self.cpu.regs.banked_sp[BankIndex.BANK_IRQ] = 0x03007FA0
+            self.cpu.regs.banked_sp[BankIndex.BANK_SWI] = 0x03007FE0
+            self.cpu.regs.banked_sp[BankIndex.BANK_ABORT] = 0x03007F00
+            self.cpu.regs.banked_sp[BankIndex.BANK_UNDEFINED] = 0x03007F00
             self.cpu.regs.sp = 0x03007F00
             self.cpu.regs.pc = 0x08000000
             self.cpu.flush_pipeline()
