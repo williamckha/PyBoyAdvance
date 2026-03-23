@@ -5,6 +5,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from build_utils.property_preprocessor import preprocess_properties
 from build_utils.constants_preprocessor import preprocess_constants
+from build_utils.cython_guard_preprocessor import preprocess_cython_guards
 
 import multiprocessing
 import os
@@ -78,6 +79,7 @@ class BuildExt(_build_ext):
             shutil.copy(src_file, build_file)
             preprocessed_files.append(build_file)
 
+        preprocessed_files = preprocess_cython_guards(preprocessed_files)
         preprocessed_files = preprocess_properties(preprocessed_files)
         preprocessed_files = preprocess_constants(preprocessed_files)
 
