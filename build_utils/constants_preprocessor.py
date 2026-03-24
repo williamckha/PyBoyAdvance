@@ -34,6 +34,7 @@ def generate_constants_pyx(py_file_path: str | os.PathLike) -> str | os.PathLike
 
     pyx_lines = []
     global_constants = []
+    constants: dict[str, int] = {}
 
     for node in tree.body:
         if isinstance(node, ast.ClassDef):
@@ -48,9 +49,11 @@ def generate_constants_pyx(py_file_path: str | os.PathLike) -> str | os.PathLike
                 if isinstance(item, ast.Assign):
                     if len(item.targets) == 1 and isinstance(item.targets[0], ast.Name):
                         member_name = item.targets[0].id
-                        if isinstance(item.value, ast.Constant):
-                            member_value = item.value.value
-                            pyx_lines.append(f"    {member_name} = {member_value}")
+                        if member_name in constants:
+                            raise ValueError(f"Duplicate constant name: {member_name}")
+                        member_value = _eval_int_expr(item.value, constants)
+                        constants[member_name] = member_value
+                        pyx_lines.append(f"    {member_name} = {member_value}")
 
             pyx_lines.append("")
 
@@ -58,9 +61,11 @@ def generate_constants_pyx(py_file_path: str | os.PathLike) -> str | os.PathLike
             # Collect global constants
             if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
                 member_name = node.targets[0].id
-                if isinstance(node.value, ast.Constant):
-                    member_value = node.value.value
-                    global_constants.append((member_name, member_value))
+                if member_name in constants:
+                    raise ValueError(f"Duplicate constant name: {member_name}")
+                member_value = _eval_int_expr(node.value, constants)
+                constants[member_name] = member_value
+                global_constants.append((member_name, member_value))
 
     if global_constants:
         pyx_lines.append("cdef enum:")
@@ -79,3 +84,47 @@ def generate_constants_pyx(py_file_path: str | os.PathLike) -> str | os.PathLike
         f.write("")
 
     return pyx_path
+
+
+def _eval_int_expr(node: ast.AST, constants: dict[str, int]) -> int:
+    if isinstance(node, ast.Constant) and isinstance(node.value, int):
+        return node.value
+    if isinstance(node, ast.Name):
+        if node.id in constants:
+            return constants[node.id]
+        raise ValueError(f"Unknown name: {node.id}")
+    if isinstance(node, ast.BinOp):
+        left = _eval_int_expr(node.left, constants)
+        right = _eval_int_expr(node.right, constants)
+        op = node.op
+        if isinstance(op, ast.Add):
+            return left + right
+        if isinstance(op, ast.Sub):
+            return left - right
+        if isinstance(op, ast.Mult):
+            return left * right
+        if isinstance(op, ast.FloorDiv):
+            return left // right
+        if isinstance(op, ast.Mod):
+            return left % right
+        if isinstance(op, ast.LShift):
+            return left << right
+        if isinstance(op, ast.RShift):
+            return left >> right
+        if isinstance(op, ast.BitOr):
+            return left | right
+        if isinstance(op, ast.BitAnd):
+            return left & right
+        if isinstance(op, ast.BitXor):
+            return left ^ right
+        raise ValueError(f"Unsupported binary operator: {type(op).__name__}")
+    if isinstance(node, ast.UnaryOp):
+        operand = _eval_int_expr(node.operand, constants)
+        if isinstance(node.op, ast.USub):
+            return -operand
+        if isinstance(node.op, ast.UAdd):
+            return +operand
+        if isinstance(node.op, ast.Invert):
+            return ~operand
+        raise ValueError(f"Unsupported unary operator: {type(node.op).__name__}")
+    raise ValueError(f"Unsupported expression node: {type(node).__name__}")
