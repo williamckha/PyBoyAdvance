@@ -1,3 +1,4 @@
+# ifndef CYTHON
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -30,45 +31,55 @@ from pyboy_advance.cpu.thumb.sdt import (
 )
 from pyboy_advance.cpu.thumb.swi import thumb_software_interrupt
 
-if TYPE_CHECKING:
-    from pyboy_advance.cpu.cpu import InstructionHandler
+from pyboy_advance.cpu.cpu import InstrPattern
 
-THUMB_PATTERNS: list[tuple[int, int, InstructionHandler]] = [
-    # ---------+-----------+------------------------------------
-    # Mask     | Value     | Handler
-    # ---------+-----------+------------------------------------
-    (0b1111_1111, 0b1101_1111, thumb_software_interrupt),
-    (0b1111_1000, 0b1110_0000, thumb_unconditional_branch),
-    (0b1111_0000, 0b1101_0000, thumb_conditional_branch),
-    (0b1111_0000, 0b1111_0000, thumb_long_branch_with_link),
-    (0b1111_0000, 0b1100_0000, thumb_multiple_load_store),
-    (0b1111_0110, 0b1011_0100, thumb_push_pop_registers),
-    (0b1111_1111, 0b1011_0000, thumb_add_offset_to_stack_pointer),
-    (0b1111_0000, 0b1010_0000, thumb_get_address),
-    (0b1111_0000, 0b1001_0000, thumb_sp_relative_load_store),
-    (0b1111_0000, 0b1000_0000, thumb_load_store_halfword),
-    (0b1110_0000, 0b0110_0000, thumb_load_store_immediate_offset),
-    (0b1111_0010, 0b0101_0000, thumb_load_store_register_offset),
-    (0b1111_0010, 0b0101_0010, thumb_load_store_sign_extended),
-    (0b1111_1000, 0b0100_1000, thumb_pc_relative_load),
-    (0b1111_1100, 0b0100_0100, thumb_high_reg_branch_exchange),
-    (0b1111_1100, 0b0100_0000, thumb_alu),
-    (0b1110_0000, 0b0010_0000, thumb_move_compare_add_subtract),
-    (0b1111_1000, 0b0001_1000, thumb_add_subtract),
-    (0b1110_0000, 0b0000_0000, thumb_move_shifted_register),
+if TYPE_CHECKING:
+    from pyboy_advance.cpu.cpu import InstrHandler
+# endif
+
+THUMB_PATTERNS: list[InstrPattern] = [
+    # ----------+------------+------------+------------------------------------
+    #           | Mask       | Value      | Handler
+    # ----------+------------+------------+------------------------------------
+    InstrPattern(0b1111_1111, 0b1101_1111, thumb_software_interrupt),
+    InstrPattern(0b1111_1000, 0b1110_0000, thumb_unconditional_branch),
+    InstrPattern(0b1111_0000, 0b1101_0000, thumb_conditional_branch),
+    InstrPattern(0b1111_0000, 0b1111_0000, thumb_long_branch_with_link),
+    InstrPattern(0b1111_0000, 0b1100_0000, thumb_multiple_load_store),
+    InstrPattern(0b1111_0110, 0b1011_0100, thumb_push_pop_registers),
+    InstrPattern(0b1111_1111, 0b1011_0000, thumb_add_offset_to_stack_pointer),
+    InstrPattern(0b1111_0000, 0b1010_0000, thumb_get_address),
+    InstrPattern(0b1111_0000, 0b1001_0000, thumb_sp_relative_load_store),
+    InstrPattern(0b1111_0000, 0b1000_0000, thumb_load_store_halfword),
+    InstrPattern(0b1110_0000, 0b0110_0000, thumb_load_store_immediate_offset),
+    InstrPattern(0b1111_0010, 0b0101_0000, thumb_load_store_register_offset),
+    InstrPattern(0b1111_0010, 0b0101_0010, thumb_load_store_sign_extended),
+    InstrPattern(0b1111_1000, 0b0100_1000, thumb_pc_relative_load),
+    InstrPattern(0b1111_1100, 0b0100_0100, thumb_high_reg_branch_exchange),
+    InstrPattern(0b1111_1100, 0b0100_0000, thumb_alu),
+    InstrPattern(0b1110_0000, 0b0010_0000, thumb_move_compare_add_subtract),
+    InstrPattern(0b1111_1000, 0b0001_1000, thumb_add_subtract),
+    InstrPattern(0b1110_0000, 0b0000_0000, thumb_move_shifted_register),
 ]
 
-THUMB_LUT: list[InstructionHandler | None] = [None] * (2**8)
-
-for opcode in range(2**8):
-    for mask, value, handler in THUMB_PATTERNS:
-        if (opcode & mask) == value:
-            THUMB_LUT[opcode] = handler
-            break
+# ifndef CYTHON
+THUMB_LUT: list[InstrHandler | None] = [None] * (2**8)
+# endif
 
 
-def thumb_decode(instr: int) -> InstructionHandler:
+def fill_thumb_lut():
+    for opcode in range(2**8):
+        for pattern in THUMB_PATTERNS:
+            if (opcode & pattern.mask) == pattern.value:
+                THUMB_LUT[opcode] = pattern.handler
+                break
+
+
+fill_thumb_lut()
+
+
+def thumb_decode(instr: int) -> InstrHandler:
     instruction_handler = THUMB_LUT[instr >> 8]
-    if instruction_handler is None:
+    if not instruction_handler:
         raise ValueError(f"Unknown THUMB instruction: {instr:016b}")
     return instruction_handler
