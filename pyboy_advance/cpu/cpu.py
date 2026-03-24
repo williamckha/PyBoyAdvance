@@ -1,6 +1,4 @@
 import logging
-from dataclasses import dataclass
-from typing import Callable, TypeAlias
 
 from pyboy_advance.cpu.arm.decode import arm_decode
 from pyboy_advance.cpu.constants import (
@@ -276,18 +274,3 @@ class CPU:
                 result = ror_32(value, get_bits(shift_amount, 0, 4))
 
         return result, carry_out
-
-
-# ifndef CYTHON
-
-InstrHandler: TypeAlias = Callable[[CPU, int], None]
-
-
-@dataclass
-class InstrPattern:
-    mask: int
-    value: int
-    handler: InstrHandler
-
-
-# endif

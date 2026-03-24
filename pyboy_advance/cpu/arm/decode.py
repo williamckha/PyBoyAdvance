@@ -1,8 +1,6 @@
 # ifndef CYTHON
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from pyboy_advance.cpu.arm.alu import arm_alu
 from pyboy_advance.cpu.arm.bdt import arm_block_data_transfer
 from pyboy_advance.cpu.arm.branch import arm_branch_exchange, arm_branch
@@ -12,11 +10,7 @@ from pyboy_advance.cpu.arm.psr import arm_msr, arm_mrs
 from pyboy_advance.cpu.arm.sdt import arm_single_data_transfer
 from pyboy_advance.cpu.arm.swi import arm_software_interrupt
 from pyboy_advance.cpu.arm.swp import arm_single_data_swap
-
-from pyboy_advance.cpu.cpu import InstrPattern
-
-if TYPE_CHECKING:
-    from pyboy_advance.cpu.cpu import InstrHandler
+from pyboy_advance.cpu.decode import InstrHandler, InstrPattern
 # endif
 
 
