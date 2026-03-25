@@ -1,20 +1,15 @@
+# ifndef CYTHON
 from __future__ import annotations
 
-from enum import IntEnum
 from typing import TYPE_CHECKING
-
-from pyboy_advance.memory.constants import MemoryAccess
-from pyboy_advance.utils import get_bit, get_bits, sign_32, extend_sign_32
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
 
-
-class MultiplyLongOpcode(IntEnum):
-    UMULL = 0b00
-    UMLAL = 0b01
-    SMULL = 0b10
-    SMLAL = 0b11
+from pyboy_advance.cpu.arm.constants import MultiplyLongOpcode
+from pyboy_advance.memory.constants import MemoryAccess
+from pyboy_advance.utils import get_bit, get_bits, sign_32, extend_sign_32
+# endif
 
 
 def arm_multiply(cpu: CPU, instr: int):
@@ -28,13 +23,15 @@ def arm_multiply(cpu: CPU, instr: int):
     accumulate = get_bit(instr, 21)
     set_cond_codes = get_bit(instr, 20)
 
-    arm_multiply_idle(cpu, cpu.regs.get(rs), signed=True)
+    arm_multiply_idle(cpu, cpu.regs.get(rs), True)
+
+    mask = 0xFFFFFFFF
 
     if accumulate:
         cpu.scheduler.idle()
-        cpu.regs.set(rd, (cpu.regs.get(rm) * cpu.regs.get(rs) + cpu.regs.get(rn)) & 0xFFFFFFFF)
+        cpu.regs.set(rd, (cpu.regs.get(rm) * cpu.regs.get(rs) + cpu.regs.get(rn)) & mask)
     else:
-        cpu.regs.set(rd, (cpu.regs.get(rm) * cpu.regs.get(rs)) & 0xFFFFFFFF)
+        cpu.regs.set(rd, (cpu.regs.get(rm) * cpu.regs.get(rs)) & mask)
 
     if set_cond_codes:
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
@@ -58,34 +55,37 @@ def arm_multiply_long(cpu: CPU, instr: int):
     cpu.scheduler.idle()
 
     if opcode == MultiplyLongOpcode.UMULL:
-        arm_multiply_idle(cpu, cpu.regs.get(rs), signed=False)
+        arm_multiply_idle(cpu, cpu.regs.get(rs), False)
 
         result = cpu.regs.get(rm) * cpu.regs.get(rs)
 
     elif opcode == MultiplyLongOpcode.UMLAL:
-        arm_multiply_idle(cpu, cpu.regs.get(rs), signed=False)
+        arm_multiply_idle(cpu, cpu.regs.get(rs), False)
         cpu.scheduler.idle()
 
         result = (cpu.regs.get(rd_hi) << 32) | cpu.regs.get(rd_lo)
         result += cpu.regs.get(rm) * cpu.regs.get(rs)
 
     elif opcode == MultiplyLongOpcode.SMULL:
-        arm_multiply_idle(cpu, cpu.regs.get(rs), signed=True)
+        arm_multiply_idle(cpu, cpu.regs.get(rs), True)
 
         result = extend_sign_32(cpu.regs.get(rm)) * extend_sign_32(cpu.regs.get(rs))
 
     elif opcode == MultiplyLongOpcode.SMLAL:
-        arm_multiply_idle(cpu, cpu.regs.get(rs), signed=True)
+        arm_multiply_idle(cpu, cpu.regs.get(rs), True)
         cpu.scheduler.idle()
 
         result = (cpu.regs.get(rd_hi) << 32) | cpu.regs.get(rd_lo)
         result += extend_sign_32(cpu.regs.get(rm)) * extend_sign_32(cpu.regs.get(rs))
 
+    # ifndef CYTHON
     else:
-        raise ValueError
+        assert False, "Unreachable, opcode must be one of MultiplyLongOpcode"
+    # endif
 
-    cpu.regs.set(rd_lo, result & 0xFFFFFFFF)
-    cpu.regs.set(rd_hi, (result >> 32) & 0xFFFFFFFF)
+    mask = 0xFFFFFFFF
+    cpu.regs.set(rd_lo, result & mask)
+    cpu.regs.set(rd_hi, (result >> 32) & mask)
 
     if set_cond_codes:
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd_hi))

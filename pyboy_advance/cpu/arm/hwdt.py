@@ -1,24 +1,15 @@
+# ifndef CYTHON
 from __future__ import annotations
 
-from enum import IntEnum
 from typing import TYPE_CHECKING
-
-from pyboy_advance.cpu.registers import Registers
-from pyboy_advance.memory.constants import MemoryAccess
-from pyboy_advance.utils import get_bits, get_bit, add_32
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
 
-
-class DataTransferOpcode(IntEnum):
-    STRH = 1  # Store halfword
-    LDRD = 2  # Load doubleword
-    STRD = 3  # Store doubleword
-
-    LDRH = 1  # Load unsigned halfword
-    LDRSB = 2  # Load signed byte
-    LDRSH = 3  # Load signed halfword
+from pyboy_advance.cpu.arm.constants import DataTransferOpcode
+from pyboy_advance.memory.constants import MemoryAccess
+from pyboy_advance.utils import get_bits, get_bit, add_32
+# endif
 
 
 def arm_halfword_data_transfer(cpu: CPU, instr: int):
@@ -46,7 +37,7 @@ def arm_halfword_data_transfer(cpu: CPU, instr: int):
     cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
-    opcode = DataTransferOpcode(get_bits(instr, 5, 6))
+    opcode = get_bits(instr, 5, 6)
 
     if load_store_bit:  # Load
         # When post-indexing, write back is always enabled
@@ -74,9 +65,9 @@ def arm_halfword_data_transfer(cpu: CPU, instr: int):
         if opcode == DataTransferOpcode.STRH:
             cpu.memory.write_16(effective_address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
         elif opcode == DataTransferOpcode.LDRD:
-            raise NotImplementedError("LDRD not implemented on ARM7")
+            pass  # LDRD not implemented on ARM7
         elif opcode == DataTransferOpcode.STRD:
-            raise NotImplementedError("STRD not implemented on ARM7")
+            pass  # STRD not implemented on ARM7
 
         # When post-indexing, write back is always enabled
         # When pre-indexing, write back is optional (controlled by W bit)

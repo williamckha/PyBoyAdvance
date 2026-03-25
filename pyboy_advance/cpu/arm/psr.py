@@ -1,14 +1,15 @@
+# ifndef CYTHON
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyboy_advance.cpu.constants import CPUMode
-from pyboy_advance.cpu.registers import ProgramStatusRegister
-from pyboy_advance.memory.constants import MemoryAccess
-from pyboy_advance.utils import get_bits, get_bit, ror_32
-
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
+
+from pyboy_advance.cpu.constants import CPUMode
+from pyboy_advance.memory.constants import MemoryAccess
+from pyboy_advance.utils import get_bits, get_bit, ror_32
+# endif
 
 
 def arm_mrs(cpu: CPU, instr: int):
@@ -47,11 +48,16 @@ def arm_msr(cpu: CPU, instr: int):
     write_to_extension_field = get_bit(instr, 17)
     write_to_control_field = get_bit(instr, 16)
 
+    flags_mask = 0xFF000000
+    status_mask = 0x00FF0000
+    extension_mask = 0x0000FF00
+    control_mask = 0x000000FF
+
     mask = 0
-    mask |= 0xFF000000 if write_to_flags_field else 0
-    mask |= 0x00FF0000 if write_to_status_field else 0
-    mask |= 0x0000FF00 if write_to_extension_field else 0
-    mask |= 0x000000FF if write_to_control_field else 0
+    mask |= flags_mask if write_to_flags_field else 0
+    mask |= status_mask if write_to_status_field else 0
+    mask |= extension_mask if write_to_extension_field else 0
+    mask |= control_mask if write_to_control_field else 0
 
     # Destination PSR; 0 = CPSR, 1 = SPSR_<current_mode>
     psr = get_bit(instr, 22)
@@ -61,11 +67,12 @@ def arm_msr(cpu: CPU, instr: int):
     else:
         # In user mode, only the condition flags can be changed
         if cpu.regs.cpsr.mode == CPUMode.USER:
-            mask &= 0xFF000000
+            mask &= flags_mask
 
-        new_cpsr = ProgramStatusRegister((cpu.regs.cpsr.reg & ~mask) | (value & mask))
-        cpu.switch_mode(new_cpsr.mode)
-        cpu.regs.cpsr.reg = new_cpsr.reg
+        new_cpsr = (cpu.regs.cpsr.reg & ~mask) | (value & mask)
+        new_cpsr_mode = new_cpsr & 0b11111
+        cpu.switch_mode(new_cpsr_mode)
+        cpu.regs.cpsr.reg = new_cpsr
 
     cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL

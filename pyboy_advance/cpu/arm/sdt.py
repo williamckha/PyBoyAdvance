@@ -1,13 +1,14 @@
+# ifndef CYTHON
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyboy_advance.cpu.registers import Registers
-from pyboy_advance.memory.constants import MemoryAccess
-from pyboy_advance.utils import get_bit, get_bits, add_32
-
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
+
+from pyboy_advance.memory.constants import MemoryAccess
+from pyboy_advance.utils import get_bit, get_bits, add_32
+# endif
 
 
 def arm_single_data_transfer(cpu: CPU, instr: int):

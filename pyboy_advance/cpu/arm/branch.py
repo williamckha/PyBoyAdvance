@@ -1,12 +1,13 @@
+# ifndef CYTHON
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyboy_advance.cpu.constants import CPUState
-from pyboy_advance.utils import extend_sign_24, get_bit, add_32
-
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
+
+from pyboy_advance.utils import extend_sign_24, get_bit, add_32
+# endif
 
 
 def arm_branch(cpu: CPU, instr: int):
@@ -29,5 +30,5 @@ def arm_branch_exchange(cpu: CPU, instr: int):
 
     # Mask out the last bit indicating whether to switch to THUMB mode
     cpu.regs.pc = address & ~1
-    cpu.regs.cpsr.state = CPUState(get_bit(address, 0))
+    cpu.regs.cpsr.state = get_bit(address, 0)
     cpu.flush_pipeline()

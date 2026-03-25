@@ -1,32 +1,14 @@
+# ifndef CYTHON
 from __future__ import annotations
 
-from enum import IntEnum
 from typing import TYPE_CHECKING
-
-from pyboy_advance.cpu.registers import Registers
-from pyboy_advance.utils import get_bits, get_bit, ror_32, sign_32, bint
 
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
 
-
-class ALUOpcode(IntEnum):
-    AND = 0x0
-    EOR = 0x1
-    SUB = 0x2
-    RSB = 0x3
-    ADD = 0x4
-    ADC = 0x5
-    SBC = 0x6
-    RSC = 0x7
-    TST = 0x8
-    TEQ = 0x9
-    CMP = 0xA
-    CMN = 0xB
-    ORR = 0xC
-    MOV = 0xD
-    BIC = 0xE
-    MVN = 0xF
+from pyboy_advance.cpu.arm.constants import ALUOpcode
+from pyboy_advance.utils import get_bits, get_bit, ror_32, sign_32, bint
+# endif
 
 
 def arm_alu(cpu: CPU, instr: int):
@@ -71,7 +53,7 @@ def arm_alu(cpu: CPU, instr: int):
         op1 = cpu.regs.get(rn)
         op2, shift_carry = cpu.decode_and_compute_shift(cpu.regs.get(rm), shift)
 
-    opcode = ALUOpcode(get_bits(instr, 21, 24))
+    opcode = get_bits(instr, 21, 24)
     if opcode == ALUOpcode.AND:
         arm_alu_and(cpu, op1, op2, rd, set_cond_codes, shift_carry)
     elif opcode == ALUOpcode.EOR:
@@ -157,8 +139,9 @@ def arm_alu_sub(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
 
 
 def arm_alu_sub_impl(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint) -> int:
+    mask = 0xFFFFFFFF
     result = op1 - op2
-    truncated_result = result & 0xFFFFFFFF
+    truncated_result = result & mask
     if set_cond_codes and rd != cpu.regs.PC:
         cpu.regs.cpsr.sign_flag = sign_32(truncated_result)
         cpu.regs.cpsr.zero_flag = truncated_result == 0
@@ -176,31 +159,34 @@ def arm_alu_add(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
 
 
 def arm_alu_add_impl(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint) -> int:
+    mask = 0xFFFFFFFF
     result = op1 + op2
-    truncated_result = result & 0xFFFFFFFF
+    truncated_result = result & mask
     if set_cond_codes and rd != cpu.regs.PC:
         cpu.regs.cpsr.sign_flag = sign_32(truncated_result)
         cpu.regs.cpsr.zero_flag = truncated_result == 0
-        cpu.regs.cpsr.carry_flag = result > 0xFFFFFFFF
+        cpu.regs.cpsr.carry_flag = result > mask
         cpu.regs.cpsr.overflow_flag = sign_32(~(op1 ^ op2) & (op2 ^ truncated_result))
     return truncated_result
 
 
 def arm_alu_adc(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
+    mask = 0xFFFFFFFF
     carry = cpu.regs.cpsr.carry_flag
     result = op1 + op2 + carry
-    cpu.regs.set(rd, result & 0xFFFFFFFF)
+    cpu.regs.set(rd, result & mask)
     if set_cond_codes and rd != cpu.regs.PC:
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
         cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
-        cpu.regs.cpsr.carry_flag = result > 0xFFFFFFFF
+        cpu.regs.cpsr.carry_flag = result > mask
         cpu.regs.cpsr.overflow_flag = sign_32(~(op1 ^ op2) & (op2 ^ cpu.regs.get(rd)))
 
 
 def arm_alu_sbc(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
+    mask = 0xFFFFFFFF
     borrow = 1 - cpu.regs.cpsr.carry_flag  # Carry = no borrow, so subtract 0
     result = op1 - op2 - borrow
-    cpu.regs.set(rd, result & 0xFFFFFFFF)
+    cpu.regs.set(rd, result & mask)
     if set_cond_codes and rd != cpu.regs.PC:
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
         cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
@@ -253,7 +239,8 @@ def arm_alu_bic(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint, shi
 
 
 def arm_alu_mvn(cpu: CPU, op2: int, rd: int, set_cond_codes: bint, shift_carry: bint):
-    cpu.regs.set(rd, ~op2 & 0xFFFFFFFF)
+    mask = 0xFFFFFFFF
+    cpu.regs.set(rd, ~op2 & mask)
     if set_cond_codes and rd != cpu.regs.PC:
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
         cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0

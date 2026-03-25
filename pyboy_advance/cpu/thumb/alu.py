@@ -169,7 +169,7 @@ def thumb_alu(cpu: CPU, instr: int):
         cpu.regs.set(rd, (op1 * op2) & 0xFFFFFFFF)
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
         cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
-        arm_multiply_idle(cpu, op1, signed=True)
+        arm_multiply_idle(cpu, op1, True)
     elif opcode == ThumbALUOpcode.BIC:
         arm_alu_bic(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.MVN:

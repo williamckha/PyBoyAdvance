@@ -1,9 +1,12 @@
+# ifndef CYTHON
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from pyboy_advance.cpu.cpu import CPU
+
 from pyboy_advance.cpu.constants import CPUMode
-from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import (
     get_bit,
@@ -11,9 +14,7 @@ from pyboy_advance.utils import (
     set_bit,
     add_32,
 )
-
-if TYPE_CHECKING:
-    from pyboy_advance.cpu.cpu import CPU
+# endif
 
 
 def arm_block_data_transfer(cpu: CPU, instr: int):
@@ -28,7 +29,10 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
     base_reg = get_bits(instr, 16, 19)
     reg_list = get_bits(instr, 0, 15)
 
-    reg_list_count = sum(get_bit(reg_list, reg) for reg in range(16))
+    # Avoiding usage of sum() here to optimize Cython output
+    reg_list_count = 0
+    for reg in range(16):
+        reg_list_count += get_bit(reg_list, reg)
 
     # If the reg list is empty, PC is loaded/stored and base is
     # incremented as if all regs were transferred
