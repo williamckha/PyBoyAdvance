@@ -26,11 +26,11 @@ def arm_single_data_transfer(cpu: CPU, instr: int):
     if immediate_bit:
         rm = get_bits(instr, 0, 3)
         shift = get_bits(instr, 4, 11)
-        offset, _ = cpu.decode_and_compute_shift(cpu.regs[rm], shift)
+        offset, _ = cpu.decode_and_compute_shift(cpu.regs.get(rm), shift)
     else:
         offset = get_bits(instr, 0, 11)
 
-    base = cpu.regs[rn]
+    base = cpu.regs.get(rn)
     address = add_32(base, offset if up_down_bit else -offset)
     effective_address = address if pre_post_bit else base
 
@@ -48,9 +48,9 @@ def arm_single_data_transfer(cpu: CPU, instr: int):
         # When post-indexing, write back is always enabled
         # When pre-indexing, write back is optional (controlled by W bit)
         if not pre_post_bit or write_back_bit:
-            cpu.regs[rn] = address
+            cpu.regs.set(rn, address)
 
-        cpu.regs[rd] = value
+        cpu.regs.set(rd, value)
 
         cpu.scheduler.idle()
 
@@ -60,12 +60,12 @@ def arm_single_data_transfer(cpu: CPU, instr: int):
     else:  # Store
         if byte_word_bit:
             # Store byte
-            cpu.memory.write_8(effective_address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+            cpu.memory.write_8(effective_address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
         else:
             # Store word
-            cpu.memory.write_32(effective_address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+            cpu.memory.write_32(effective_address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
 
         # When post-indexing, write back is always enabled
         # When pre-indexing, write back is optional (controlled by W bit)
         if not pre_post_bit or write_back_bit:
-            cpu.regs[rn] = address
+            cpu.regs.set(rn, address)

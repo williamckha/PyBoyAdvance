@@ -22,7 +22,7 @@ def arm_mrs(cpu: CPU, instr: int):
 
     # Source PSR; 0 = CPSR, 1 = SPSR_<current_mode>
     psr = get_bit(instr, 22)
-    cpu.regs[rd] = cpu.regs.spsr.reg if psr else cpu.regs.cpsr.reg
+    cpu.regs.set(rd, cpu.regs.spsr.reg if psr else cpu.regs.cpsr.reg)
 
     cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -40,7 +40,7 @@ def arm_msr(cpu: CPU, instr: int):
         ror_amount = get_bits(instr, 8, 11) * 2
         value = ror_32(value, ror_amount)
     else:
-        value = cpu.regs[get_bits(instr, 0, 3)]
+        value = cpu.regs.get(get_bits(instr, 0, 3))
 
     write_to_flags_field = get_bit(instr, 19)
     write_to_status_field = get_bit(instr, 18)

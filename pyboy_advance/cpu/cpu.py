@@ -198,7 +198,7 @@ class CPU:
             shift_amount = get_bits(shift, 3, 7)
         else:
             shift_reg = get_bits(shift, 4, 7)
-            shift_amount = self.regs[shift_reg] & 0xFF
+            shift_amount = self.regs.get(shift_reg) & 0xFF
 
         shift_type = get_bits(shift, 1, 2)
 

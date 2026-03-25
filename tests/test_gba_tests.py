@@ -21,10 +21,10 @@ def run_test_rom(rom: str, test_reg: int):
         ):
             gba.step()
     except Exception as e:
-        print(f"Was executing test {gba.cpu.regs[test_reg]:03}")
+        print(f"Was executing test {gba.cpu.regs.get(test_reg):03}")
         raise e
 
-    assert gba.cpu.regs[test_reg] == 0, f"Failed test {gba.cpu.regs[test_reg]:03}"
+    assert gba.cpu.regs.get(test_reg) == 0, f"Failed test {gba.cpu.regs.get(test_reg):03}"
 
 
 def test_arm():

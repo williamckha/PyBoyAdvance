@@ -38,7 +38,7 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
 
     pc_in_reg_list = get_bit(reg_list, cpu.regs.PC)
 
-    base = cpu.regs[base_reg]
+    base = cpu.regs.get(base_reg)
 
     # Find the final address
     if up_down_bit:
@@ -75,16 +75,16 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
                 # Write back before read
                 if first and write_back_bit:
                     first = False
-                    cpu.regs[base_reg] = final_address
+                    cpu.regs.set(base_reg, final_address)
 
-                cpu.regs[reg] = cpu.memory.read_32(base, access_type)
+                cpu.regs.set(reg, cpu.memory.read_32(base, access_type))
             else:  # Store
-                cpu.memory.write_32(base, cpu.regs[reg], access_type)
+                cpu.memory.write_32(base, cpu.regs.get(reg), access_type)
 
                 # Write back after write
                 if first and write_back_bit:
                     first = False
-                    cpu.regs[base_reg] = final_address
+                    cpu.regs.set(base_reg, final_address)
 
             if not pre_post_bit:  # Post: add offset after transfer
                 base = add_32(base, 4)

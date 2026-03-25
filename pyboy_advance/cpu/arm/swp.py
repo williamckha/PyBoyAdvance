@@ -19,13 +19,17 @@ def arm_single_data_swap(cpu: CPU, instr: int):
     byte_word_bit = get_bit(instr, 22)
 
     if byte_word_bit:  # Byte swap
-        temp = cpu.memory.read_8(cpu.regs[base_reg], MemoryAccess.NON_SEQUENTIAL)
-        cpu.memory.write_8(cpu.regs[base_reg], cpu.regs[src_reg], MemoryAccess.NON_SEQUENTIAL)
-        cpu.regs[dst_reg] = temp
+        temp = cpu.memory.read_8(cpu.regs.get(base_reg), MemoryAccess.NON_SEQUENTIAL)
+        cpu.memory.write_8(
+            cpu.regs.get(base_reg), cpu.regs.get(src_reg), MemoryAccess.NON_SEQUENTIAL
+        )
+        cpu.regs.set(dst_reg, temp)
     else:  # Word swap
-        temp = cpu.memory.read_32_ror(cpu.regs[base_reg], MemoryAccess.NON_SEQUENTIAL)
-        cpu.memory.write_32(cpu.regs[base_reg], cpu.regs[src_reg], MemoryAccess.NON_SEQUENTIAL)
-        cpu.regs[dst_reg] = temp
+        temp = cpu.memory.read_32_ror(cpu.regs.get(base_reg), MemoryAccess.NON_SEQUENTIAL)
+        cpu.memory.write_32(
+            cpu.regs.get(base_reg), cpu.regs.get(src_reg), MemoryAccess.NON_SEQUENTIAL
+        )
+        cpu.regs.set(dst_reg, temp)
 
     cpu.scheduler.idle()
 

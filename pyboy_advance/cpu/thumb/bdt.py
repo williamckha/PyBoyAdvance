@@ -18,7 +18,7 @@ def thumb_multiple_load_store(cpu: CPU, instr: int):
 
     reg_list = get_bits(instr, 0, 7)
     base_reg = get_bits(instr, 8, 10)
-    address = cpu.regs[base_reg]
+    address = cpu.regs.get(base_reg)
 
     cpu.advance_pc_thumb()
     cpu.prefetch_access_type = MemoryAccess.NON_SEQUENTIAL
@@ -27,34 +27,34 @@ def thumb_multiple_load_store(cpu: CPU, instr: int):
 
     if reg_list == 0:
         if load:
-            cpu.regs.pc = cpu.memory.read_32(cpu.regs[base_reg], MemoryAccess.NON_SEQUENTIAL)
+            cpu.regs.pc = cpu.memory.read_32(cpu.regs.get(base_reg), MemoryAccess.NON_SEQUENTIAL)
             cpu.flush_pipeline()
         else:
-            cpu.memory.write_32(cpu.regs[base_reg], cpu.regs.pc, MemoryAccess.NON_SEQUENTIAL)
-        cpu.regs[base_reg] = add_32(cpu.regs[base_reg], 0x40)
+            cpu.memory.write_32(cpu.regs.get(base_reg), cpu.regs.pc, MemoryAccess.NON_SEQUENTIAL)
+        cpu.regs.set(base_reg, add_32(cpu.regs.get(base_reg), 0x40))
         return
 
     count = sum(get_bit(instr, reg) for reg in range(8)) * 4
     access_type = MemoryAccess.NON_SEQUENTIAL
 
     if load:
-        cpu.regs[base_reg] = add_32(cpu.regs[base_reg], count)
+        cpu.regs.set(base_reg, add_32(cpu.regs.get(base_reg), count))
         cpu.scheduler.idle()
 
         for reg in range(8):
             if get_bit(reg_list, reg):
-                cpu.regs[reg] = cpu.memory.read_32(address, access_type)
+                cpu.regs.set(reg, cpu.memory.read_32(address, access_type))
                 address = add_32(address, 4)
                 access_type = MemoryAccess.SEQUENTIAL
     else:
         first = True
         for reg in range(8):
             if get_bit(reg_list, reg):
-                cpu.memory.write_32(address, cpu.regs[reg], access_type)
+                cpu.memory.write_32(address, cpu.regs.get(reg), access_type)
                 address = add_32(address, 4)
                 access_type = MemoryAccess.SEQUENTIAL
                 if first:
-                    cpu.regs[base_reg] = add_32(cpu.regs[base_reg], count)
+                    cpu.regs.set(base_reg, add_32(cpu.regs.get(base_reg), count))
                     first = False
 
 
@@ -96,7 +96,7 @@ def thumb_push_registers(cpu: CPU, reg_list: int):
     for reg in range(7, -1, -1):
         if get_bit(reg_list, reg):
             cpu.regs.sp = add_32(cpu.regs.sp, -4)
-            cpu.memory.write_32(cpu.regs.sp, cpu.regs[reg], MemoryAccess.SEQUENTIAL)
+            cpu.memory.write_32(cpu.regs.sp, cpu.regs.get(reg), MemoryAccess.SEQUENTIAL)
 
 
 def thumb_pop_registers(cpu: CPU, reg_list: int):
@@ -118,7 +118,7 @@ def thumb_pop_registers(cpu: CPU, reg_list: int):
     access_type = MemoryAccess.NON_SEQUENTIAL
     for reg in range(8):
         if get_bit(reg_list, reg):
-            cpu.regs[reg] = cpu.memory.read_32(cpu.regs.sp, access_type)
+            cpu.regs.set(reg, cpu.memory.read_32(cpu.regs.sp, access_type))
             cpu.regs.sp = add_32(cpu.regs.sp, 4)
             access_type = MemoryAccess.SEQUENTIAL
 

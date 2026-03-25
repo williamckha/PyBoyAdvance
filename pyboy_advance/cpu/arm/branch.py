@@ -25,7 +25,7 @@ def arm_branch(cpu: CPU, instr: int):
 def arm_branch_exchange(cpu: CPU, instr: int):
     """Execute a Branch and Exchange instruction"""
 
-    address = cpu.regs[instr & 0xF]
+    address = cpu.regs.get(instr & 0xF)
 
     # Mask out the last bit indicating whether to switch to THUMB mode
     cpu.regs.pc = address & ~1

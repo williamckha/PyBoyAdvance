@@ -61,11 +61,11 @@ def thumb_move_shifted_register(cpu: CPU, instr: int):
     opcode = ShiftType(get_bits(instr, 11, 12))
     offset = get_bits(instr, 6, 10)
 
-    result, carry = cpu.compute_shift(cpu.regs[rs], opcode, offset, immediate=True)
+    result, carry = cpu.compute_shift(cpu.regs.get(rs), opcode, offset, immediate=True)
 
-    cpu.regs[rd] = result
-    cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd])
-    cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
+    cpu.regs.set(rd, result)
+    cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
+    cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
     cpu.regs.cpsr.carry_flag = carry
 
     cpu.advance_pc_thumb()
@@ -81,8 +81,8 @@ def thumb_add_subtract(cpu: CPU, instr: int):
     opcode = get_bits(instr, 9, 10)
     immediate_bit = get_bit(instr, 10)
 
-    op1 = cpu.regs[rs]
-    op2 = get_bits(instr, 6, 8) if immediate_bit else cpu.regs[get_bits(instr, 6, 8)]
+    op1 = cpu.regs.get(rs)
+    op2 = get_bits(instr, 6, 8) if immediate_bit else cpu.regs.get(get_bits(instr, 6, 8))
 
     if opcode == 0:  # ADD (Register)
         arm_alu_add(cpu, op1, op2, rd, set_cond_codes=True)
@@ -108,11 +108,11 @@ def thumb_move_compare_add_subtract(cpu: CPU, instr: int):
     if opcode == 0:  # MOV
         arm_alu_mov(cpu, value, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
     elif opcode == 1:  # CMP
-        arm_alu_cmp(cpu, cpu.regs[rd], value)
+        arm_alu_cmp(cpu, cpu.regs.get(rd), value)
     elif opcode == 2:  # ADD
-        arm_alu_add(cpu, cpu.regs[rd], value, rd, set_cond_codes=True)
+        arm_alu_add(cpu, cpu.regs.get(rd), value, rd, set_cond_codes=True)
     elif opcode == 3:  # SUB
-        arm_alu_sub(cpu, cpu.regs[rd], value, rd, set_cond_codes=True)
+        arm_alu_sub(cpu, cpu.regs.get(rd), value, rd, set_cond_codes=True)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -124,16 +124,16 @@ def thumb_alu(cpu: CPU, instr: int):
     rs = get_bits(instr, 3, 5)
     rd = get_bits(instr, 0, 2)
 
-    op1 = cpu.regs[rd]
-    op2 = cpu.regs[rs]
+    op1 = cpu.regs.get(rd)
+    op2 = cpu.regs.get(rs)
 
     def execute_shift(shift_type: ShiftType):
         shift = op2 & 0xFF
         result, carry = cpu.compute_shift(op1, shift_type, shift, immediate=False)
 
-        cpu.regs[rd] = result
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd])
-        cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
+        cpu.regs.set(rd, result)
+        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
+        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
         cpu.regs.cpsr.carry_flag = carry
 
         cpu.scheduler.idle()
@@ -166,9 +166,9 @@ def thumb_alu(cpu: CPU, instr: int):
     elif opcode == ThumbALUOpcode.ORR:
         arm_alu_orr(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.MUL:
-        cpu.regs[rd] = (op1 * op2) & 0xFFFFFFFF
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd])
-        cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
+        cpu.regs.set(rd, (op1 * op2) & 0xFFFFFFFF)
+        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
+        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
         arm_multiply_idle(cpu, op1, signed=True)
     elif opcode == ThumbALUOpcode.BIC:
         arm_alu_bic(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
@@ -188,22 +188,22 @@ def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):
     opcode = get_bits(instr, 8, 9)
 
     if opcode == 0:  # ADD
-        cpu.regs[rd] = add_32(cpu.regs[rd], cpu.regs[rs])
+        cpu.regs.set(rd, add_32(cpu.regs.get(rd), cpu.regs.get(rs)))
         if rd == cpu.regs.PC:
             cpu.flush_pipeline()
             return
 
     elif opcode == 1:  # CMP
-        arm_alu_cmp(cpu, cpu.regs[rd], cpu.regs[rs])
+        arm_alu_cmp(cpu, cpu.regs.get(rd), cpu.regs.get(rs))
 
     elif opcode == 2:  # MOV
-        cpu.regs[rd] = cpu.regs[rs]
+        cpu.regs.set(rd, cpu.regs.get(rs))
         if rd == cpu.regs.PC:
             cpu.flush_pipeline()
             return
 
     elif opcode == 3:  # BX
-        address = cpu.regs[rs]
+        address = cpu.regs.get(rs)
 
         # Mask out the last bit indicating whether to switch to ARM mode
         cpu.regs.pc = address & ~1
@@ -225,10 +225,10 @@ def thumb_get_address(cpu: CPU, instr: int):
 
     if opcode:
         # Load from SP
-        cpu.regs[rd] = add_32(cpu.regs.sp, offset)
+        cpu.regs.set(rd, add_32(cpu.regs.sp, offset))
     else:
         # Load from PC
-        cpu.regs[rd] = add_32(cpu.regs.pc & ~2, offset)
+        cpu.regs.set(rd, add_32(cpu.regs.pc & ~2, offset))
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL

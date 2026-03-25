@@ -47,10 +47,10 @@ class Registers:
         self.banked_spsr_abort = ProgramStatusRegister()
         self.banked_spsr_undefined = ProgramStatusRegister()
 
-    def __getitem__(self, reg: int):
+    def get(self, reg: int):
         return self.regs[reg]
 
-    def __setitem__(self, reg: int, value: int):
+    def set(self, reg: int, value: int):
         self.regs[reg] = value
 
     @property

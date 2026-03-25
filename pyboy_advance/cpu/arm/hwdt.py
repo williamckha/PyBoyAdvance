@@ -36,10 +36,10 @@ def arm_halfword_data_transfer(cpu: CPU, instr: int):
     offset = (
         (get_bits(instr, 8, 11) << 4) | get_bits(instr, 0, 3)
         if immediate_bit
-        else cpu.regs[get_bits(instr, 0, 3)]
+        else cpu.regs.get(get_bits(instr, 0, 3))
     )
 
-    base = cpu.regs[rn]
+    base = cpu.regs.get(rn)
     address = add_32(base, offset if up_down_bit else -offset)
     effective_address = address if pre_post_bit else base
 
@@ -52,14 +52,18 @@ def arm_halfword_data_transfer(cpu: CPU, instr: int):
         # When post-indexing, write back is always enabled
         # When pre-indexing, write back is optional (controlled by W bit)
         if not pre_post_bit or write_back_bit:
-            cpu.regs[rn] = address
+            cpu.regs.set(rn, address)
 
         if opcode == DataTransferOpcode.LDRH:
-            cpu.regs[rd] = cpu.memory.read_16_ror(effective_address, MemoryAccess.NON_SEQUENTIAL)
+            cpu.regs.set(rd, cpu.memory.read_16_ror(effective_address, MemoryAccess.NON_SEQUENTIAL))
         elif opcode == DataTransferOpcode.LDRSB:
-            cpu.regs[rd] = cpu.memory.read_8_signed(effective_address, MemoryAccess.NON_SEQUENTIAL)
+            cpu.regs.set(
+                rd, cpu.memory.read_8_signed(effective_address, MemoryAccess.NON_SEQUENTIAL)
+            )
         elif opcode == DataTransferOpcode.LDRSH:
-            cpu.regs[rd] = cpu.memory.read_16_signed(effective_address, MemoryAccess.NON_SEQUENTIAL)
+            cpu.regs.set(
+                rd, cpu.memory.read_16_signed(effective_address, MemoryAccess.NON_SEQUENTIAL)
+            )
 
         cpu.scheduler.idle()
 
@@ -68,7 +72,7 @@ def arm_halfword_data_transfer(cpu: CPU, instr: int):
 
     else:  # Store
         if opcode == DataTransferOpcode.STRH:
-            cpu.memory.write_16(effective_address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+            cpu.memory.write_16(effective_address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
         elif opcode == DataTransferOpcode.LDRD:
             raise NotImplementedError("LDRD not implemented on ARM7")
         elif opcode == DataTransferOpcode.STRD:
@@ -77,4 +81,4 @@ def arm_halfword_data_transfer(cpu: CPU, instr: int):
         # When post-indexing, write back is always enabled
         # When pre-indexing, write back is optional (controlled by W bit)
         if not pre_post_bit or write_back_bit:
-            cpu.regs[rn] = address
+            cpu.regs.set(rn, address)

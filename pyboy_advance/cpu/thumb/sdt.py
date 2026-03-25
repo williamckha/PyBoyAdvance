@@ -20,7 +20,7 @@ def thumb_pc_relative_load(cpu: CPU, instr: int):
     offset = get_bits(instr, 0, 7) << 2
     address = add_32(cpu.regs.pc & ~2, offset)
 
-    cpu.regs[rd] = cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL)
+    cpu.regs.set(rd, cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL))
     cpu.scheduler.idle()
 
     cpu.advance_pc_thumb()
@@ -37,18 +37,18 @@ def thumb_load_store_register_offset(cpu: CPU, instr: int):
     rb = get_bits(instr, 3, 5)  # Base reg
     rd = get_bits(instr, 0, 2)  # Source/destination reg
 
-    address = add_32(cpu.regs[rb], cpu.regs[ro])
+    address = add_32(cpu.regs.get(rb), cpu.regs.get(ro))
 
     opcode = get_bits(instr, 10, 11)
     if opcode == 0:  # STR
-        cpu.memory.write_32(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+        cpu.memory.write_32(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
     elif opcode == 1:  # STRB
-        cpu.memory.write_8(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+        cpu.memory.write_8(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
     elif opcode == 2:  # LDR
-        cpu.regs[rd] = cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL)
+        cpu.regs.set(rd, cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL))
         cpu.scheduler.idle()
     elif opcode == 3:  # LDRB
-        cpu.regs[rd] = cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL)
+        cpu.regs.set(rd, cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL))
         cpu.scheduler.idle()
 
     cpu.advance_pc_thumb()
@@ -65,19 +65,19 @@ def thumb_load_store_sign_extended(cpu: CPU, instr: int):
     rb = get_bits(instr, 3, 5)  # Base reg
     rd = get_bits(instr, 0, 2)  # Source/destination reg
 
-    address = add_32(cpu.regs[rb], cpu.regs[ro])
+    address = add_32(cpu.regs.get(rb), cpu.regs.get(ro))
 
     opcode = get_bits(instr, 10, 11)
     if opcode == 0:  # STRH
-        cpu.memory.write_16(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+        cpu.memory.write_16(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
     elif opcode == 1:  # LDSB
-        cpu.regs[rd] = cpu.memory.read_8_signed(address, MemoryAccess.NON_SEQUENTIAL)
+        cpu.regs.set(rd, cpu.memory.read_8_signed(address, MemoryAccess.NON_SEQUENTIAL))
         cpu.scheduler.idle()
     elif opcode == 2:  # LDRH
-        cpu.regs[rd] = cpu.memory.read_16_ror(address, MemoryAccess.NON_SEQUENTIAL)
+        cpu.regs.set(rd, cpu.memory.read_16_ror(address, MemoryAccess.NON_SEQUENTIAL))
         cpu.scheduler.idle()
     elif opcode == 3:  # LDSH
-        cpu.regs[rd] = cpu.memory.read_16_signed(address, MemoryAccess.NON_SEQUENTIAL)
+        cpu.regs.set(rd, cpu.memory.read_16_signed(address, MemoryAccess.NON_SEQUENTIAL))
         cpu.scheduler.idle()
 
     cpu.advance_pc_thumb()
@@ -95,17 +95,17 @@ def thumb_load_store_immediate_offset(cpu: CPU, instr: int):
 
     opcode = get_bits(instr, 11, 12)
     offset = (get_bits(instr, 6, 10) << 2) if opcode in (0, 1) else get_bits(instr, 6, 10)
-    address = add_32(cpu.regs[rb], offset)
+    address = add_32(cpu.regs.get(rb), offset)
 
     if opcode == 0:  # STR
-        cpu.memory.write_32(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+        cpu.memory.write_32(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
     elif opcode == 1:  # LDR
-        cpu.regs[rd] = cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL)
+        cpu.regs.set(rd, cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL))
         cpu.scheduler.idle()
     elif opcode == 2:  # STRB
-        cpu.memory.write_8(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+        cpu.memory.write_8(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
     elif opcode == 3:  # LDRB
-        cpu.regs[rd] = cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL)
+        cpu.regs.set(rd, cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL))
         cpu.scheduler.idle()
 
     cpu.advance_pc_thumb()
@@ -122,14 +122,14 @@ def thumb_load_store_halfword(cpu: CPU, instr: int):
     rd = get_bits(instr, 0, 2)  # Source/destination reg
 
     offset = get_bits(instr, 6, 10) << 1
-    address = add_32(cpu.regs[rb], offset)
+    address = add_32(cpu.regs.get(rb), offset)
 
     opcode = get_bit(instr, 11)
     if opcode:  # LDRH
-        cpu.regs[rd] = cpu.memory.read_16_ror(address, MemoryAccess.NON_SEQUENTIAL)
+        cpu.regs.set(rd, cpu.memory.read_16_ror(address, MemoryAccess.NON_SEQUENTIAL))
         cpu.scheduler.idle()
     else:  # STRH
-        cpu.memory.write_16(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+        cpu.memory.write_16(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
         cpu.scheduler.idle()
 
     cpu.advance_pc_thumb()
@@ -149,10 +149,10 @@ def thumb_sp_relative_load_store(cpu: CPU, instr: int):
 
     opcode = get_bit(instr, 11)
     if opcode:  # LDR
-        cpu.regs[rd] = cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL)
+        cpu.regs.set(rd, cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL))
         cpu.scheduler.idle()
     else:  # STR
-        cpu.memory.write_32(address, cpu.regs[rd], MemoryAccess.NON_SEQUENTIAL)
+        cpu.memory.write_32(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL

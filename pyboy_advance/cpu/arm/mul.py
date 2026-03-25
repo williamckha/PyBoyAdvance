@@ -28,17 +28,17 @@ def arm_multiply(cpu: CPU, instr: int):
     accumulate = get_bit(instr, 21)
     set_cond_codes = get_bit(instr, 20)
 
-    arm_multiply_idle(cpu, cpu.regs[rs], signed=True)
+    arm_multiply_idle(cpu, cpu.regs.get(rs), signed=True)
 
     if accumulate:
         cpu.scheduler.idle()
-        cpu.regs[rd] = (cpu.regs[rm] * cpu.regs[rs] + cpu.regs[rn]) & 0xFFFFFFFF
+        cpu.regs.set(rd, (cpu.regs.get(rm) * cpu.regs.get(rs) + cpu.regs.get(rn)) & 0xFFFFFFFF)
     else:
-        cpu.regs[rd] = (cpu.regs[rm] * cpu.regs[rs]) & 0xFFFFFFFF
+        cpu.regs.set(rd, (cpu.regs.get(rm) * cpu.regs.get(rs)) & 0xFFFFFFFF)
 
     if set_cond_codes:
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd])
-        cpu.regs.cpsr.zero_flag = cpu.regs[rd] == 0
+        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
+        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
 
     cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
@@ -58,38 +58,38 @@ def arm_multiply_long(cpu: CPU, instr: int):
     cpu.scheduler.idle()
 
     if opcode == MultiplyLongOpcode.UMULL:
-        arm_multiply_idle(cpu, cpu.regs[rs], signed=False)
+        arm_multiply_idle(cpu, cpu.regs.get(rs), signed=False)
 
-        result = cpu.regs[rm] * cpu.regs[rs]
+        result = cpu.regs.get(rm) * cpu.regs.get(rs)
 
     elif opcode == MultiplyLongOpcode.UMLAL:
-        arm_multiply_idle(cpu, cpu.regs[rs], signed=False)
+        arm_multiply_idle(cpu, cpu.regs.get(rs), signed=False)
         cpu.scheduler.idle()
 
-        result = (cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo]
-        result += cpu.regs[rm] * cpu.regs[rs]
+        result = (cpu.regs.get(rd_hi) << 32) | cpu.regs.get(rd_lo)
+        result += cpu.regs.get(rm) * cpu.regs.get(rs)
 
     elif opcode == MultiplyLongOpcode.SMULL:
-        arm_multiply_idle(cpu, cpu.regs[rs], signed=True)
+        arm_multiply_idle(cpu, cpu.regs.get(rs), signed=True)
 
-        result = extend_sign_32(cpu.regs[rm]) * extend_sign_32(cpu.regs[rs])
+        result = extend_sign_32(cpu.regs.get(rm)) * extend_sign_32(cpu.regs.get(rs))
 
     elif opcode == MultiplyLongOpcode.SMLAL:
-        arm_multiply_idle(cpu, cpu.regs[rs], signed=True)
+        arm_multiply_idle(cpu, cpu.regs.get(rs), signed=True)
         cpu.scheduler.idle()
 
-        result = (cpu.regs[rd_hi] << 32) | cpu.regs[rd_lo]
-        result += extend_sign_32(cpu.regs[rm]) * extend_sign_32(cpu.regs[rs])
+        result = (cpu.regs.get(rd_hi) << 32) | cpu.regs.get(rd_lo)
+        result += extend_sign_32(cpu.regs.get(rm)) * extend_sign_32(cpu.regs.get(rs))
 
     else:
         raise ValueError
 
-    cpu.regs[rd_lo] = result & 0xFFFFFFFF
-    cpu.regs[rd_hi] = (result >> 32) & 0xFFFFFFFF
+    cpu.regs.set(rd_lo, result & 0xFFFFFFFF)
+    cpu.regs.set(rd_hi, (result >> 32) & 0xFFFFFFFF)
 
     if set_cond_codes:
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs[rd_hi])
-        cpu.regs.cpsr.zero_flag = cpu.regs[rd_hi] == 0 and cpu.regs[rd_lo] == 0
+        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd_hi))
+        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd_hi) == 0 and cpu.regs.get(rd_lo) == 0
 
     cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
