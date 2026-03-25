@@ -1,18 +1,20 @@
+# ifndef CYTHON
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyboy_advance.constants import PowerDownMode
-from pyboy_advance.interrupt_controller import InterruptController
-from pyboy_advance.keypad import Keypad
-from pyboy_advance.memory.constants import IOAddress
-from pyboy_advance.memory.dma import DMAController
-from pyboy_advance.ppu.constants import WindowIndex
-from pyboy_advance.ppu.ppu import PPU
-from pyboy_advance.utils import get_bit
-
 if TYPE_CHECKING:
     from pyboy_advance.memory.memory import Memory
+
+from pyboy_advance.interrupt_controller import InterruptController
+from pyboy_advance.memory.constants import IOAddress
+from pyboy_advance.memory.dma import DMAController
+from pyboy_advance.utils import get_bit
+# endif
+
+from pyboy_advance.keypad import Keypad
+from pyboy_advance.ppu.constants import WindowIndex
+from pyboy_advance.ppu.ppu import PPU
 
 
 class IO:
@@ -169,52 +171,68 @@ class IO:
 
         # DMA Source/Destination Registers
         elif address == IOAddress.REG_DMA0SAD_L:
-            self.dma_controller.channel_0.src_address &= 0xFFFF0000
+            mask = 0xFFFF0000
+            self.dma_controller.channel_0.src_address &= mask
             self.dma_controller.channel_0.src_address |= value
         elif address == IOAddress.REG_DMA0SAD_H:
-            self.dma_controller.channel_0.src_address &= 0xFFFF
+            mask = 0xFFFF
+            self.dma_controller.channel_0.src_address &= mask
             self.dma_controller.channel_0.src_address |= value << 16
         elif address == IOAddress.REG_DMA0DAD_L:
-            self.dma_controller.channel_0.dst_address &= 0xFFFF0000
+            mask = 0xFFFF0000
+            self.dma_controller.channel_0.dst_address &= mask
             self.dma_controller.channel_0.dst_address |= value
         elif address == IOAddress.REG_DMA0DAD_H:
-            self.dma_controller.channel_0.dst_address &= 0xFFFF
+            mask = 0xFFFF
+            self.dma_controller.channel_0.dst_address &= mask
             self.dma_controller.channel_0.dst_address |= value << 16
         elif address == IOAddress.REG_DMA1SAD_L:
-            self.dma_controller.channel_1.src_address &= 0xFFFF0000
+            mask = 0xFFFF0000
+            self.dma_controller.channel_1.src_address &= mask
             self.dma_controller.channel_1.src_address |= value
         elif address == IOAddress.REG_DMA1SAD_H:
-            self.dma_controller.channel_1.src_address &= 0xFFFF
+            mask = 0xFFFF
+            self.dma_controller.channel_1.src_address &= mask
             self.dma_controller.channel_1.src_address |= value << 16
         elif address == IOAddress.REG_DMA1DAD_L:
-            self.dma_controller.channel_1.dst_address &= 0xFFFF0000
+            mask = 0xFFFF0000
+            self.dma_controller.channel_1.dst_address &= mask
             self.dma_controller.channel_1.dst_address |= value
         elif address == IOAddress.REG_DMA1DAD_H:
-            self.dma_controller.channel_1.dst_address &= 0xFFFF
+            mask = 0xFFFF
+            self.dma_controller.channel_1.dst_address &= mask
             self.dma_controller.channel_1.dst_address |= value << 16
         elif address == IOAddress.REG_DMA2SAD_L:
-            self.dma_controller.channel_2.src_address &= 0xFFFF0000
+            mask = 0xFFFF0000
+            self.dma_controller.channel_2.src_address &= mask
             self.dma_controller.channel_2.src_address |= value
         elif address == IOAddress.REG_DMA2SAD_H:
-            self.dma_controller.channel_2.src_address &= 0xFFFF
+            mask = 0xFFFF
+            self.dma_controller.channel_2.src_address &= mask
             self.dma_controller.channel_2.src_address |= value << 16
         elif address == IOAddress.REG_DMA2DAD_L:
-            self.dma_controller.channel_2.dst_address &= 0xFFFF0000
+            mask = 0xFFFF0000
+            self.dma_controller.channel_2.dst_address &= mask
             self.dma_controller.channel_2.dst_address |= value
         elif address == IOAddress.REG_DMA2DAD_H:
-            self.dma_controller.channel_2.dst_address &= 0xFFFF
+            mask = 0xFFFF
+            self.dma_controller.channel_2.dst_address &= mask
             self.dma_controller.channel_2.dst_address |= value << 16
         elif address == IOAddress.REG_DMA3SAD_L:
-            self.dma_controller.channel_3.src_address &= 0xFFFF0000
+            mask = 0xFFFF0000
+            self.dma_controller.channel_3.src_address &= mask
             self.dma_controller.channel_3.src_address |= value
         elif address == IOAddress.REG_DMA3SAD_H:
-            self.dma_controller.channel_3.src_address &= 0xFFFF
+            mask = 0xFFFF
+            self.dma_controller.channel_3.src_address &= mask
             self.dma_controller.channel_3.src_address |= value << 16
         elif address == IOAddress.REG_DMA3DAD_L:
-            self.dma_controller.channel_3.dst_address &= 0xFFFF0000
+            mask = 0xFFFF0000
+            self.dma_controller.channel_3.dst_address &= mask
             self.dma_controller.channel_3.dst_address |= value
         elif address == IOAddress.REG_DMA3DAD_H:
-            self.dma_controller.channel_3.dst_address &= 0xFFFF
+            mask = 0xFFFF
+            self.dma_controller.channel_3.dst_address &= mask
             self.dma_controller.channel_3.dst_address |= value << 16
 
         # DMA Control Registers
@@ -250,7 +268,7 @@ class IO:
         elif address == IOAddress.REG_IME:
             self.interrupt_controller.interrupt_master_enable = value
         elif address == IOAddress.REG_HALTCNT:
-            self.interrupt_controller.power_down_mode = PowerDownMode(get_bit(value, 15) + 1)
+            self.interrupt_controller.power_down_mode = get_bit(value, 15) + 1
 
     def write_8(self, address: int, value: int):
         aligned_address = address & ~1

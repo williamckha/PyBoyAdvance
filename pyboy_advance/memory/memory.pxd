@@ -4,6 +4,8 @@ from libc.stdint cimport uint8_t, uint32_t
 from pyboy_advance.cpu.cpu cimport CPU
 from pyboy_advance.cpu.constants cimport CPUState
 from pyboy_advance.memory.constants cimport MemoryRegion, MemoryAccess
+from pyboy_advance.memory.gamepak cimport GamePak
+from pyboy_advance.memory.io cimport IO
 from pyboy_advance.utils cimport (
     get_bit,
     array_read_16,
@@ -18,9 +20,11 @@ from pyboy_advance.utils cimport (
 
 cdef class Memory:
     cdef CPU cpu
+    cdef IO io
     cdef uint8_t[:] bios
     cdef uint8_t[:] ewram
     cdef uint8_t[:] iwram
+    cdef GamePak gamepak
     cdef uint32_t bios_last_opcode
     cdef WaitstateControlRegister wait_control
     cdef array access_time_32_raw

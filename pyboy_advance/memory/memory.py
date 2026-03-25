@@ -4,8 +4,13 @@ from __future__ import annotations
 from array import array
 from typing import TYPE_CHECKING, Iterable
 
+if TYPE_CHECKING:
+    from pyboy_advance.cpu.cpu import CPU
+
 from pyboy_advance.cpu.constants import CPUState
 from pyboy_advance.memory.constants import MemoryRegion, MemoryAccess
+from pyboy_advance.memory.gamepak import GamePak
+from pyboy_advance.memory.io import IO
 from pyboy_advance.utils import (
     get_bit,
     array_read_16,
@@ -17,13 +22,8 @@ from pyboy_advance.utils import (
     extend_sign_8,
     get_bits,
 )
-
-if TYPE_CHECKING:
-    from pyboy_advance.cpu.cpu import CPU
 # endif
 
-from pyboy_advance.memory.gamepak import GamePak
-from pyboy_advance.memory.io import IO
 from pyboy_advance.scheduler import Scheduler
 
 
