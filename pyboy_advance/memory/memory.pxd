@@ -1,5 +1,5 @@
-from cpython.array cimport array
 from libc.stdint cimport uint8_t, uint32_t
+from cpython.array cimport array
 
 from pyboy_advance.cpu.cpu cimport CPU
 from pyboy_advance.cpu.constants cimport CPUState

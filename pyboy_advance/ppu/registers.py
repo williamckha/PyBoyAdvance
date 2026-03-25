@@ -1,28 +1,9 @@
+# ifndef CYTHON
 from __future__ import annotations
 
-from enum import IntEnum
-
-from pyboy_advance.ppu.constants import LayerType, WindowIndex
-from pyboy_advance.utils import get_bits, bint, get_bit, set_bit
-
-
-class VideoMode(IntEnum):
-    MODE_0 = 0
-    MODE_1 = 1
-    MODE_2 = 2
-    MODE_3 = 3
-    MODE_4 = 4
-    MODE_5 = 5
-
-    @classmethod
-    def _missing_(cls, value):
-        if value == 6 or value == 7:
-            return cls.MODE_5
-        return None
-
-    @property
-    def bitmapped(self):
-        return self in [VideoMode.MODE_3, VideoMode.MODE_4, VideoMode.MODE_5]
+from pyboy_advance.ppu.constants import LayerType, WindowIndex, VideoMode
+from pyboy_advance.utils import get_bits, get_bit, set_bit, bint
+# endif
 
 
 class DisplayControlRegister:
@@ -30,8 +11,8 @@ class DisplayControlRegister:
         self.reg = 0
 
     @property
-    def video_mode(self) -> VideoMode:
-        return VideoMode(get_bits(self.reg, 0, 2))
+    def video_mode(self) -> VideoMode | int:
+        return get_bits(self.reg, 0, 2)
 
     @property
     def page_select(self) -> bint:

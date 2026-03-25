@@ -1,14 +1,17 @@
+# ifndef CYTHON
 from array import array
 
 from pyboy_advance.memory.constants import MemoryRegion
+from pyboy_advance.ppu.constants import VideoMode
 from pyboy_advance.ppu.registers import DisplayControlRegister
 from pyboy_advance.utils import (
+    get_bit,
     array_read_32,
     array_read_16,
-    get_bit,
     array_write_32,
     array_write_16,
 )
+# endif
 
 
 class VideoMemory:
@@ -80,7 +83,8 @@ class VideoMemory:
         # VRAM is split into BG and OBJ regions.
         # Size of the BG region changes depending on whether we are in bitmap mode
         video_mode = self.display_control.video_mode
-        bg_region_end = 0x14000 if video_mode.bitmapped else 0x10000
+        bitmapped = video_mode in [VideoMode.MODE_3, VideoMode.MODE_4, VideoMode.MODE_5]
+        bg_region_end = 0x14000 if bitmapped else 0x10000
 
         # Ignore attempts to write a byte into OBJ, but allow writes into BG
         if address & 0x1FFFF < bg_region_end:
@@ -92,8 +96,7 @@ class VideoMemory:
             self.vram[address & mask_1] = value
             self.vram[(address + 1) & mask_2] = value
 
-    @staticmethod
-    def _get_vram_address_mask(address: int):
+    def _get_vram_address_mask(self, address: int):
         """
         Get the appropriate mask for the given VRAM address.
 

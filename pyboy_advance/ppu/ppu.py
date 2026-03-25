@@ -1,20 +1,18 @@
+# ifndef CYTHON
 from __future__ import annotations
 
 from array import array
-from ctypes import c_void_p
 
 from pyboy_advance.constants import Interrupt
 from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.ppu.constants import *
 from pyboy_advance.ppu.memory import VideoMemory
 from pyboy_advance.ppu.registers import (
-    VideoMode,
     DisplayControlRegister,
     DisplayStatusRegister,
     BackgroundControlRegister,
     WindowControlRegister,
 )
-from pyboy_advance.scheduler import Scheduler, EventTrigger
 from pyboy_advance.utils import (
     get_bit,
     get_bits,
@@ -23,6 +21,10 @@ from pyboy_advance.utils import (
     add_32,
     extend_sign_9,
 )
+# endif
+
+from ctypes import c_void_p
+from pyboy_advance.scheduler import Scheduler, EventTrigger
 
 
 class PPU:
@@ -148,22 +150,22 @@ class PPU:
                 self._render_background_text(bg_num)
 
         elif video_mode == VideoMode.MODE_1:
-            self._render_background_affine(bg_num=2)
-            self._render_background_text(bg_num=1)
-            self._render_background_text(bg_num=0)
+            self._render_background_affine(2)
+            self._render_background_text(1)
+            self._render_background_text(0)
 
         elif video_mode == VideoMode.MODE_2:
-            self._render_background_affine(bg_num=3)
-            self._render_background_affine(bg_num=2)
+            self._render_background_affine(3)
+            self._render_background_affine(2)
 
         elif video_mode == VideoMode.MODE_3:
-            self._render_background_bitmap(paletted=False, small=False)
+            self._render_background_bitmap(False, False)
 
         elif video_mode == VideoMode.MODE_4:
-            self._render_background_bitmap(paletted=True, small=False)
+            self._render_background_bitmap(True, False)
 
         elif video_mode == VideoMode.MODE_5:
-            self._render_background_bitmap(paletted=False, small=True)
+            self._render_background_bitmap(False, True)
 
     def _render_background_text(self, bg_num: int):
         if not self.display_control.display_bg(bg_num):
@@ -281,7 +283,9 @@ class PPU:
 
         # Because the BG section of VRAM gets extended in bitmapped modes (hence
         # making the OBJ section smaller), attempts to use tiles 0-511 are ignored
-        if self.display_control.video_mode.bitmapped and obj.tile_index < 512:
+        video_mode = self.display_control.video_mode
+        bitmapped = video_mode in [VideoMode.MODE_3, VideoMode.MODE_4, VideoMode.MODE_5]
+        if bitmapped and obj.tile_index < 512:
             return
 
         obj_x = extend_sign_9(obj.x)
@@ -434,31 +438,19 @@ class PPU:
         return palette_index
 
 
-class ObjectMode(IntEnum):
-    NORMAL = 0
-    BLEND = 1
-    WINDOW = 2
-
-
-class ObjectShape(IntEnum):
-    SQUARE = 0
-    HORIZONTAL = 1
-    VERTICAL = 2
-
-
 class Object:
     """
     Corresponds to an OAM entry representing an object (moveable sprite).
     Each entry consists of three 16-bit attributes.
     """
 
-    SIZES = [
-        [(8, 8), (16, 16), (32, 32), (64, 64)],  # Square
-        [(16, 8), (32, 8), (32, 16), (64, 32)],  # Horizontal
-        [(8, 16), (8, 32), (16, 32), (32, 64)],  # Vertical
-    ]
-
     def __init__(self, attr_0: int, attr_1: int, attr_2: int):
+        self.SIZES = [
+            [(8, 8), (16, 16), (32, 32), (64, 64)],  # Square
+            [(16, 8), (32, 8), (32, 16), (64, 32)],  # Horizontal
+            [(8, 16), (8, 32), (16, 32), (32, 64)],  # Vertical
+        ]
+
         self.attr_0 = attr_0
         self.attr_1 = attr_1
         self.attr_2 = attr_2
@@ -484,8 +476,8 @@ class Object:
         return get_bit(self.attr_0, 9) & ~self.affine
 
     @property
-    def mode(self) -> ObjectMode:
-        return ObjectMode(get_bits(self.attr_0, 10, 11))
+    def mode(self) -> ObjectMode | int:
+        return get_bits(self.attr_0, 10, 11)
 
     @property
     def mosaic(self) -> bint:
@@ -496,8 +488,8 @@ class Object:
         return get_bit(self.attr_0, 13)
 
     @property
-    def shape(self) -> ObjectShape:
-        return ObjectShape(get_bits(self.attr_0, 14, 15))
+    def shape(self) -> ObjectShape | int:
+        return get_bits(self.attr_0, 14, 15)
 
     @property
     def flip_horizontal(self) -> bint:
@@ -510,7 +502,7 @@ class Object:
     @property
     def size(self) -> tuple[int, int]:
         size = get_bits(self.attr_1, 14, 15)
-        return Object.SIZES[self.shape][size]
+        return self.SIZES[self.shape][size]
 
     @property
     def tile_index(self) -> int:

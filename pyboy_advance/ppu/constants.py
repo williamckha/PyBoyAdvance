@@ -38,7 +38,8 @@ OBJ_PALETTE_OFFSET = 0x200
 
 VRAM_PAGE_OFFSET = 0xA000
 
-NUM_BACKGROUNDS = NUM_PRIORITIES = 4
+NUM_BACKGROUNDS = 4
+NUM_PRIORITIES = 4
 
 NUM_PRIMARY_WINDOWS = 2
 
@@ -56,3 +57,24 @@ class WindowIndex(IntEnum):
     WIN_1 = 1
     WIN_OBJ = 2
     WIN_OUT = 3
+
+
+class VideoMode(IntEnum):
+    MODE_0 = 0
+    MODE_1 = 1
+    MODE_2 = 2
+    MODE_3 = 3
+    MODE_4 = 4
+    MODE_5 = 5
+
+
+class ObjectMode(IntEnum):
+    NORMAL = 0
+    BLEND = 1
+    WINDOW = 2
+
+
+class ObjectShape(IntEnum):
+    SQUARE = 0
+    HORIZONTAL = 1
+    VERTICAL = 2
