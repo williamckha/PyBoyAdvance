@@ -31,6 +31,7 @@ from pyboy_advance.cpu.thumb.swi import thumb_software_interrupt
 from pyboy_advance.cpu.arm.decode import InstrHandler, InstrPattern
 # endif
 
+
 THUMB_PATTERNS: list[InstrPattern] = [
     # ----------+------------+------------+------------------------------------
     #           | Mask       | Value      | Handler
@@ -56,6 +57,7 @@ THUMB_PATTERNS: list[InstrPattern] = [
     InstrPattern(0b1110_0000, 0b0000_0000, thumb_move_shifted_register),
 ]
 
+
 # ifndef CYTHON
 THUMB_LUT: list[InstrHandler | None] = [None] * (2**8)
 # endif
@@ -72,7 +74,7 @@ def fill_thumb_lut():
 fill_thumb_lut()
 
 
-def thumb_decode(instr: int) -> InstrHandler:
+def thumb_decoder(instr: int) -> InstrHandler:
     instruction_handler = THUMB_LUT[instr >> 8]
     if not instruction_handler:
         raise ValueError(f"Unknown THUMB instruction: {instr:016b}")

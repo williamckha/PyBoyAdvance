@@ -1,3 +1,5 @@
 from libc.stdint cimport uint32_t
 
-cdef void thumb_software_interrupt(object, uint32_t) noexcept
+from pyboy_advance.cpu.cpu cimport CPU
+
+cdef void thumb_software_interrupt(CPU, uint32_t) noexcept

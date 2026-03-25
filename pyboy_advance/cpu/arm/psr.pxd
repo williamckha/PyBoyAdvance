@@ -1,4 +1,6 @@
 from libc.stdint cimport uint32_t
 
-cdef void arm_msr(object, uint32_t) noexcept
-cdef void arm_mrs(object, uint32_t) noexcept
+from pyboy_advance.cpu.cpu cimport CPU
+
+cdef void arm_msr(CPU, uint32_t) noexcept
+cdef void arm_mrs(CPU, uint32_t) noexcept

@@ -1,5 +1,6 @@
 from libc.stdint cimport uint32_t
 
+from pyboy_advance.cpu.cpu cimport CPU, InstrHandler, InstrPattern
 from pyboy_advance.cpu.arm.alu cimport arm_alu
 from pyboy_advance.cpu.arm.bdt cimport arm_block_data_transfer
 from pyboy_advance.cpu.arm.branch cimport arm_branch_exchange, arm_branch
@@ -10,17 +11,10 @@ from pyboy_advance.cpu.arm.sdt cimport arm_single_data_transfer
 from pyboy_advance.cpu.arm.swi cimport arm_software_interrupt
 from pyboy_advance.cpu.arm.swp cimport arm_single_data_swap
 
-ctypedef void (*InstrHandler)(object, uint32_t) noexcept
-
-cdef struct InstrPattern:
-    uint32_t mask
-    uint32_t value
-    InstrHandler handler
-
 cdef InstrPattern[12] ARM_PATTERNS
 
 cdef InstrHandler[4096] ARM_LUT
 
 cdef void fill_arm_lut() noexcept
 
-cdef InstrHandler arm_decode(uint32_t) except NULL
+cdef InstrHandler arm_decoder(uint32_t) except NULL

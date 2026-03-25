@@ -11,6 +11,8 @@ from pyboy_advance.memory.memory import Memory
 from pyboy_advance.ppu.ppu import PPU
 from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.app.window import Window, WindowEvent
+from pyboy_advance.cpu.arm.decode import arm_decoder
+from pyboy_advance.cpu.thumb.decode import thumb_decoder
 
 
 class PyBoyAdvance:
@@ -46,6 +48,8 @@ class PyBoyAdvance:
         )
 
         self.cpu = CPU(self.scheduler, self.memory)
+        self.cpu.arm_decoder = arm_decoder
+        self.cpu.thumb_decoder = thumb_decoder
 
         if skip_bios:
             self.cpu.regs.banked_sp[BankIndex.BANK_SYSTEM_USER] = 0x03007F00

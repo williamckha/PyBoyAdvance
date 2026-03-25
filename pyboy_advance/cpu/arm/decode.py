@@ -17,16 +17,15 @@ from pyboy_advance.cpu.arm.sdt import arm_single_data_transfer
 from pyboy_advance.cpu.arm.swi import arm_software_interrupt
 from pyboy_advance.cpu.arm.swp import arm_single_data_swap
 
+# fmt: off
 InstrHandler: TypeAlias = Callable[["CPU", int], None]
-
 
 @dataclass
 class InstrPattern:
     mask: int
     value: int
     handler: InstrHandler
-
-
+# fmt: on
 # endif
 
 
@@ -48,6 +47,7 @@ ARM_PATTERNS: list[InstrPattern] = [
     InstrPattern(0b1100_0000_0000, 0b0000_0000_0000, arm_alu),
 ]
 
+
 # ifndef CYTHON
 ARM_LUT: list[InstrHandler | None] = [None] * (2**12)
 # endif
@@ -64,7 +64,7 @@ def fill_arm_lut():
 fill_arm_lut()
 
 
-def arm_decode(instr: int) -> InstrHandler:
+def arm_decoder(instr: int) -> InstrHandler:
     opcode_hash = ((instr >> 16) & 0xFF0) | ((instr >> 4) & 0xF)
     instruction_handler = ARM_LUT[opcode_hash]
     if not instruction_handler:

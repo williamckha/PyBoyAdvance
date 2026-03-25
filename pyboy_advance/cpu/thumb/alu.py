@@ -61,7 +61,7 @@ def thumb_move_shifted_register(cpu: CPU, instr: int):
     opcode = ShiftType(get_bits(instr, 11, 12))
     offset = get_bits(instr, 6, 10)
 
-    result, carry = cpu.compute_shift(cpu.regs.get(rs), opcode, offset, immediate=True)
+    result, carry = cpu.compute_shift(cpu.regs.get(rs), opcode, offset, True)
 
     cpu.regs.set(rd, result)
     cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
@@ -129,7 +129,7 @@ def thumb_alu(cpu: CPU, instr: int):
 
     def execute_shift(shift_type: ShiftType):
         shift = op2 & 0xFF
-        result, carry = cpu.compute_shift(op1, shift_type, shift, immediate=False)
+        result, carry = cpu.compute_shift(op1, shift_type, shift, False)
 
         cpu.regs.set(rd, result)
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))

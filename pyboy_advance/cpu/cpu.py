@@ -1,7 +1,7 @@
 import logging
 
 # ifndef CYTHON
-from pyboy_advance.cpu.arm.decode import arm_decode
+from pyboy_advance.cpu.arm.decode import arm_decoder
 from pyboy_advance.cpu.constants import (
     CPUMode,
     CPUState,
@@ -12,7 +12,7 @@ from pyboy_advance.cpu.constants import (
     ExceptionVector,
 )
 from pyboy_advance.cpu.registers import Registers
-from pyboy_advance.cpu.thumb.decode import thumb_decode
+from pyboy_advance.cpu.thumb.decode import thumb_decoder
 from pyboy_advance.memory.memory import Memory
 from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import (
@@ -56,6 +56,19 @@ class CPU:
         self.pipeline = [0xF0000000, 0xF0000000]
         self.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
 
+        # We call the instruction decoders via function pointers rather than
+        # calling them directly so that we can set them outside the CPU class.
+        # This is necessary for the Cython build, since we cannot import the
+        # decoders in this module without causing circular imports. For Python,
+        # we only need circular imports for type hints, so we can import the
+        # decoders here and use TYPE_CHECKING to avoid the circular imports at
+        # runtime.
+        #
+        # ifndef CYTHON
+        self.arm_decoder = arm_decoder
+        self.thumb_decoder = thumb_decoder
+        # endif
+
     def step(self):
         irq_line = self.memory.io.interrupt_controller.irq_line
 
@@ -78,7 +91,7 @@ class CPU:
         self.pipeline[0] = self.pipeline[1]
         self.pipeline[1] = self.memory.read_32(self.regs.pc, self.next_fetch_access)
 
-        instruction_handler = arm_decode(instruction)
+        instruction_handler = self.arm_decoder(instruction)
 
         cond = get_bits(instruction, 28, 31)
         if self.check_condition(cond):
@@ -93,7 +106,7 @@ class CPU:
         self.pipeline[0] = self.pipeline[1]
         self.pipeline[1] = self.memory.read_16(self.regs.pc, self.next_fetch_access)
 
-        instruction_handler = thumb_decode(instruction)
+        instruction_handler = self.thumb_decoder(instruction)
         instruction_handler(self, instruction)
 
     def advance_pc_arm(self):
