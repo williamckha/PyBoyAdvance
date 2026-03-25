@@ -2,6 +2,7 @@ cimport cython
 
 from libc.stdint cimport uint32_t
 
+from pyboy_advance.constants cimport PowerDownMode
 from pyboy_advance.cpu.constants cimport (
     CPUMode,
     CPUState,

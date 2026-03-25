@@ -1,7 +1,8 @@
 from enum import IntFlag, auto
 
 from pyboy_advance.app.window import WindowEvent
-from pyboy_advance.interrupt_controller import InterruptController, Interrupt
+from pyboy_advance.constants import Interrupt
+from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.utils import bint, get_bit, get_bits
 
 

@@ -1,5 +1,6 @@
 from libc.stdint cimport uint32_t
 
+from pyboy_advance.constants cimport Interrupt
 from pyboy_advance.memory.memory cimport Memory
 from pyboy_advance.memory.constants cimport (
     IOAddress,

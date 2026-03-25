@@ -1,43 +1,18 @@
+# ifndef CYTHON
 from __future__ import annotations
 
-import functools
-from enum import IntFlag, IntEnum
+from pyboy_advance.constants import Interrupt, PowerDownMode
+from pyboy_advance.utils import bint
+# endif
 
 from pyboy_advance.scheduler import Scheduler
-from pyboy_advance.utils import bint
-
-
-class Interrupt(IntFlag):
-    # fmt: off
-    VBLANK      = 2 ** 0
-    HBLANK      = 2 ** 1
-    VCOUNT      = 2 ** 2
-    TIMER_0     = 2 ** 3
-    TIMER_1     = 2 ** 4
-    TIMER_2     = 2 ** 5
-    TIMER_3     = 2 ** 6
-    SERIAL      = 2 ** 7
-    DMA_0       = 2 ** 8
-    DMA_1       = 2 ** 9
-    DMA_2       = 2 ** 10
-    DMA_3       = 2 ** 11
-    KEYPAD      = 2 ** 12
-    GAMEPAK     = 2 ** 13
-    ALL         = 0x3FFF
-    # fmt: on
-
-
-class PowerDownMode(IntEnum):
-    NONE = 0
-    HALT = 1
-    STOP = 2
 
 
 class InterruptController:
-    WRITE_INTERRUPT_REGISTERS_DELAY = 1
-    UPDATE_IRQ_LINE_DELAY = 2
-
     def __init__(self, scheduler: Scheduler):
+        self.WRITE_INTERRUPT_REGISTERS_DELAY = 1
+        self.UPDATE_IRQ_LINE_DELAY = 2
+
         self.scheduler = scheduler
 
         self._interrupt_enable = 0
@@ -86,7 +61,7 @@ class InterruptController:
     def _schedule_write_interrupt_registers(self):
         self.scheduler.schedule(
             self._write_interrupt_registers,
-            InterruptController.WRITE_INTERRUPT_REGISTERS_DELAY,
+            self.WRITE_INTERRUPT_REGISTERS_DELAY,
         )
 
     def _write_interrupt_registers(self):
@@ -101,10 +76,13 @@ class InterruptController:
 
         new_irq_line = interrupt_available and self._interrupt_master_enable
         if new_irq_line != self.irq_line:
-            self.scheduler.schedule(
-                functools.partial(self._update_irq_line, new_irq_line),
-                InterruptController.UPDATE_IRQ_LINE_DELAY,
-            )
+            if new_irq_line:
+                self.scheduler.schedule(self._set_irq_line, self.UPDATE_IRQ_LINE_DELAY)
+            else:
+                self.scheduler.schedule(self._reset_irq_line, self.UPDATE_IRQ_LINE_DELAY)
 
-    def _update_irq_line(self, new_irq_line: bool):
-        self.irq_line = new_irq_line
+    def _set_irq_line(self):
+        self.irq_line = True
+
+    def _reset_irq_line(self):
+        self.irq_line = False

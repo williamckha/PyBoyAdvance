@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pyboy_advance.memory.memory import Memory
 
+from pyboy_advance.constants import Interrupt
 from pyboy_advance.memory.constants import (
     IOAddress,
     MemoryAccess,
@@ -16,7 +17,6 @@ from pyboy_advance.memory.constants import (
 from pyboy_advance.utils import get_bits, get_bit, set_bit, bint
 # endif
 
-from pyboy_advance.interrupt_controller import Interrupt
 from pyboy_advance.scheduler import Scheduler, EventTrigger
 
 

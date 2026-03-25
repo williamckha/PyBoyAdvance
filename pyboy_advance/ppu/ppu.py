@@ -3,7 +3,8 @@ from __future__ import annotations
 from array import array
 from ctypes import c_void_p
 
-from pyboy_advance.interrupt_controller import InterruptController, Interrupt
+from pyboy_advance.constants import Interrupt
+from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.ppu.constants import *
 from pyboy_advance.ppu.memory import VideoMemory
 from pyboy_advance.ppu.registers import (

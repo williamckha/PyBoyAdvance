@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyboy_advance.interrupt_controller import InterruptController, PowerDownMode
+from pyboy_advance.constants import PowerDownMode
+from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.keypad import Keypad
 from pyboy_advance.memory.constants import IOAddress
 from pyboy_advance.memory.dma import DMAController

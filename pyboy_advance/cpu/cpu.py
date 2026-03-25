@@ -1,6 +1,7 @@
 import logging
 
 # ifndef CYTHON
+from pyboy_advance.constants import PowerDownMode
 from pyboy_advance.cpu.arm.decode import arm_decoder
 from pyboy_advance.cpu.constants import (
     CPUMode,
@@ -25,7 +26,6 @@ from pyboy_advance.utils import (
 )
 # endif
 
-from pyboy_advance.interrupt_controller import PowerDownMode
 from pyboy_advance.scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
