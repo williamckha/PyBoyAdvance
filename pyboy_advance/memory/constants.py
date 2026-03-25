@@ -152,3 +152,22 @@ class IOAddress(IntEnum):
     REG_WAITCNT = 0x04000204
     REG_IME = 0x04000208
     REG_HALTCNT = 0x04000300
+
+
+class DMAAddressAdjustment(IntEnum):
+    INCREMENT = 0
+    DECREMENT = 1
+    LEAVE_UNCHANGED = 2
+    INCREMENT_RELOAD = 3
+
+
+class DMATransferSize(IntEnum):
+    HALFWORD = 0
+    WORD = 1
+
+
+class DMAStartTiming(IntEnum):
+    IMMEDIATELY = 0
+    VBLANK = 1
+    HBLANK = 2
+    SPECIAL = 3

@@ -70,13 +70,13 @@ class IO:
 
         # DMA Control Registers
         elif address == IOAddress.REG_DMA0CNT_H:
-            return self.dma_controller.channels[0].control_reg
+            return self.dma_controller.channel_0.control_reg
         elif address == IOAddress.REG_DMA1CNT_H:
-            return self.dma_controller.channels[1].control_reg
+            return self.dma_controller.channel_1.control_reg
         elif address == IOAddress.REG_DMA2CNT_H:
-            return self.dma_controller.channels[2].control_reg
+            return self.dma_controller.channel_2.control_reg
         elif address == IOAddress.REG_DMA3CNT_H:
-            return self.dma_controller.channels[3].control_reg
+            return self.dma_controller.channel_3.control_reg
 
         # Keypad Registers
         elif address == IOAddress.REG_KEYINPUT:
@@ -168,71 +168,71 @@ class IO:
 
         # DMA Source/Destination Registers
         elif address == IOAddress.REG_DMA0SAD_L:
-            self.dma_controller.channels[0].src_address &= 0xFFFF0000
-            self.dma_controller.channels[0].src_address |= value
+            self.dma_controller.channel_0.src_address &= 0xFFFF0000
+            self.dma_controller.channel_0.src_address |= value
         elif address == IOAddress.REG_DMA0SAD_H:
-            self.dma_controller.channels[0].src_address &= 0xFFFF
-            self.dma_controller.channels[0].src_address |= value << 16
+            self.dma_controller.channel_0.src_address &= 0xFFFF
+            self.dma_controller.channel_0.src_address |= value << 16
         elif address == IOAddress.REG_DMA0DAD_L:
-            self.dma_controller.channels[0].dst_address &= 0xFFFF0000
-            self.dma_controller.channels[0].dst_address |= value
+            self.dma_controller.channel_0.dst_address &= 0xFFFF0000
+            self.dma_controller.channel_0.dst_address |= value
         elif address == IOAddress.REG_DMA0DAD_H:
-            self.dma_controller.channels[0].dst_address &= 0xFFFF
-            self.dma_controller.channels[0].dst_address |= value << 16
+            self.dma_controller.channel_0.dst_address &= 0xFFFF
+            self.dma_controller.channel_0.dst_address |= value << 16
         elif address == IOAddress.REG_DMA1SAD_L:
-            self.dma_controller.channels[1].src_address &= 0xFFFF0000
-            self.dma_controller.channels[1].src_address |= value
+            self.dma_controller.channel_1.src_address &= 0xFFFF0000
+            self.dma_controller.channel_1.src_address |= value
         elif address == IOAddress.REG_DMA1SAD_H:
-            self.dma_controller.channels[1].src_address &= 0xFFFF
-            self.dma_controller.channels[1].src_address |= value << 16
+            self.dma_controller.channel_1.src_address &= 0xFFFF
+            self.dma_controller.channel_1.src_address |= value << 16
         elif address == IOAddress.REG_DMA1DAD_L:
-            self.dma_controller.channels[1].dst_address &= 0xFFFF0000
-            self.dma_controller.channels[1].dst_address |= value
+            self.dma_controller.channel_1.dst_address &= 0xFFFF0000
+            self.dma_controller.channel_1.dst_address |= value
         elif address == IOAddress.REG_DMA1DAD_H:
-            self.dma_controller.channels[1].dst_address &= 0xFFFF
-            self.dma_controller.channels[1].dst_address |= value << 16
+            self.dma_controller.channel_1.dst_address &= 0xFFFF
+            self.dma_controller.channel_1.dst_address |= value << 16
         elif address == IOAddress.REG_DMA2SAD_L:
-            self.dma_controller.channels[2].src_address &= 0xFFFF0000
-            self.dma_controller.channels[2].src_address |= value
+            self.dma_controller.channel_2.src_address &= 0xFFFF0000
+            self.dma_controller.channel_2.src_address |= value
         elif address == IOAddress.REG_DMA2SAD_H:
-            self.dma_controller.channels[2].src_address &= 0xFFFF
-            self.dma_controller.channels[2].src_address |= value << 16
+            self.dma_controller.channel_2.src_address &= 0xFFFF
+            self.dma_controller.channel_2.src_address |= value << 16
         elif address == IOAddress.REG_DMA2DAD_L:
-            self.dma_controller.channels[2].dst_address &= 0xFFFF0000
-            self.dma_controller.channels[2].dst_address |= value
+            self.dma_controller.channel_2.dst_address &= 0xFFFF0000
+            self.dma_controller.channel_2.dst_address |= value
         elif address == IOAddress.REG_DMA2DAD_H:
-            self.dma_controller.channels[2].dst_address &= 0xFFFF
-            self.dma_controller.channels[2].dst_address |= value << 16
+            self.dma_controller.channel_2.dst_address &= 0xFFFF
+            self.dma_controller.channel_2.dst_address |= value << 16
         elif address == IOAddress.REG_DMA3SAD_L:
-            self.dma_controller.channels[3].src_address &= 0xFFFF0000
-            self.dma_controller.channels[3].src_address |= value
+            self.dma_controller.channel_3.src_address &= 0xFFFF0000
+            self.dma_controller.channel_3.src_address |= value
         elif address == IOAddress.REG_DMA3SAD_H:
-            self.dma_controller.channels[3].src_address &= 0xFFFF
-            self.dma_controller.channels[3].src_address |= value << 16
+            self.dma_controller.channel_3.src_address &= 0xFFFF
+            self.dma_controller.channel_3.src_address |= value << 16
         elif address == IOAddress.REG_DMA3DAD_L:
-            self.dma_controller.channels[3].dst_address &= 0xFFFF0000
-            self.dma_controller.channels[3].dst_address |= value
+            self.dma_controller.channel_3.dst_address &= 0xFFFF0000
+            self.dma_controller.channel_3.dst_address |= value
         elif address == IOAddress.REG_DMA3DAD_H:
-            self.dma_controller.channels[3].dst_address &= 0xFFFF
-            self.dma_controller.channels[3].dst_address |= value << 16
+            self.dma_controller.channel_3.dst_address &= 0xFFFF
+            self.dma_controller.channel_3.dst_address |= value << 16
 
         # DMA Control Registers
         elif address == IOAddress.REG_DMA0CNT_L:
-            self.dma_controller.channels[0].count = value
+            self.dma_controller.channel_0.count = value
         elif address == IOAddress.REG_DMA0CNT_H:
-            self.dma_controller.channels[0].control_reg = value
+            self.dma_controller.channel_0.control_reg = value
         elif address == IOAddress.REG_DMA1CNT_L:
-            self.dma_controller.channels[1].count = value
+            self.dma_controller.channel_1.count = value
         elif address == IOAddress.REG_DMA1CNT_H:
-            self.dma_controller.channels[1].control_reg = value
+            self.dma_controller.channel_1.control_reg = value
         elif address == IOAddress.REG_DMA2CNT_L:
-            self.dma_controller.channels[2].count = value
+            self.dma_controller.channel_2.count = value
         elif address == IOAddress.REG_DMA2CNT_H:
-            self.dma_controller.channels[2].control_reg = value
+            self.dma_controller.channel_2.control_reg = value
         elif address == IOAddress.REG_DMA3CNT_L:
-            self.dma_controller.channels[3].count = value
+            self.dma_controller.channel_3.count = value
         elif address == IOAddress.REG_DMA3CNT_H:
-            self.dma_controller.channels[3].control_reg = value
+            self.dma_controller.channel_3.control_reg = value
 
         # Keypad Registers
         elif address == IOAddress.REG_KEYCNT:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools
-from enum import IntFlag, auto, IntEnum
+from enum import IntFlag, IntEnum
 
 from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import bint
@@ -9,20 +9,20 @@ from pyboy_advance.utils import bint
 
 class Interrupt(IntFlag):
     # fmt: off
-    VBLANK      = auto()
-    HBLANK      = auto()
-    VCOUNT      = auto()
-    TIMER_0     = auto()
-    TIMER_1     = auto()
-    TIMER_2     = auto()
-    TIMER_3     = auto()
-    SERIAL      = auto()
-    DMA_0       = auto()
-    DMA_1       = auto()
-    DMA_2       = auto()
-    DMA_3       = auto()
-    KEYPAD      = auto()
-    GAMEPAK     = auto()
+    VBLANK      = 2 ** 0
+    HBLANK      = 2 ** 1
+    VCOUNT      = 2 ** 2
+    TIMER_0     = 2 ** 3
+    TIMER_1     = 2 ** 4
+    TIMER_2     = 2 ** 5
+    TIMER_3     = 2 ** 6
+    SERIAL      = 2 ** 7
+    DMA_0       = 2 ** 8
+    DMA_1       = 2 ** 9
+    DMA_2       = 2 ** 10
+    DMA_3       = 2 ** 11
+    KEYPAD      = 2 ** 12
+    GAMEPAK     = 2 ** 13
     ALL         = 0x3FFF
     # fmt: on
 

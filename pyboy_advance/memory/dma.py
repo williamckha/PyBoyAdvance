@@ -1,34 +1,23 @@
+# ifndef CYTHON
 from __future__ import annotations
 
-from enum import IntEnum
 from typing import TYPE_CHECKING
-
-from pyboy_advance.interrupt_controller import Interrupt
-from pyboy_advance.memory.constants import IOAddress, MemoryAccess
-from pyboy_advance.scheduler import Scheduler, EventTrigger
-from pyboy_advance.utils import get_bits, bint, get_bit, set_bit
 
 if TYPE_CHECKING:
     from pyboy_advance.memory.memory import Memory
 
+from pyboy_advance.memory.constants import (
+    IOAddress,
+    MemoryAccess,
+    DMAAddressAdjustment,
+    DMAStartTiming,
+    DMATransferSize,
+)
+from pyboy_advance.utils import get_bits, get_bit, set_bit, bint
+# endif
 
-class DMAAddressAdjustment(IntEnum):
-    INCREMENT = 0
-    DECREMENT = 1
-    LEAVE_UNCHANGED = 2
-    INCREMENT_RELOAD = 3
-
-
-class DMATransferSize(IntEnum):
-    HALFWORD = 0
-    WORD = 1
-
-
-class DMAStartTiming(IntEnum):
-    IMMEDIATELY = 0
-    VBLANK = 1
-    HBLANK = 2
-    SPECIAL = 3
+from pyboy_advance.interrupt_controller import Interrupt
+from pyboy_advance.scheduler import Scheduler, EventTrigger
 
 
 class DMAControlRegister:
@@ -36,48 +25,46 @@ class DMAControlRegister:
         self.reg = 0
 
     @property
-    def dst_address_adjustment(self) -> DMAAddressAdjustment:
-        return DMAAddressAdjustment(get_bits(self.reg, 5, 6))
+    def dst_address_adjustment(self) -> DMAAddressAdjustment | int:
+        return get_bits(self.reg, 5, 6)
 
     @property
-    def src_address_adjustment(self) -> DMAAddressAdjustment:
-        return DMAAddressAdjustment(get_bits(self.reg, 7, 8))
+    def src_address_adjustment(self) -> DMAAddressAdjustment | int:
+        return get_bits(self.reg, 7, 8)
 
     @property
     def repeat(self) -> bint:
         return get_bit(self.reg, 9)
 
     @property
-    def size(self) -> DMATransferSize:
-        return DMATransferSize(get_bit(self.reg, 10))
+    def transfer_size(self) -> DMATransferSize | int:
+        return get_bit(self.reg, 10)
 
     @property
-    def start_timing(self) -> DMAStartTiming:
-        return DMAStartTiming(get_bits(self.reg, 12, 13))
+    def start_timing(self) -> DMAStartTiming | int:
+        return get_bits(self.reg, 12, 13)
 
     @property
     def irq_when_done(self) -> bint:
         return get_bit(self.reg, 14)
 
     @property
-    def enable(self) -> bint:
+    def transfer_enabled(self) -> bint:
         return get_bit(self.reg, 15)
 
-    @enable.setter
-    def enable(self, enable: bint):
+    @transfer_enabled.setter
+    def transfer_enabled(self, enable: bint):
         self.reg = set_bit(self.reg, 15, enable)
 
 
 class DMAChannel:
-    SRC_MASK = [0x07FFFFFF, 0x0FFFFFFF, 0x0FFFFFFF, 0x0FFFFFFF]
-    DST_MASK = [0x07FFFFFF, 0x07FFFFFF, 0x07FFFFFF, 0x0FFFFFFF]
-    COUNT_MASK = [0x3FFF, 0x3FFF, 0x3FFF, 0xFFFF]
-
-    INTERRUPT = [Interrupt.DMA_0, Interrupt.DMA_1, Interrupt.DMA_2, Interrupt.DMA_3]
-
-    TRANSFER_DELAY = 2
-
     def __init__(self, channel_id: int, scheduler: Scheduler, memory: Memory):
+        self.SRC_MASK = [0x07FFFFFF, 0x0FFFFFFF, 0x0FFFFFFF, 0x0FFFFFFF]
+        self.DST_MASK = [0x07FFFFFF, 0x07FFFFFF, 0x07FFFFFF, 0x0FFFFFFF]
+        self.COUNT_MASK = [0x3FFF, 0x3FFF, 0x3FFF, 0xFFFF]
+        self.INTERRUPT = [Interrupt.DMA_0, Interrupt.DMA_1, Interrupt.DMA_2, Interrupt.DMA_3]
+        self.TRANSFER_DELAY = 2
+
         self.channel_id = channel_id
         self.scheduler = scheduler
         self.memory = memory
@@ -89,9 +76,9 @@ class DMAChannel:
         self._src = 0
         self._dst = 0
 
+        self._internal_count = 0
         self._internal_src = 0
         self._internal_dst = 0
-        self._internal_count = 0
 
         self._event = None
 
@@ -101,10 +88,10 @@ class DMAChannel:
 
     @control_reg.setter
     def control_reg(self, value: int) -> None:
-        old_enable = self._control_reg.enable
+        old_enable = self._control_reg.transfer_enabled
         self._control_reg.reg = value
 
-        if not old_enable and self._control_reg.enable:  # DMA enabled
+        if not old_enable and self._control_reg.transfer_enabled:  # DMA enabled
             self.fifo = (
                 self._control_reg.start_timing == DMAStartTiming.SPECIAL
                 and (self.channel_id == 1 or self.channel_id == 2)
@@ -117,20 +104,20 @@ class DMAChannel:
 
             # Count of 0 is treated as max count
             if self._internal_count == 0:
-                self._internal_count = DMAChannel.COUNT_MASK[self.channel_id] + 1
+                self._internal_count = self.COUNT_MASK[self.channel_id] + 1
 
             if self._control_reg.start_timing == DMAStartTiming.IMMEDIATELY:
-                self._event = self.scheduler.schedule(self.activate, DMAChannel.TRANSFER_DELAY)
+                self._event = self.scheduler.schedule(self.activate, self.TRANSFER_DELAY)
             elif self._control_reg.start_timing == DMAStartTiming.VBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, DMAChannel.TRANSFER_DELAY, EventTrigger.VBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.VBLANK
                 )
             elif self._control_reg.start_timing == DMAStartTiming.HBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, DMAChannel.TRANSFER_DELAY, EventTrigger.HBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.HBLANK
                 )
 
-        elif old_enable and not self._control_reg.enable:  # DMA cancelled
+        elif old_enable and not self._control_reg.transfer_enabled:  # DMA cancelled
             if self._event:
                 self._event.cancelled = False
                 self._event = None
@@ -142,7 +129,7 @@ class DMAChannel:
 
     @count.setter
     def count(self, value: int) -> None:
-        self._count = value & DMAChannel.COUNT_MASK[self.channel_id]
+        self._count = value & self.COUNT_MASK[self.channel_id]
 
     @property
     def src_address(self) -> int:
@@ -150,7 +137,7 @@ class DMAChannel:
 
     @src_address.setter
     def src_address(self, value: int):
-        self._src = value & DMAChannel.SRC_MASK[self.channel_id]
+        self._src = value & self.SRC_MASK[self.channel_id]
 
     @property
     def dst_address(self) -> int:
@@ -158,13 +145,13 @@ class DMAChannel:
 
     @dst_address.setter
     def dst_address(self, value: int):
-        self._dst = value & DMAChannel.DST_MASK[self.channel_id]
+        self._dst = value & self.DST_MASK[self.channel_id]
 
     def transfer(self):
         if not self.pending:
             return
 
-        transfer_size = self._control_reg.size
+        transfer_size = self._control_reg.transfer_size
         transfer_size_bytes = 4 if transfer_size == DMATransferSize.WORD else 2
 
         address_alignment = ~0b11 if transfer_size == DMATransferSize.WORD else ~0b1
@@ -178,8 +165,10 @@ class DMAChannel:
             src_step = -transfer_size_bytes
         elif src_adj == DMAAddressAdjustment.LEAVE_UNCHANGED:
             src_step = 0
+        # ifndef CYTHON
         else:
-            raise ValueError
+            assert False, "Unreachable, src_adj must be one of DMAAddressAdjustment"
+        # endif
 
         dst_adj = self._control_reg.dst_address_adjustment
         if self.fifo:
@@ -192,8 +181,10 @@ class DMAChannel:
             dst_step = 0
         elif dst_adj == DMAAddressAdjustment.INCREMENT_RELOAD:
             dst_step = transfer_size_bytes
+        # ifndef CYTHON
         else:
-            raise ValueError
+            assert False, "Unreachable, dst_adj must be one of DMAAddressAdjustment"
+        # endif
 
         access = MemoryAccess.NON_SEQUENTIAL
 
@@ -210,7 +201,7 @@ class DMAChannel:
             access = MemoryAccess.SEQUENTIAL
 
         if self._control_reg.irq_when_done:
-            self.memory.io.interrupt_controller.signal(DMAChannel.INTERRUPT[self.channel_id])
+            self.memory.io.interrupt_controller.signal(self.INTERRUPT[self.channel_id])
 
         self.pending = False
 
@@ -220,38 +211,38 @@ class DMAChannel:
 
             if self._control_reg.start_timing == DMAStartTiming.VBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, DMAChannel.TRANSFER_DELAY, EventTrigger.VBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.VBLANK
                 )
             elif self._control_reg.start_timing == DMAStartTiming.HBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, DMAChannel.TRANSFER_DELAY, EventTrigger.HBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.HBLANK
                 )
         else:
-            self._control_reg.enable = False
+            self._control_reg.transfer_enabled = False
 
     def activate(self):
-        if self._control_reg.enable:
+        if self._control_reg.transfer_enabled:
             self.pending = True
 
 
 class DMAController:
     def __init__(self, scheduler: Scheduler, memory: Memory):
-        self.channels = [
-            DMAChannel(0, scheduler, memory),
-            DMAChannel(1, scheduler, memory),
-            DMAChannel(2, scheduler, memory),
-            DMAChannel(3, scheduler, memory),
-        ]
+        self.channel_0 = DMAChannel(0, scheduler, memory)
+        self.channel_1 = DMAChannel(1, scheduler, memory)
+        self.channel_2 = DMAChannel(2, scheduler, memory)
+        self.channel_3 = DMAChannel(3, scheduler, memory)
 
     @property
     def active(self) -> bool:
         return (
-            self.channels[0].pending
-            or self.channels[1].pending
-            or self.channels[2].pending
-            or self.channels[3].pending
+            self.channel_0.pending
+            or self.channel_1.pending
+            or self.channel_2.pending
+            or self.channel_3.pending
         )
 
     def perform_transfers(self):
-        for channel in self.channels:
-            channel.transfer()
+        self.channel_0.transfer()
+        self.channel_1.transfer()
+        self.channel_2.transfer()
+        self.channel_3.transfer()
