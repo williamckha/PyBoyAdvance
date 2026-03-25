@@ -80,13 +80,11 @@ class CPU:
 
         instruction_handler = arm_decode(instruction)
 
-        cond = Condition(get_bits(instruction, 28, 31))
+        cond = get_bits(instruction, 28, 31)
         if self.check_condition(cond):
             instruction_handler(self, instruction)
         else:
             # Skip instruction since condition was not met
-            pass
-
             self.advance_pc_arm()
             self.next_fetch_access = MemoryAccess.SEQUENTIAL
 
@@ -140,7 +138,7 @@ class CPU:
         elif vector == ExceptionVector.EV_FIQ:
             new_mode = CPUMode.FIQ
         else:
-            raise ValueError
+            return
 
         cpsr_reg = self.regs.cpsr.reg
         self.switch_mode(new_mode)
@@ -159,7 +157,7 @@ class CPU:
         self.regs.pc = vector
         self.flush_pipeline()
 
-    def check_condition(self, cond: Condition) -> bint:
+    def check_condition(self, cond: Condition | int) -> bint:
         cpsr = self.regs.cpsr
         if cond == Condition.EQ:
             return cpsr.zero_flag
@@ -191,10 +189,8 @@ class CPU:
             return cpsr.zero_flag or cpsr.sign_flag != cpsr.overflow_flag
         elif cond == Condition.AL:
             return True
-        elif cond == Condition.NV:
-            raise ValueError("Condition NV (never) is reserved")
         else:
-            raise ValueError
+            return False
 
     def decode_and_compute_shift(self, value: int, shift: int) -> tuple[int, bint]:
         immediate = not get_bit(shift, 0)
@@ -204,12 +200,12 @@ class CPU:
             shift_reg = get_bits(shift, 4, 7)
             shift_amount = self.regs[shift_reg] & 0xFF
 
-        shift_type = ShiftType(get_bits(shift, 1, 2))
+        shift_type = get_bits(shift, 1, 2)
 
         return self.compute_shift(value, shift_type, shift_amount, immediate)
 
     def compute_shift(
-        self, value: int, shift_type: ShiftType, shift_amount: int, immediate: bint
+        self, value: int, shift_type: ShiftType | int, shift_amount: int, immediate: bint
     ) -> tuple[int, bint]:
         if not immediate and shift_amount == 0:
             return value, self.regs.cpsr.carry_flag
@@ -225,7 +221,8 @@ class CPU:
                 carry_out = self.regs.cpsr.carry_flag
             elif shift_amount < 32:
                 carry_out = get_bit(value, 32 - shift_amount)
-                result = (value << shift_amount) & 0xFFFFFFFF
+                mask = 0xFFFFFFFF
+                result = (value << shift_amount) & mask
             elif shift_amount == 32:
                 carry_out = get_bit(value, 0)
                 result = 0
@@ -258,7 +255,8 @@ class CPU:
                 result = 0xFFFFFFFF if carry_out else 0
             else:
                 carry_out = get_bit(value, shift_amount - 1)
-                result = (extend_sign_32(value) >> shift_amount) & 0xFFFFFFFF
+                mask = 0xFFFFFFFF
+                result = (extend_sign_32(value) >> shift_amount) & mask
 
         elif shift_type == ShiftType.ROR:
             # ROR by n where n is greater than 32 will give the same result and carry out
