@@ -27,17 +27,17 @@ class Registers:
         self.BANKED_GPR_RANGE_END = 12
         self.BANKED_GPR_RANGE_LEN = self.BANKED_GPR_RANGE_END - self.BANKED_GPR_RANGE_START + 1
 
-        self.regs = array("L", [0] * 16)
+        self.regs = array("I", [0] * 16)
         self.cpsr = ProgramStatusRegister()  # Current program status register
         self.spsr = ProgramStatusRegister()  # Saved program status register
 
         # System/User mode and FIQ mode each have their own copy of R8 to R12
-        self.banked_old_gpr = array("L", [0] * self.BANKED_GPR_RANGE_LEN)
-        self.banked_fiq_gpr = array("L", [0] * self.BANKED_GPR_RANGE_LEN)
+        self.banked_old_gpr = array("I", [0] * self.BANKED_GPR_RANGE_LEN)
+        self.banked_fiq_gpr = array("I", [0] * self.BANKED_GPR_RANGE_LEN)
 
         # Every mode has its own SP and LR register
-        self.banked_sp = array("L", [0] * len(BankIndex))
-        self.banked_lr = array("L", [0] * len(BankIndex))
+        self.banked_sp = array("I", [0] * len(BankIndex))
+        self.banked_lr = array("I", [0] * len(BankIndex))
 
         # Every mode has its own SPSR register
         self.banked_spsr_user = ProgramStatusRegister()

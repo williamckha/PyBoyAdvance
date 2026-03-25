@@ -1,6 +1,12 @@
 # ifndef CYTHON
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Callable, TypeAlias, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyboy_advance.cpu.cpu import CPU
+
 from pyboy_advance.cpu.arm.alu import arm_alu
 from pyboy_advance.cpu.arm.bdt import arm_block_data_transfer
 from pyboy_advance.cpu.arm.branch import arm_branch_exchange, arm_branch
@@ -10,7 +16,17 @@ from pyboy_advance.cpu.arm.psr import arm_msr, arm_mrs
 from pyboy_advance.cpu.arm.sdt import arm_single_data_transfer
 from pyboy_advance.cpu.arm.swi import arm_software_interrupt
 from pyboy_advance.cpu.arm.swp import arm_single_data_swap
-from pyboy_advance.cpu.decode import InstrHandler, InstrPattern
+
+InstrHandler: TypeAlias = Callable[["CPU", int], None]
+
+
+@dataclass
+class InstrPattern:
+    mask: int
+    value: int
+    handler: InstrHandler
+
+
 # endif
 
 

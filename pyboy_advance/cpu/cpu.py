@@ -1,5 +1,6 @@
 import logging
 
+# ifndef CYTHON
 from pyboy_advance.cpu.arm.decode import arm_decode
 from pyboy_advance.cpu.constants import (
     CPUMode,
@@ -10,12 +11,10 @@ from pyboy_advance.cpu.constants import (
     ShiftType,
     ExceptionVector,
 )
-from pyboy_advance.interrupt_controller import PowerDownMode
 from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.cpu.thumb.decode import thumb_decode
 from pyboy_advance.memory.memory import Memory
 from pyboy_advance.memory.constants import MemoryAccess
-from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import (
     get_bits,
     get_bit,
@@ -24,6 +23,10 @@ from pyboy_advance.utils import (
     extend_sign_32,
     bint,
 )
+# endif
+
+from pyboy_advance.interrupt_controller import PowerDownMode
+from pyboy_advance.scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 

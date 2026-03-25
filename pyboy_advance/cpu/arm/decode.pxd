@@ -9,7 +9,13 @@ from pyboy_advance.cpu.arm.psr cimport arm_msr, arm_mrs
 from pyboy_advance.cpu.arm.sdt cimport arm_single_data_transfer
 from pyboy_advance.cpu.arm.swi cimport arm_software_interrupt
 from pyboy_advance.cpu.arm.swp cimport arm_single_data_swap
-from pyboy_advance.cpu.cpu cimport InstrHandler, InstrPattern
+
+ctypedef void (*InstrHandler)(object, uint32_t) noexcept
+
+cdef struct InstrPattern:
+    uint32_t mask
+    uint32_t value
+    InstrHandler handler
 
 cdef InstrPattern[12] ARM_PATTERNS
 

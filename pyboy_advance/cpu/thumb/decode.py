@@ -28,7 +28,7 @@ from pyboy_advance.cpu.thumb.sdt import (
     thumb_sp_relative_load_store,
 )
 from pyboy_advance.cpu.thumb.swi import thumb_software_interrupt
-from pyboy_advance.cpu.decode import InstrHandler, InstrPattern
+from pyboy_advance.cpu.arm.decode import InstrHandler, InstrPattern
 # endif
 
 THUMB_PATTERNS: list[InstrPattern] = [
