@@ -44,7 +44,7 @@ def arm_alu(cpu: CPU, instr: int):
             # Advance PC by 4 so that cpu.regs.pc returns PC + 12
             cpu.advance_pc_arm()
             early_advance_pc = True
-            cpu.scheduler.idle()
+            cpu.scheduler.idle(1)
         else:
             # Otherwise, the operand should be PC + 8
             # (which is what cpu.regs.pc returns normally).
@@ -160,29 +160,27 @@ def arm_alu_add(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
 
 def arm_alu_add_impl(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint) -> int:
     mask = 0xFFFFFFFF
-    result = op1 + op2
-    masked_result = result & mask
+    result = (op1 + op2) & mask
     if set_cond_codes and rd != cpu.regs.PC:
-        cpu.regs.cpsr.sign_flag = sign_32(masked_result)
-        cpu.regs.cpsr.zero_flag = masked_result == 0
-        cpu.regs.cpsr.carry_flag = masked_result < op1
-        cpu.regs.cpsr.overflow_flag = sign_32(~(op1 ^ op2) & (op2 ^ masked_result))
-    return masked_result
+        cpu.regs.cpsr.sign_flag = sign_32(result)
+        cpu.regs.cpsr.zero_flag = result == 0
+        cpu.regs.cpsr.carry_flag = result < op1
+        cpu.regs.cpsr.overflow_flag = sign_32(~(op1 ^ op2) & (op2 ^ result))
+    return result
 
 
 def arm_alu_adc(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
     mask = 0xFFFFFFFF
     temp = (op1 + op2) & mask
     carry_1 = temp < op1
-    result = temp + cpu.regs.cpsr.carry_flag
+    result = (temp + cpu.regs.cpsr.carry_flag) & mask
     carry_2 = result < temp
-    masked_result = result & mask
-    cpu.regs.set(rd, masked_result)
+    cpu.regs.set(rd, result)
     if set_cond_codes and rd != cpu.regs.PC:
-        cpu.regs.cpsr.sign_flag = sign_32(masked_result)
-        cpu.regs.cpsr.zero_flag = masked_result == 0
+        cpu.regs.cpsr.sign_flag = sign_32(result)
+        cpu.regs.cpsr.zero_flag = result == 0
         cpu.regs.cpsr.carry_flag = carry_1 or carry_2
-        cpu.regs.cpsr.overflow_flag = sign_32(~(op1 ^ op2) & (op2 ^ masked_result))
+        cpu.regs.cpsr.overflow_flag = sign_32(~(op1 ^ op2) & (op2 ^ result))
 
 
 def arm_alu_sbc(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):

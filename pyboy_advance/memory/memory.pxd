@@ -6,6 +6,7 @@ from pyboy_advance.cpu.constants cimport CPUState
 from pyboy_advance.memory.constants cimport MemoryRegion, MemoryAccess
 from pyboy_advance.memory.gamepak cimport GamePak
 from pyboy_advance.memory.io cimport IO
+from pyboy_advance.scheduler cimport Scheduler
 from pyboy_advance.utils cimport (
     get_bit,
     array_read_16,
@@ -19,7 +20,7 @@ from pyboy_advance.utils cimport (
 )
 
 cdef class Memory:
-    cdef object scheduler
+    cdef Scheduler scheduler
     cdef CPU cpu
     cdef IO io
     cdef uint8_t[:] bios

@@ -138,7 +138,7 @@ def thumb_alu(cpu: CPU, instr: int):
         cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
         cpu.regs.cpsr.carry_flag = carry
 
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
 
     opcode = get_bits(instr, 6, 9)
     if opcode == ThumbALUOpcode.AND:

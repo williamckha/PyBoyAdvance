@@ -1,11 +1,10 @@
 # ifndef CYTHON
 from __future__ import annotations
 
-from pyboy_advance.constants import Interrupt, PowerDownMode
+from pyboy_advance.constants import Interrupt, PowerDownMode, EventTrigger
+from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import bint
 # endif
-
-from pyboy_advance.scheduler import Scheduler
 
 
 class InterruptController:
@@ -62,6 +61,7 @@ class InterruptController:
         self.scheduler.schedule(
             self._write_interrupt_registers,
             self.WRITE_INTERRUPT_REGISTERS_DELAY,
+            EventTrigger.TRIG_IMMEDIATELY,
         )
 
     def _write_interrupt_registers(self):
@@ -77,9 +77,17 @@ class InterruptController:
         new_irq_line = interrupt_available and self._interrupt_master_enable
         if new_irq_line != self.irq_line:
             if new_irq_line:
-                self.scheduler.schedule(self._set_irq_line, self.UPDATE_IRQ_LINE_DELAY)
+                self.scheduler.schedule(
+                    self._set_irq_line,
+                    self.UPDATE_IRQ_LINE_DELAY,
+                    EventTrigger.TRIG_IMMEDIATELY,
+                )
             else:
-                self.scheduler.schedule(self._reset_irq_line, self.UPDATE_IRQ_LINE_DELAY)
+                self.scheduler.schedule(
+                    self._reset_irq_line,
+                    self.UPDATE_IRQ_LINE_DELAY,
+                    EventTrigger.TRIG_IMMEDIATELY,
+                )
 
     def _set_irq_line(self):
         self.irq_line = True

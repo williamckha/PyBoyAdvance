@@ -16,6 +16,7 @@ from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.cpu.thumb.decode import thumb_decoder
 from pyboy_advance.memory.memory import Memory
 from pyboy_advance.memory.constants import MemoryAccess
+from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import (
     get_bits,
     get_bit,
@@ -25,8 +26,6 @@ from pyboy_advance.utils import (
     bint,
 )
 # endif
-
-from pyboy_advance.scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 

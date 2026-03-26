@@ -28,7 +28,7 @@ def arm_multiply(cpu: CPU, instr: int):
     mask = 0xFFFFFFFF
 
     if accumulate:
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
         cpu.regs.set(rd, (cpu.regs.get(rm) * cpu.regs.get(rs) + cpu.regs.get(rn)) & mask)
     else:
         cpu.regs.set(rd, (cpu.regs.get(rm) * cpu.regs.get(rs)) & mask)
@@ -57,7 +57,7 @@ def arm_multiply_long(cpu: CPU, instr: int):
     opcode = get_bits(instr, 21, 22)
     set_cond_codes = get_bit(instr, 20)
 
-    cpu.scheduler.idle()
+    cpu.scheduler.idle(1)
 
     if opcode == MultiplyLongOpcode.UMULL:
         arm_multiply_idle(cpu, rs_val, False)
@@ -66,7 +66,7 @@ def arm_multiply_long(cpu: CPU, instr: int):
 
     elif opcode == MultiplyLongOpcode.UMLAL:
         arm_multiply_idle(cpu, rs_val, False)
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
 
         result = (rd_hi_val << 32) | rd_lo_val
         result += rm_val * rs_val
@@ -78,7 +78,7 @@ def arm_multiply_long(cpu: CPU, instr: int):
 
     elif opcode == MultiplyLongOpcode.SMLAL:
         arm_multiply_idle(cpu, rs_val, True)
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
 
         result = (rd_hi_val << 32) | rd_lo_val
         result += extend_sign_32(rm_val) * extend_sign_32(rs_val)

@@ -56,7 +56,7 @@ def arm_halfword_data_transfer(cpu: CPU, instr: int):
                 rd, cpu.memory.read_16_signed(effective_address, MemoryAccess.NON_SEQUENTIAL)
             )
 
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
 
         if rd == cpu.regs.PC:
             cpu.flush_pipeline()

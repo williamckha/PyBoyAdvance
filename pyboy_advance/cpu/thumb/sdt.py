@@ -23,7 +23,7 @@ def thumb_pc_relative_load(cpu: CPU, instr: int):
     address = add_32(cpu.regs.pc & ~2, offset)
 
     cpu.regs.set(rd, cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL))
-    cpu.scheduler.idle()
+    cpu.scheduler.idle(1)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
@@ -48,10 +48,10 @@ def thumb_load_store_register_offset(cpu: CPU, instr: int):
         cpu.memory.write_8(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
     elif opcode == 2:  # LDR
         cpu.regs.set(rd, cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL))
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
     elif opcode == 3:  # LDRB
         cpu.regs.set(rd, cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL))
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
@@ -74,13 +74,13 @@ def thumb_load_store_sign_extended(cpu: CPU, instr: int):
         cpu.memory.write_16(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
     elif opcode == 1:  # LDSB
         cpu.regs.set(rd, cpu.memory.read_8_signed(address, MemoryAccess.NON_SEQUENTIAL))
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
     elif opcode == 2:  # LDRH
         cpu.regs.set(rd, cpu.memory.read_16_ror(address, MemoryAccess.NON_SEQUENTIAL))
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
     elif opcode == 3:  # LDSH
         cpu.regs.set(rd, cpu.memory.read_16_signed(address, MemoryAccess.NON_SEQUENTIAL))
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
@@ -103,12 +103,12 @@ def thumb_load_store_immediate_offset(cpu: CPU, instr: int):
         cpu.memory.write_32(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
     elif opcode == 1:  # LDR
         cpu.regs.set(rd, cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL))
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
     elif opcode == 2:  # STRB
         cpu.memory.write_8(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
     elif opcode == 3:  # LDRB
         cpu.regs.set(rd, cpu.memory.read_8(address, MemoryAccess.NON_SEQUENTIAL))
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
@@ -129,10 +129,10 @@ def thumb_load_store_halfword(cpu: CPU, instr: int):
     opcode = get_bit(instr, 11)
     if opcode:  # LDRH
         cpu.regs.set(rd, cpu.memory.read_16_ror(address, MemoryAccess.NON_SEQUENTIAL))
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
     else:  # STRH
         cpu.memory.write_16(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL
@@ -152,7 +152,7 @@ def thumb_sp_relative_load_store(cpu: CPU, instr: int):
     opcode = get_bit(instr, 11)
     if opcode:  # LDR
         cpu.regs.set(rd, cpu.memory.read_32_ror(address, MemoryAccess.NON_SEQUENTIAL))
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
     else:  # STR
         cpu.memory.write_32(address, cpu.regs.get(rd), MemoryAccess.NON_SEQUENTIAL)
 

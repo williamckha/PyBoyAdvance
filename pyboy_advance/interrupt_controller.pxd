@@ -2,13 +2,14 @@ cimport cython
 
 from libc.stdint cimport uint32_t
 
-from pyboy_advance.constants cimport Interrupt, PowerDownMode
+from pyboy_advance.constants cimport Interrupt, PowerDownMode, EventTrigger
+from pyboy_advance.scheduler cimport Scheduler
 
 cdef class InterruptController:
     cdef int WRITE_INTERRUPT_REGISTERS_DELAY
     cdef int UPDATE_IRQ_LINE_DELAY
 
-    cdef object scheduler
+    cdef Scheduler scheduler
     cdef uint32_t _interrupt_enable
     cdef uint32_t _interrupt_flags
     cdef bint _interrupt_master_enable

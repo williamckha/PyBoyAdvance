@@ -46,7 +46,7 @@ def thumb_multiple_load_store(cpu: CPU, instr: int):
 
     if load:
         cpu.regs.set(base_reg, add_32(cpu.regs.get(base_reg), count))
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)
 
         for reg in range(8):
             if get_bit(reg_list, reg):
@@ -135,4 +135,4 @@ def thumb_pop_registers(cpu: CPU, reg_list: int):
         cpu.regs.sp = add_32(cpu.regs.sp, 4)
         cpu.flush_pipeline()
 
-    cpu.scheduler.idle()
+    cpu.scheduler.idle(1)

@@ -1,6 +1,6 @@
 from libc.stdint cimport uint32_t
 
-from pyboy_advance.constants cimport Interrupt
+from pyboy_advance.constants cimport Interrupt, EventTrigger
 from pyboy_advance.memory.memory cimport Memory
 from pyboy_advance.memory.constants cimport (
     IOAddress,
@@ -9,6 +9,7 @@ from pyboy_advance.memory.constants cimport (
     DMAStartTiming,
     DMATransferSize,
 )
+from pyboy_advance.scheduler cimport Scheduler
 from pyboy_advance.utils cimport get_bits, get_bit, set_bit
 
 cdef class DMAControlRegister:
@@ -31,7 +32,7 @@ cdef class DMAChannel:
     cdef int TRANSFER_DELAY
 
     cdef int channel_id
-    cdef object scheduler
+    cdef Scheduler scheduler
     cdef Memory memory
     cdef bint fifo
     cdef bint pending

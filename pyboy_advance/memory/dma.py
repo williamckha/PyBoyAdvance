@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pyboy_advance.memory.memory import Memory
 
-from pyboy_advance.constants import Interrupt
+from pyboy_advance.constants import Interrupt, EventTrigger
 from pyboy_advance.memory.constants import (
     IOAddress,
     MemoryAccess,
@@ -14,10 +14,9 @@ from pyboy_advance.memory.constants import (
     DMAStartTiming,
     DMATransferSize,
 )
+from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import get_bits, get_bit, set_bit, bint
 # endif
-
-from pyboy_advance.scheduler import Scheduler, EventTrigger
 
 
 class DMAControlRegister:
@@ -107,14 +106,16 @@ class DMAChannel:
                 self._internal_count = self.COUNT_MASK[self.channel_id] + 1
 
             if self._control_reg.start_timing == DMAStartTiming.IMMEDIATELY:
-                self._event = self.scheduler.schedule(self.activate, self.TRANSFER_DELAY)
+                self._event = self.scheduler.schedule(
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.TRIG_IMMEDIATELY
+                )
             elif self._control_reg.start_timing == DMAStartTiming.VBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, self.TRANSFER_DELAY, EventTrigger.VBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.TRIG_VBLANK
                 )
             elif self._control_reg.start_timing == DMAStartTiming.HBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, self.TRANSFER_DELAY, EventTrigger.HBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.TRIG_HBLANK
                 )
 
         elif old_enable and not self._control_reg.transfer_enabled:  # DMA cancelled
@@ -211,11 +212,11 @@ class DMAChannel:
 
             if self._control_reg.start_timing == DMAStartTiming.VBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, self.TRANSFER_DELAY, EventTrigger.VBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.TRIG_VBLANK
                 )
             elif self._control_reg.start_timing == DMAStartTiming.HBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, self.TRANSFER_DELAY, EventTrigger.HBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.TRIG_HBLANK
                 )
         else:
             self._control_reg.transfer_enabled = False

@@ -33,7 +33,7 @@ def arm_single_data_swap(cpu: CPU, instr: int):
         )
         cpu.regs.set(dst_reg, temp)
 
-    cpu.scheduler.idle()
+    cpu.scheduler.idle(1)
 
     cpu.advance_pc_arm()
     cpu.next_fetch_access = MemoryAccess.NON_SEQUENTIAL

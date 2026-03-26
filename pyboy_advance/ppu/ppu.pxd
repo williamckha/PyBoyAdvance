@@ -1,7 +1,7 @@
 from libc.stdint cimport uint8_t, uint16_t, uint32_t
 from cpython.array cimport array
 
-from pyboy_advance.constants cimport Interrupt
+from pyboy_advance.constants cimport Interrupt, EventTrigger
 from pyboy_advance.interrupt_controller cimport InterruptController
 from pyboy_advance.ppu.constants cimport *
 from pyboy_advance.ppu.memory cimport VideoMemory
@@ -11,6 +11,7 @@ from pyboy_advance.ppu.registers cimport (
     BackgroundControlRegister,
     WindowControlRegister,
 )
+from pyboy_advance.scheduler cimport Scheduler
 from pyboy_advance.utils cimport (
     get_bit,
     get_bits,
@@ -43,7 +44,7 @@ cdef class Object:
     cdef uint32_t get_palette_num(self)
 
 cdef class PPU:
-    cdef object scheduler
+    cdef Scheduler scheduler
     cdef InterruptController interrupt_controller
     cdef DisplayControlRegister display_control
     cdef DisplayStatusRegister display_status

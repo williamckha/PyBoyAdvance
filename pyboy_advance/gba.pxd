@@ -6,12 +6,13 @@ from pyboy_advance.memory.gamepak cimport GamePak
 from pyboy_advance.memory.io cimport IO
 from pyboy_advance.memory.memory cimport Memory
 from pyboy_advance.ppu.ppu cimport PPU
+from pyboy_advance.scheduler cimport Scheduler
 from pyboy_advance.cpu.arm.decode cimport arm_decoder
 from pyboy_advance.cpu.thumb.decode cimport thumb_decoder
 
 cdef class PyBoyAdvance:
     cdef GamePak gamepak
-    cdef object scheduler
+    cdef Scheduler scheduler
     cdef Memory memory
     cdef InterruptController interrupt_controller
     cdef DMAController dma_controller

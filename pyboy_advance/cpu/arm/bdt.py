@@ -114,4 +114,4 @@ def arm_block_data_transfer(cpu: CPU, instr: int):
         cpu.switch_mode(original_mode)
 
     if load_store_bit:
-        cpu.scheduler.idle()
+        cpu.scheduler.idle(1)

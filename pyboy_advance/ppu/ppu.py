@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from array import array
 
-from pyboy_advance.constants import Interrupt
+from pyboy_advance.constants import Interrupt, EventTrigger
 from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.ppu.constants import *
 from pyboy_advance.ppu.memory import VideoMemory
@@ -13,6 +13,7 @@ from pyboy_advance.ppu.registers import (
     BackgroundControlRegister,
     WindowControlRegister,
 )
+from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import (
     get_bit,
     get_bits,
@@ -24,7 +25,6 @@ from pyboy_advance.utils import (
 # endif
 
 from ctypes import c_void_p
-from pyboy_advance.scheduler import Scheduler, EventTrigger
 
 
 class PPU:
@@ -73,7 +73,11 @@ class PPU:
         self.front_buffer_ptr = c_void_p(self.front_buffer.buffer_info()[0])
         self.back_buffer_ptr = c_void_p(self.back_buffer.buffer_info()[0])
 
-        self.scheduler.schedule(self.hblank_start, CYCLES_HDRAW)
+        self.scheduler.schedule(
+            self.hblank_start,
+            CYCLES_HDRAW,
+            EventTrigger.TRIG_IMMEDIATELY,
+        )
 
     @property
     def frame_buffer_ptr(self) -> c_void_p:
@@ -92,12 +96,16 @@ class PPU:
 
             self._merge_layers()
 
-            self.scheduler.trigger(EventTrigger.HBLANK)
+            self.scheduler.trigger(EventTrigger.TRIG_HBLANK)
 
         if self.display_status.hblank_irq:
             self.interrupt_controller.signal(Interrupt.HBLANK)
 
-        self.scheduler.schedule(self.hblank_end, CYCLES_HBLANK)
+        self.scheduler.schedule(
+            self.hblank_end,
+            CYCLES_HBLANK,
+            EventTrigger.TRIG_IMMEDIATELY,
+        )
 
     def hblank_end(self):
         self.vcount += 1
@@ -122,12 +130,16 @@ class PPU:
             if self.display_status.vblank_irq:
                 self.interrupt_controller.signal(Interrupt.VBLANK)
 
-            self.scheduler.trigger(EventTrigger.VBLANK)
+            self.scheduler.trigger(EventTrigger.TRIG_VBLANK)
 
         if self.display_status.vcount_irq and self.display_status.vcount_trigger_status:
             self.interrupt_controller.signal(Interrupt.VCOUNT)
 
-        self.scheduler.schedule(self.hblank_start, CYCLES_HDRAW)
+        self.scheduler.schedule(
+            self.hblank_start,
+            CYCLES_HDRAW,
+            EventTrigger.TRIG_IMMEDIATELY,
+        )
 
     def _init_layers(self):
         backdrop_colour = 0 if self.display_control.force_blank else self.memory.read_16_palram(0)

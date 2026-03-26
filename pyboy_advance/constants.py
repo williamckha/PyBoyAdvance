@@ -25,3 +25,9 @@ class PowerDownMode(IntEnum):
     NONE = 0
     HALT = 1
     STOP = 2
+
+
+class EventTrigger(IntEnum):
+    TRIG_IMMEDIATELY = 0
+    TRIG_VBLANK = 1
+    TRIG_HBLANK = 2

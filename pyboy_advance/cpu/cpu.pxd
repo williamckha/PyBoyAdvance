@@ -15,6 +15,7 @@ from pyboy_advance.cpu.constants cimport (
 from pyboy_advance.cpu.registers cimport Registers
 from pyboy_advance.memory.memory cimport Memory
 from pyboy_advance.memory.constants cimport MemoryAccess
+from pyboy_advance.scheduler cimport Scheduler
 from pyboy_advance.utils cimport (
     get_bits,
     get_bit,
@@ -35,7 +36,7 @@ cdef struct InstrPattern:
     InstrHandler handler
 
 cdef class CPU:
-    cdef object scheduler
+    cdef Scheduler scheduler
     cdef readonly Registers regs
     cdef readonly Memory memory
     cdef readonly uint32_t[2] pipeline

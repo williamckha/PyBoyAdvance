@@ -9,12 +9,12 @@ from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
 from pyboy_advance.memory.memory import Memory
 from pyboy_advance.ppu.ppu import PPU
+from pyboy_advance.scheduler import Scheduler
 # endif
 
 import os
 
 from pyboy_advance.keypad import Keypad
-from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.app.window import Window, WindowEvent
 
 
