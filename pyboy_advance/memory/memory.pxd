@@ -19,6 +19,7 @@ from pyboy_advance.utils cimport (
 )
 
 cdef class Memory:
+    cdef object scheduler
     cdef CPU cpu
     cdef IO io
     cdef uint8_t[:] bios

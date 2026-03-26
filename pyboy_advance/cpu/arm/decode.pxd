@@ -17,4 +17,4 @@ cdef InstrHandler[4096] ARM_LUT
 
 cdef void fill_arm_lut() noexcept
 
-cdef InstrHandler arm_decoder(uint32_t) except NULL
+cdef InstrHandler arm_decoder(uint32_t) noexcept

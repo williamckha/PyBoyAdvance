@@ -388,11 +388,11 @@ class Memory:
 
         """
         # fmt: off
-        self.access_time_32_raw = array("B", [0] * (len(MemoryAccess) * 16 * 4))
-        self.access_time_16_raw = array("B", [0] * (len(MemoryAccess) * 16 * 4))
+        self.access_time_32_raw = array("B", [0] * (2 * 16 * 4))
+        self.access_time_16_raw = array("B", [0] * (2 * 16 * 4))
 
-        self.access_time_32 = memoryview(self.access_time_32_raw).cast("I", (len(MemoryAccess), 16))
-        self.access_time_16 = memoryview(self.access_time_16_raw).cast("I", (len(MemoryAccess), 16))
+        self.access_time_32 = memoryview(self.access_time_32_raw).cast("I", (2, 16))
+        self.access_time_16 = memoryview(self.access_time_16_raw).cast("I", (2, 16))
 
         self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.EWRAM_REGION)]  = 6
         self.access_time_32[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.EWRAM_REGION)]      = 6

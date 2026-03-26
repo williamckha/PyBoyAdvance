@@ -31,6 +31,7 @@ cdef class DMAChannel:
     cdef int TRANSFER_DELAY
 
     cdef int channel_id
+    cdef object scheduler
     cdef Memory memory
     cdef bint fifo
     cdef bint pending
@@ -41,6 +42,7 @@ cdef class DMAChannel:
     cdef uint32_t _internal_count
     cdef uint32_t _internal_src
     cdef uint32_t _internal_dst
+    cdef object _event
 
     cdef uint32_t get_control_reg(self) noexcept
     cdef void set_control_reg(self, uint32_t) noexcept

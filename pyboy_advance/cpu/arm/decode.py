@@ -67,6 +67,10 @@ fill_arm_lut()
 def arm_decoder(instr: int) -> InstrHandler:
     opcode_hash = ((instr >> 16) & 0xFF0) | ((instr >> 4) & 0xF)
     instruction_handler = ARM_LUT[opcode_hash]
+
+    # ifndef CYTHON
     if not instruction_handler:
         raise ValueError(f"Unknown ARM instruction: {instr:032b}")
+    # endif
+
     return instruction_handler

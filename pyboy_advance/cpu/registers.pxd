@@ -20,6 +20,7 @@ cdef class Registers:
     cdef uint32_t[:] banked_fiq_gpr
     cdef uint32_t[:] banked_sp
     cdef uint32_t[:] banked_lr
+    cdef ProgramStatusRegister banked_spsr_user
     cdef ProgramStatusRegister banked_spsr_fiq
     cdef ProgramStatusRegister banked_spsr_irq
     cdef ProgramStatusRegister banked_spsr_swi

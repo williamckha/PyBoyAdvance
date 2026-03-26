@@ -1,6 +1,10 @@
+# ifndef CYTHON
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyboy_advance.cpu.cpu import CPU
 
 from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import (
@@ -8,9 +12,7 @@ from pyboy_advance.utils import (
     get_bits,
     add_32,
 )
-
-if TYPE_CHECKING:
-    from pyboy_advance.cpu.cpu import CPU
+# endif
 
 
 def thumb_multiple_load_store(cpu: CPU, instr: int):
@@ -21,7 +23,7 @@ def thumb_multiple_load_store(cpu: CPU, instr: int):
     address = cpu.regs.get(base_reg)
 
     cpu.advance_pc_thumb()
-    cpu.prefetch_access_type = MemoryAccess.NON_SEQUENTIAL
+    # cpu.prefetch_access_type = MemoryAccess.NON_SEQUENTIAL
 
     load = get_bit(instr, 11)  # 0 = STMIA (Store), 1 = LDMIA (Load)
 
@@ -65,7 +67,7 @@ def thumb_push_pop_registers(cpu: CPU, instr: int):
     opcode = get_bit(instr, 11)
 
     cpu.advance_pc_thumb()
-    cpu.prefetch_access_type = MemoryAccess.NON_SEQUENTIAL
+    # cpu.prefetch_access_type = MemoryAccess.NON_SEQUENTIAL
 
     if opcode:
         thumb_pop_registers(cpu, reg_list)

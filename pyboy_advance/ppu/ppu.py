@@ -343,7 +343,7 @@ class PPU:
                     self.display_control.display_bg(bg_num)
                     and self.bg_control[bg_num].priority == priority
                 ):
-                    self._merge_layer(self.bg_scanline[bg_num], LayerType(bg_num))
+                    self._merge_layer(self.bg_scanline[bg_num], bg_num)
 
             if self.display_control.display_obj:
                 self._merge_layer(self.obj_scanline[priority], LayerType.OBJ)
@@ -351,7 +351,7 @@ class PPU:
         for x in range(DISPLAY_WIDTH):
             self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = self.scanline[x]
 
-    def _merge_layer(self, scanline, layer_type: LayerType):
+    def _merge_layer(self, scanline, layer_type: LayerType | int):
         windowing_enabled = (
             self.display_control.display_window(WindowIndex.WIN_0)
             or self.display_control.display_window(WindowIndex.WIN_1)

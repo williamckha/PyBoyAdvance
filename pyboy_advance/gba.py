@@ -1,18 +1,21 @@
-import os
-
+# ifndef CYTHON
 from pyboy_advance.cpu.constants import ExceptionVector, BankIndex
 from pyboy_advance.cpu.cpu import CPU
+from pyboy_advance.cpu.arm.decode import arm_decoder
+from pyboy_advance.cpu.thumb.decode import thumb_decoder
 from pyboy_advance.interrupt_controller import InterruptController
-from pyboy_advance.keypad import Keypad
 from pyboy_advance.memory.dma import DMAController
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
 from pyboy_advance.memory.memory import Memory
 from pyboy_advance.ppu.ppu import PPU
+# endif
+
+import os
+
+from pyboy_advance.keypad import Keypad
 from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.app.window import Window, WindowEvent
-from pyboy_advance.cpu.arm.decode import arm_decoder
-from pyboy_advance.cpu.thumb.decode import thumb_decoder
 
 
 class PyBoyAdvance:
@@ -52,12 +55,12 @@ class PyBoyAdvance:
         self.cpu.thumb_decoder = thumb_decoder
 
         if skip_bios:
-            self.cpu.regs.banked_sp[BankIndex.BANK_SYSTEM_USER] = 0x03007F00
-            self.cpu.regs.banked_sp[BankIndex.BANK_FIQ] = 0x03007F00
-            self.cpu.regs.banked_sp[BankIndex.BANK_IRQ] = 0x03007FA0
-            self.cpu.regs.banked_sp[BankIndex.BANK_SWI] = 0x03007FE0
-            self.cpu.regs.banked_sp[BankIndex.BANK_ABORT] = 0x03007F00
-            self.cpu.regs.banked_sp[BankIndex.BANK_UNDEFINED] = 0x03007F00
+            self.cpu.regs.banked_sp[int(BankIndex.BANK_SYSTEM_USER)] = 0x03007F00
+            self.cpu.regs.banked_sp[int(BankIndex.BANK_FIQ)] = 0x03007F00
+            self.cpu.regs.banked_sp[int(BankIndex.BANK_IRQ)] = 0x03007FA0
+            self.cpu.regs.banked_sp[int(BankIndex.BANK_SWI)] = 0x03007FE0
+            self.cpu.regs.banked_sp[int(BankIndex.BANK_ABORT)] = 0x03007F00
+            self.cpu.regs.banked_sp[int(BankIndex.BANK_UNDEFINED)] = 0x03007F00
             self.cpu.regs.sp = 0x03007F00
             self.cpu.regs.pc = 0x08000000
             self.cpu.flush_pipeline()

@@ -1,6 +1,10 @@
+# ifndef CYTHON
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyboy_advance.cpu.cpu import CPU
 
 from pyboy_advance.cpu.constants import Condition
 from pyboy_advance.memory.constants import MemoryAccess
@@ -12,9 +16,7 @@ from pyboy_advance.utils import (
     add_32,
     extend_sign_23,
 )
-
-if TYPE_CHECKING:
-    from pyboy_advance.cpu.cpu import CPU
+# endif
 
 
 def thumb_unconditional_branch(cpu: CPU, instr: int):

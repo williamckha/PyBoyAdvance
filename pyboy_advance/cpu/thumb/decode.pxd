@@ -35,4 +35,4 @@ cdef InstrHandler[4096] THUMB_LUT
 
 cdef void fill_thumb_lut() noexcept
 
-cdef InstrHandler thumb_decoder(uint32_t) except NULL
+cdef InstrHandler thumb_decoder(uint32_t) noexcept

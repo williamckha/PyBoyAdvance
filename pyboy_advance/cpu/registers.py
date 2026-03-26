@@ -36,8 +36,8 @@ class Registers:
         self.banked_fiq_gpr = array("I", [0] * self.BANKED_GPR_RANGE_LEN)
 
         # Every mode has its own SP and LR register
-        self.banked_sp = array("I", [0] * len(BankIndex))
-        self.banked_lr = array("I", [0] * len(BankIndex))
+        self.banked_sp = array("I", [0] * 6)
+        self.banked_lr = array("I", [0] * 6)
 
         # Every mode has its own SPSR register
         self.banked_spsr_user = ProgramStatusRegister()

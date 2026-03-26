@@ -1,11 +1,13 @@
+# ifndef CYTHON
 from __future__ import annotations
+
+from pyboy_advance.ppu.constants import DISPLAY_WIDTH, DISPLAY_HEIGHT, COLOUR_SIZE
+# endif
 
 from ctypes import c_void_p
 from enum import Enum, auto
 
 import sdl2.ext
-
-from pyboy_advance.ppu.constants import DISPLAY_WIDTH, DISPLAY_HEIGHT, COLOUR_SIZE
 
 
 class Window:

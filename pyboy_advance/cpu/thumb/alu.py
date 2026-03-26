@@ -1,7 +1,10 @@
+# ifndef CYTHON
 from __future__ import annotations
 
-from enum import IntEnum
 from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyboy_advance.cpu.cpu import CPU
 
 from pyboy_advance.cpu.arm.alu import (
     arm_alu_sub,
@@ -20,7 +23,6 @@ from pyboy_advance.cpu.arm.alu import (
 )
 from pyboy_advance.cpu.arm.mul import arm_multiply_idle
 from pyboy_advance.cpu.constants import CPUState, ShiftType
-from pyboy_advance.cpu.registers import Registers
 from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import (
     get_bits,
@@ -28,9 +30,9 @@ from pyboy_advance.utils import (
     sign_32,
     add_32,
 )
+# endif
 
-if TYPE_CHECKING:
-    from pyboy_advance.cpu.cpu import CPU
+from enum import IntEnum
 
 
 class ThumbALUOpcode(IntEnum):
@@ -58,7 +60,7 @@ def thumb_move_shifted_register(cpu: CPU, instr: int):
     rs = get_bits(instr, 3, 5)  # Source reg
     rd = get_bits(instr, 0, 2)  # Destination reg
 
-    opcode = ShiftType(get_bits(instr, 11, 12))
+    opcode = get_bits(instr, 11, 12)
     offset = get_bits(instr, 6, 10)
 
     result, carry = cpu.compute_shift(cpu.regs.get(rs), opcode, offset, True)
@@ -85,13 +87,13 @@ def thumb_add_subtract(cpu: CPU, instr: int):
     op2 = get_bits(instr, 6, 8) if immediate_bit else cpu.regs.get(get_bits(instr, 6, 8))
 
     if opcode == 0:  # ADD (Register)
-        arm_alu_add(cpu, op1, op2, rd, set_cond_codes=True)
+        arm_alu_add(cpu, op1, op2, rd, True)
     elif opcode == 1:  # SUB (Register)
-        arm_alu_sub(cpu, op1, op2, rd, set_cond_codes=True)
+        arm_alu_sub(cpu, op1, op2, rd, True)
     elif opcode == 2:  # ADD (Immediate)
-        arm_alu_add(cpu, op1, op2, rd, set_cond_codes=True)
+        arm_alu_add(cpu, op1, op2, rd, True)
     elif opcode == 3:  # SUB (Immediate)
-        arm_alu_sub(cpu, op1, op2, rd, set_cond_codes=True)
+        arm_alu_sub(cpu, op1, op2, rd, True)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -106,13 +108,13 @@ def thumb_move_compare_add_subtract(cpu: CPU, instr: int):
     value = get_bits(instr, 0, 7)
 
     if opcode == 0:  # MOV
-        arm_alu_mov(cpu, value, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+        arm_alu_mov(cpu, value, rd, True, cpu.regs.cpsr.carry_flag)
     elif opcode == 1:  # CMP
         arm_alu_cmp(cpu, cpu.regs.get(rd), value)
     elif opcode == 2:  # ADD
-        arm_alu_add(cpu, cpu.regs.get(rd), value, rd, set_cond_codes=True)
+        arm_alu_add(cpu, cpu.regs.get(rd), value, rd, True)
     elif opcode == 3:  # SUB
-        arm_alu_sub(cpu, cpu.regs.get(rd), value, rd, set_cond_codes=True)
+        arm_alu_sub(cpu, cpu.regs.get(rd), value, rd, True)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -140,9 +142,9 @@ def thumb_alu(cpu: CPU, instr: int):
 
     opcode = get_bits(instr, 6, 9)
     if opcode == ThumbALUOpcode.AND:
-        arm_alu_and(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+        arm_alu_and(cpu, op1, op2, rd, True, cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.EOR:
-        arm_alu_eor(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+        arm_alu_eor(cpu, op1, op2, rd, True, cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.LSL:
         execute_shift(ShiftType.LSL)
     elif opcode == ThumbALUOpcode.LSR:
@@ -150,30 +152,30 @@ def thumb_alu(cpu: CPU, instr: int):
     elif opcode == ThumbALUOpcode.ASR:
         execute_shift(ShiftType.ASR)
     elif opcode == ThumbALUOpcode.ADC:
-        arm_alu_adc(cpu, op1, op2, rd, set_cond_codes=True)
+        arm_alu_adc(cpu, op1, op2, rd, True)
     elif opcode == ThumbALUOpcode.SBC:
-        arm_alu_sbc(cpu, op1, op2, rd, set_cond_codes=True)
+        arm_alu_sbc(cpu, op1, op2, rd, True)
     elif opcode == ThumbALUOpcode.ROR:
         execute_shift(ShiftType.ROR)
     elif opcode == ThumbALUOpcode.TST:
-        arm_alu_tst(cpu, op1, op2, shift_carry=cpu.regs.cpsr.carry_flag)
+        arm_alu_tst(cpu, op1, op2, cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.NEG:
-        arm_alu_sub(cpu, 0, op2, rd, set_cond_codes=True)
+        arm_alu_sub(cpu, 0, op2, rd, True)
     elif opcode == ThumbALUOpcode.CMP:
         arm_alu_cmp(cpu, op1, op2)
     elif opcode == ThumbALUOpcode.CMN:
         arm_alu_cmn(cpu, op1, op2)
     elif opcode == ThumbALUOpcode.ORR:
-        arm_alu_orr(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+        arm_alu_orr(cpu, op1, op2, rd, True, cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.MUL:
         cpu.regs.set(rd, (op1 * op2) & 0xFFFFFFFF)
         cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
         cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
         arm_multiply_idle(cpu, op1, True)
     elif opcode == ThumbALUOpcode.BIC:
-        arm_alu_bic(cpu, op1, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+        arm_alu_bic(cpu, op1, op2, rd, True, cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.MVN:
-        arm_alu_mvn(cpu, op2, rd, set_cond_codes=True, shift_carry=cpu.regs.cpsr.carry_flag)
+        arm_alu_mvn(cpu, op2, rd, True, cpu.regs.cpsr.carry_flag)
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
@@ -207,7 +209,7 @@ def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):
 
         # Mask out the last bit indicating whether to switch to ARM mode
         cpu.regs.pc = address & ~1
-        cpu.regs.cpsr.state = CPUState(get_bit(address, 0))
+        cpu.regs.cpsr.state = get_bit(address, 0)
 
         cpu.flush_pipeline()
         return

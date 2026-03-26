@@ -76,6 +76,10 @@ fill_thumb_lut()
 
 def thumb_decoder(instr: int) -> InstrHandler:
     instruction_handler = THUMB_LUT[instr >> 8]
+
+    # ifndef CYTHON
     if not instruction_handler:
         raise ValueError(f"Unknown THUMB instruction: {instr:016b}")
+    # endif
+
     return instruction_handler

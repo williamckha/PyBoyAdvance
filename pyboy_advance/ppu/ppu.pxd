@@ -43,7 +43,28 @@ cdef class Object:
     cdef uint32_t get_palette_num(self)
 
 cdef class PPU:
+    cdef object scheduler
+    cdef InterruptController interrupt_controller
+    cdef DisplayControlRegister display_control
+    cdef DisplayStatusRegister display_status
+    cdef uint32_t vcount
+    cdef object bg_control
+    cdef object bg_offset_h
+    cdef object bg_offset_v
+    cdef object window_v_min
+    cdef object window_v_max
+    cdef object window_h_min
+    cdef object window_h_max
+    cdef object window_control
+    cdef object window_mask
+    cdef VideoMemory memory
+    cdef object bg_scanline
+    cdef object obj_scanline
     cdef uint16_t[:] scanline
+    cdef object front_buffer
+    cdef object back_buffer
+    cdef object front_buffer_ptr
+    cdef object back_buffer_ptr
 
     cdef void hblank_start(self)
     cdef void hblank_end(self)

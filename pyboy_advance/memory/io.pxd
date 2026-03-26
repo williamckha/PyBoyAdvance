@@ -14,6 +14,8 @@ cdef class IO:
     cdef Memory memory
     cdef InterruptController interrupt_controller
     cdef DMAController dma_controller
+    cdef PPU ppu
+    cdef object keypad
     cdef uint32_t reg_soundbias
 
     cdef uint32_t read_32(self, uint32_t) noexcept

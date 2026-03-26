@@ -35,6 +35,7 @@ cdef struct InstrPattern:
     InstrHandler handler
 
 cdef class CPU:
+    cdef object scheduler
     cdef Registers regs
     cdef Memory memory
     cdef uint32_t[2] pipeline

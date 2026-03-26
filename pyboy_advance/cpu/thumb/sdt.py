@@ -1,12 +1,14 @@
+# ifndef CYTHON
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyboy_advance.memory.constants import MemoryAccess
-from pyboy_advance.utils import get_bits, get_bit, add_32
-
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
+
+from pyboy_advance.memory.constants import MemoryAccess
+from pyboy_advance.utils import get_bits, get_bit, add_32
+# endif
 
 
 def thumb_pc_relative_load(cpu: CPU, instr: int):

@@ -8,6 +8,7 @@ cdef class InterruptController:
     cdef int WRITE_INTERRUPT_REGISTERS_DELAY
     cdef int UPDATE_IRQ_LINE_DELAY
 
+    cdef object scheduler
     cdef uint32_t _interrupt_enable
     cdef uint32_t _interrupt_flags
     cdef bint _interrupt_master_enable
