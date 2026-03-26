@@ -1,4 +1,5 @@
 from libc.stdint cimport uint8_t, uint32_t
+from cpython.array cimport array
 
 from pyboy_advance.memory.constants cimport MemoryRegion
 from pyboy_advance.utils cimport array_read_32, array_read_16

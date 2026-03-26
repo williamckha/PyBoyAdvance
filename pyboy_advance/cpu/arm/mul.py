@@ -49,34 +49,39 @@ def arm_multiply_long(cpu: CPU, instr: int):
     rs = get_bits(instr, 8, 11)  # Operand reg
     rm = get_bits(instr, 0, 3)  # Operand reg
 
+    rd_hi_val = cpu.regs.get(rd_hi)
+    rd_lo_val = cpu.regs.get(rd_lo)
+    rs_val = cpu.regs.get(rs)
+    rm_val = cpu.regs.get(rm)
+
     opcode = get_bits(instr, 21, 22)
     set_cond_codes = get_bit(instr, 20)
 
     cpu.scheduler.idle()
 
     if opcode == MultiplyLongOpcode.UMULL:
-        arm_multiply_idle(cpu, cpu.regs.get(rs), False)
+        arm_multiply_idle(cpu, rs_val, False)
 
-        result = cpu.regs.get(rm) * cpu.regs.get(rs)
+        result = rm_val * rs_val
 
     elif opcode == MultiplyLongOpcode.UMLAL:
-        arm_multiply_idle(cpu, cpu.regs.get(rs), False)
+        arm_multiply_idle(cpu, rs_val, False)
         cpu.scheduler.idle()
 
-        result = (cpu.regs.get(rd_hi) << 32) | cpu.regs.get(rd_lo)
-        result += cpu.regs.get(rm) * cpu.regs.get(rs)
+        result = (rd_hi_val << 32) | rd_lo_val
+        result += rm_val * rs_val
 
     elif opcode == MultiplyLongOpcode.SMULL:
-        arm_multiply_idle(cpu, cpu.regs.get(rs), True)
+        arm_multiply_idle(cpu, rs_val, True)
 
-        result = extend_sign_32(cpu.regs.get(rm)) * extend_sign_32(cpu.regs.get(rs))
+        result = extend_sign_32(rm_val) * extend_sign_32(rs_val)
 
     elif opcode == MultiplyLongOpcode.SMLAL:
-        arm_multiply_idle(cpu, cpu.regs.get(rs), True)
+        arm_multiply_idle(cpu, rs_val, True)
         cpu.scheduler.idle()
 
-        result = (cpu.regs.get(rd_hi) << 32) | cpu.regs.get(rd_lo)
-        result += extend_sign_32(cpu.regs.get(rm)) * extend_sign_32(cpu.regs.get(rs))
+        result = (rd_hi_val << 32) | rd_lo_val
+        result += extend_sign_32(rm_val) * extend_sign_32(rs_val)
 
     # ifndef CYTHON
     else:

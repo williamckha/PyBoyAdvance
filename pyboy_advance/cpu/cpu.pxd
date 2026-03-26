@@ -36,9 +36,9 @@ cdef struct InstrPattern:
 
 cdef class CPU:
     cdef object scheduler
-    cdef Registers regs
-    cdef Memory memory
-    cdef uint32_t[2] pipeline
+    cdef readonly Registers regs
+    cdef readonly Memory memory
+    cdef readonly uint32_t[2] pipeline
     cdef int next_fetch_access
     cdef InstrDecoder arm_decoder
     cdef InstrDecoder thumb_decoder

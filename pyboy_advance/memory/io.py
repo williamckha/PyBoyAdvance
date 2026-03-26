@@ -49,22 +49,22 @@ class IO:
 
         # Background Control Registers
         elif address == IOAddress.REG_BG0CNT:
-            return self.ppu.bg_control[0].reg
+            return self.ppu.bg_control_0.reg
         elif address == IOAddress.REG_BG1CNT:
-            return self.ppu.bg_control[1].reg
+            return self.ppu.bg_control_1.reg
         elif address == IOAddress.REG_BG2CNT:
-            return self.ppu.bg_control[2].reg
+            return self.ppu.bg_control_2.reg
         elif address == IOAddress.REG_BG3CNT:
-            return self.ppu.bg_control[3].reg
+            return self.ppu.bg_control_3.reg
 
         # Window Registers
         elif address == IOAddress.REG_WININ:
-            win_in = self.ppu.window_control[WindowIndex.WIN_0].reg
-            win_in |= self.ppu.window_control[WindowIndex.WIN_1].reg << 8
+            win_in = self.ppu.window_control_0.reg
+            win_in |= self.ppu.window_control_1.reg << 8
             return win_in
         elif address == IOAddress.REG_WINOUT:
-            win_out = self.ppu.window_control[WindowIndex.WIN_OUT].reg
-            win_out |= self.ppu.window_control[WindowIndex.WIN_OBJ].reg << 8
+            win_out = self.ppu.window_control_out.reg
+            win_out |= self.ppu.window_control_obj.reg << 8
             return win_out
 
         # Sound Control Registers
@@ -119,13 +119,13 @@ class IO:
 
         # Background Control Registers
         elif address == IOAddress.REG_BG0CNT:
-            self.ppu.bg_control[0].reg = value
+            self.ppu.bg_control_0.reg = value
         elif address == IOAddress.REG_BG1CNT:
-            self.ppu.bg_control[1].reg = value
+            self.ppu.bg_control_1.reg = value
         elif address == IOAddress.REG_BG2CNT:
-            self.ppu.bg_control[2].reg = value
+            self.ppu.bg_control_2.reg = value
         elif address == IOAddress.REG_BG3CNT:
-            self.ppu.bg_control[3].reg = value
+            self.ppu.bg_control_3.reg = value
 
         # Background Offset Registers
         elif address == IOAddress.REG_BG0HOFS:
@@ -159,11 +159,11 @@ class IO:
             self.ppu.window_v_min[1] = (value >> 8) & 0xFF
             self.ppu.window_v_max[1] = value & 0xFF
         elif address == IOAddress.REG_WININ:
-            self.ppu.window_control[WindowIndex.WIN_0].reg = value & 0x3F
-            self.ppu.window_control[WindowIndex.WIN_1].reg = (value >> 8) & 0x3F
+            self.ppu.window_control_0.reg = value & 0x3F
+            self.ppu.window_control_1.reg = (value >> 8) & 0x3F
         elif address == IOAddress.REG_WINOUT:
-            self.ppu.window_control[WindowIndex.WIN_OUT].reg = value & 0x3F
-            self.ppu.window_control[WindowIndex.WIN_OBJ].reg = (value >> 8) & 0x3F
+            self.ppu.window_control_out.reg = value & 0x3F
+            self.ppu.window_control_obj.reg = (value >> 8) & 0x3F
 
         # Sound Control Registers
         elif address == IOAddress.REG_SOUNDBIAS:

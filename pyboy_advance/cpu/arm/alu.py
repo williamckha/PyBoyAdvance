@@ -161,25 +161,28 @@ def arm_alu_add(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
 def arm_alu_add_impl(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint) -> int:
     mask = 0xFFFFFFFF
     result = op1 + op2
-    truncated_result = result & mask
+    masked_result = result & mask
     if set_cond_codes and rd != cpu.regs.PC:
-        cpu.regs.cpsr.sign_flag = sign_32(truncated_result)
-        cpu.regs.cpsr.zero_flag = truncated_result == 0
-        cpu.regs.cpsr.carry_flag = result > mask
-        cpu.regs.cpsr.overflow_flag = sign_32(~(op1 ^ op2) & (op2 ^ truncated_result))
-    return truncated_result
+        cpu.regs.cpsr.sign_flag = sign_32(masked_result)
+        cpu.regs.cpsr.zero_flag = masked_result == 0
+        cpu.regs.cpsr.carry_flag = masked_result < op1
+        cpu.regs.cpsr.overflow_flag = sign_32(~(op1 ^ op2) & (op2 ^ masked_result))
+    return masked_result
 
 
 def arm_alu_adc(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
     mask = 0xFFFFFFFF
-    carry = cpu.regs.cpsr.carry_flag
-    result = op1 + op2 + carry
-    cpu.regs.set(rd, result & mask)
+    temp = (op1 + op2) & mask
+    carry_1 = temp < op1
+    result = temp + cpu.regs.cpsr.carry_flag
+    carry_2 = result < temp
+    masked_result = result & mask
+    cpu.regs.set(rd, masked_result)
     if set_cond_codes and rd != cpu.regs.PC:
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
-        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
-        cpu.regs.cpsr.carry_flag = result > mask
-        cpu.regs.cpsr.overflow_flag = sign_32(~(op1 ^ op2) & (op2 ^ cpu.regs.get(rd)))
+        cpu.regs.cpsr.sign_flag = sign_32(masked_result)
+        cpu.regs.cpsr.zero_flag = masked_result == 0
+        cpu.regs.cpsr.carry_flag = carry_1 or carry_2
+        cpu.regs.cpsr.overflow_flag = sign_32(~(op1 ^ op2) & (op2 ^ masked_result))
 
 
 def arm_alu_sbc(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):

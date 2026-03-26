@@ -27,7 +27,7 @@ cdef class Registers:
     cdef ProgramStatusRegister banked_spsr_abort
     cdef ProgramStatusRegister banked_spsr_undefined
 
-    cdef uint32_t get(self, uint32_t) noexcept
+    cpdef uint32_t get(self, uint32_t) noexcept
     cdef void set(self, uint32_t, uint32_t) noexcept
     cdef uint32_t get_sp(self) noexcept
     cdef void set_sp(self, uint32_t) noexcept

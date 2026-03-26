@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
 
-from pyboy_advance.cpu.constants import Condition
 from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import (
     get_bits,
@@ -30,7 +29,7 @@ def thumb_unconditional_branch(cpu: CPU, instr: int):
 def thumb_conditional_branch(cpu: CPU, instr: int):
     """Execute a THUMB.16 instruction (conditional branch)"""
 
-    condition = Condition(get_bits(instr, 8, 11))
+    condition = get_bits(instr, 8, 11)
     offset = extend_sign_8(get_bits(instr, 0, 7)) * 2
 
     if cpu.check_condition(condition):

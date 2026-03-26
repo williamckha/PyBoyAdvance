@@ -40,27 +40,27 @@ class PPU:
         self.display_status = DisplayStatusRegister()
         self.vcount = 0
 
-        self.bg_control = [BackgroundControlRegister() for _ in range(NUM_BACKGROUNDS)]
-        self.bg_offset_h = [0] * NUM_BACKGROUNDS
-        self.bg_offset_v = [0] * NUM_BACKGROUNDS
+        self.bg_control_0 = BackgroundControlRegister()
+        self.bg_control_1 = BackgroundControlRegister()
+        self.bg_control_2 = BackgroundControlRegister()
+        self.bg_control_3 = BackgroundControlRegister()
 
-        self.window_v_min = [0] * NUM_PRIMARY_WINDOWS
-        self.window_v_max = [0] * NUM_PRIMARY_WINDOWS
-        self.window_h_min = [0] * NUM_PRIMARY_WINDOWS
-        self.window_h_max = [0] * NUM_PRIMARY_WINDOWS
+        self.bg_offset_h = array("I", [0] * NUM_BACKGROUNDS)
+        self.bg_offset_v = array("I", [0] * NUM_BACKGROUNDS)
 
-        self.window_control = {
-            WindowIndex.WIN_0: WindowControlRegister(),
-            WindowIndex.WIN_1: WindowControlRegister(),
-            WindowIndex.WIN_OBJ: WindowControlRegister(),
-            WindowIndex.WIN_OUT: WindowControlRegister(),
-        }
+        self.window_v_min = array("I", [0] * NUM_PRIMARY_WINDOWS)
+        self.window_v_max = array("I", [0] * NUM_PRIMARY_WINDOWS)
+        self.window_h_min = array("I", [0] * NUM_PRIMARY_WINDOWS)
+        self.window_h_max = array("I", [0] * NUM_PRIMARY_WINDOWS)
 
-        self.window_mask = {
-            WindowIndex.WIN_0: array("H", [0] * DISPLAY_WIDTH),
-            WindowIndex.WIN_1: array("H", [0] * DISPLAY_WIDTH),
-            WindowIndex.WIN_OBJ: array("H", [0] * DISPLAY_WIDTH),
-        }
+        self.window_control_0 = WindowControlRegister()
+        self.window_control_1 = WindowControlRegister()
+        self.window_control_obj = WindowControlRegister()
+        self.window_control_out = WindowControlRegister()
+
+        self.window_mask_0 = array("H", [0] * DISPLAY_WIDTH)
+        self.window_mask_1 = array("H", [0] * DISPLAY_WIDTH)
+        self.window_mask_obj = array("H", [0] * DISPLAY_WIDTH)
 
         self.memory = VideoMemory(self.display_control)
 
@@ -171,7 +171,7 @@ class PPU:
         if not self.display_control.display_bg(bg_num):
             return
 
-        bg_control = self.bg_control[bg_num]
+        bg_control = self._get_bg_control(bg_num)
 
         rel_y = self.vcount + self.bg_offset_v[bg_num]
         tile_y = rel_y // TILE_HEIGHT
@@ -329,7 +329,7 @@ class PPU:
 
             if palette_index:
                 if obj.mode == ObjectMode.WINDOW:
-                    self.window_mask[WindowIndex.WIN_OBJ][win_x] = 1
+                    self.window_mask_obj[win_x] = 1
                 else:
                     colour = self.memory.read_16_palram(
                         OBJ_PALETTE_OFFSET + palette_index * COLOUR_SIZE
@@ -341,7 +341,7 @@ class PPU:
             for bg_num in range(NUM_BACKGROUNDS - 1, -1, -1):
                 if (
                     self.display_control.display_bg(bg_num)
-                    and self.bg_control[bg_num].priority == priority
+                    and self._get_bg_control(bg_num).priority == priority
                 ):
                     self._merge_layer(self.bg_scanline[bg_num], bg_num)
 
@@ -370,12 +370,12 @@ class PPU:
 
     def _calc_window_masks(self):
         for window in (WindowIndex.WIN_0, WindowIndex.WIN_1):
-            window_mask = self.window_mask[window]
+            window_mask = self.window_mask_0 if window == WindowIndex.WIN_0 else self.window_mask_1
 
-            h_min = self.window_h_min[window]
-            h_max = self.window_h_max[window]
-            v_min = self.window_v_min[window]
-            v_max = self.window_v_max[window]
+            h_min = self.window_h_min[int(window)]
+            h_max = self.window_h_max[int(window)]
+            v_min = self.window_v_min[int(window)]
+            v_max = self.window_v_max[int(window)]
 
             inside_v_bounds = (
                 v_min <= self.vcount < v_max
@@ -395,17 +395,17 @@ class PPU:
                         window_mask[x] = x < h_max or x >= h_min
 
         for x in range(DISPLAY_WIDTH):
-            self.window_mask[WindowIndex.WIN_OBJ][x] = 0
+            self.window_mask_obj[x] = 0
 
     def _get_window_for_pixel(self, x):
-        if self.window_mask[WindowIndex.WIN_0][x]:
-            return self.window_control[WindowIndex.WIN_0]
-        elif self.window_mask[WindowIndex.WIN_1][x]:
-            return self.window_control[WindowIndex.WIN_1]
-        elif self.window_mask[WindowIndex.WIN_OBJ][x]:
-            return self.window_control[WindowIndex.WIN_OBJ]
+        if self.window_mask_0[x]:
+            return self.window_control_0
+        elif self.window_mask_1[x]:
+            return self.window_control_1
+        elif self.window_mask_obj[x]:
+            return self.window_control_obj
         else:
-            return self.window_control[WindowIndex.WIN_OUT]
+            return self.window_control_out
 
     def _get_palette_index(
         self,
@@ -436,6 +436,20 @@ class PPU:
             palette_index += palette_num * 16
 
         return palette_index
+
+    def _get_bg_control(self, bg_num: int) -> BackgroundControlRegister:
+        if bg_num == 0:
+            return self.bg_control_0
+        elif bg_num == 1:
+            return self.bg_control_1
+        elif bg_num == 2:
+            return self.bg_control_2
+        elif bg_num == 3:
+            return self.bg_control_3
+        # ifndef CYTHON
+        else:
+            raise ValueError("Invalid bg_num")
+        # endif
 
 
 class Object:

@@ -3,12 +3,11 @@ from __future__ import annotations
 
 import os
 from typing import Iterable
+from array import array
 
 from pyboy_advance.memory.constants import MemoryRegion
 from pyboy_advance.utils import array_read_32, array_read_16
 # endif
-
-from array import array
 
 
 class GamePak:

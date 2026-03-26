@@ -48,19 +48,27 @@ cdef class PPU:
     cdef DisplayControlRegister display_control
     cdef DisplayStatusRegister display_status
     cdef uint32_t vcount
-    cdef object bg_control
-    cdef object bg_offset_h
-    cdef object bg_offset_v
-    cdef object window_v_min
-    cdef object window_v_max
-    cdef object window_h_min
-    cdef object window_h_max
-    cdef object window_control
-    cdef object window_mask
+    cdef BackgroundControlRegister bg_control_0
+    cdef BackgroundControlRegister bg_control_1
+    cdef BackgroundControlRegister bg_control_2
+    cdef BackgroundControlRegister bg_control_3
+    cdef uint32_t[:] bg_offset_h
+    cdef uint32_t[:] bg_offset_v
+    cdef uint32_t[:] window_v_min
+    cdef uint32_t[:] window_v_max
+    cdef uint32_t[:] window_h_min
+    cdef uint32_t[:] window_h_max
+    cdef WindowControlRegister window_control_0
+    cdef WindowControlRegister window_control_1
+    cdef WindowControlRegister window_control_obj
+    cdef WindowControlRegister window_control_out
+    cdef uint16_t[:] window_mask_0
+    cdef uint16_t[:] window_mask_1
+    cdef uint16_t[:] window_mask_obj
     cdef VideoMemory memory
-    cdef object bg_scanline
-    cdef object obj_scanline
-    cdef uint16_t[:] scanline
+    cdef uint16_t[4][240] bg_scanline
+    cdef uint16_t[4][240] obj_scanline
+    cdef uint16_t[240] scanline
     cdef object front_buffer
     cdef object back_buffer
     cdef object front_buffer_ptr
@@ -80,3 +88,4 @@ cdef class PPU:
     cdef void _calc_window_masks(self)
     cdef WindowControlRegister _get_window_for_pixel(self, uint32_t)
     cdef uint32_t _get_palette_index(self, uint32_t, uint32_t, uint32_t, uint32_t, bint, uint32_t)
+    cdef BackgroundControlRegister _get_bg_control(self, int)

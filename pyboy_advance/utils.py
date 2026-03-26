@@ -1,3 +1,4 @@
+# ifndef CYTHON
 from array import array
 from typing import TypeAlias
 
@@ -8,6 +9,7 @@ like a boolean (0 for False, 1 for True) while still being an integer.
 Casting to bool has a measurable performance hit, so it is better to avoid
 casts and use bint where possible.
 """
+# endif
 
 
 def get_bit(num: int, i: int) -> bint:

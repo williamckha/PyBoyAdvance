@@ -36,7 +36,12 @@ def thumb_multiple_load_store(cpu: CPU, instr: int):
         cpu.regs.set(base_reg, add_32(cpu.regs.get(base_reg), 0x40))
         return
 
-    count = sum(get_bit(instr, reg) for reg in range(8)) * 4
+    # Avoiding usage of sum() here to optimize Cython output
+    count = 0
+    for reg in range(8):
+        count += get_bit(instr, reg)
+    count *= 4
+
     access_type = MemoryAccess.NON_SEQUENTIAL
 
     if load:

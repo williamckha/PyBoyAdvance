@@ -17,7 +17,7 @@ cdef class PyBoyAdvance:
     cdef DMAController dma_controller
     cdef PPU ppu
     cdef object keypad
-    cdef CPU cpu
+    cdef readonly CPU cpu
 
     cpdef void step(self)
     cpdef void frame(self)

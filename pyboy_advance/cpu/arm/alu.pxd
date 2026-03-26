@@ -30,7 +30,7 @@ cdef void arm_alu_add(CPU, uint32_t, uint32_t, uint32_t, bint) noexcept
 @cython.locals(mask=uint32_t)
 cdef uint32_t arm_alu_add_impl(CPU, uint32_t, uint32_t, uint32_t, bint) noexcept
 
-@cython.locals(mask=uint32_t)
+@cython.locals(mask=uint32_t, carry_1=bint, carry_2=bint)
 cdef void arm_alu_adc(CPU, uint32_t, uint32_t, uint32_t, bint) noexcept
 
 @cython.locals(mask=uint32_t)

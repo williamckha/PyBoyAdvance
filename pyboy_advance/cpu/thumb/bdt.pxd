@@ -10,3 +10,5 @@ from pyboy_advance.utils cimport (
 
 cdef void thumb_multiple_load_store(CPU, uint32_t) noexcept
 cdef void thumb_push_pop_registers(CPU, uint32_t) noexcept
+cdef void thumb_push_registers(CPU, uint32_t) noexcept
+cdef void thumb_pop_registers(CPU, uint32_t) noexcept
