@@ -387,64 +387,61 @@ class Memory:
 
         """
         # fmt: off
-        self.access_time_32_raw = array("B", [0] * (2 * 16 * 4))
-        self.access_time_16_raw = array("B", [0] * (2 * 16 * 4))
+        self.access_time_32 = [[1] * 16 for _ in range(2)]
+        self.access_time_16 = [[1] * 16 for _ in range(2)]
 
-        self.access_time_32 = memoryview(self.access_time_32_raw).cast("I", (2, 16))
-        self.access_time_16 = memoryview(self.access_time_16_raw).cast("I", (2, 16))
+        self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.EWRAM_REGION)]  = 6
+        self.access_time_32[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.EWRAM_REGION)]      = 6
+        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.EWRAM_REGION)]  = 3
+        self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.EWRAM_REGION)]      = 3
 
-        self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.EWRAM_REGION)]  = 6
-        self.access_time_32[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.EWRAM_REGION)]      = 6
-        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.EWRAM_REGION)]  = 3
-        self.access_time_16[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.EWRAM_REGION)]      = 3
+        self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.PALRAM_REGION)] = 2
+        self.access_time_32[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.PALRAM_REGION)]     = 2
 
-        self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.PALRAM_REGION)] = 2
-        self.access_time_32[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.PALRAM_REGION)]     = 2
+        self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.VRAM_REGION)]   = 2
+        self.access_time_32[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.VRAM_REGION)]       = 2
 
-        self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.VRAM_REGION)]   = 2
-        self.access_time_32[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.VRAM_REGION)]       = 2
-
-        self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.OAM_REGION)]    = 2
-        self.access_time_32[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.OAM_REGION)]        = 2
+        self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.OAM_REGION)]    = 2
+        self.access_time_32[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.OAM_REGION)]        = 2
 
         self.update_waitstates()
         # fmt: on
 
     def update_waitstates(self):
         # fmt: off
-        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.GAMEPAK_0_REGION_1)] = 1 + self.wait_control.ws0_non_seq
-        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.GAMEPAK_0_REGION_2)] = 1 + self.wait_control.ws0_non_seq
-        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.GAMEPAK_1_REGION_1)] = 1 + self.wait_control.ws1_non_seq
-        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.GAMEPAK_1_REGION_2)] = 1 + self.wait_control.ws1_non_seq
-        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.GAMEPAK_2_REGION_1)] = 1 + self.wait_control.ws2_non_seq
-        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.GAMEPAK_2_REGION_2)] = 1 + self.wait_control.ws2_non_seq
-        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL), int(MemoryRegion.SRAM_REGION)]        = 1 + self.wait_control.sram
+        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.GAMEPAK_0_REGION_1)] = 1 + self.wait_control.ws0_non_seq
+        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.GAMEPAK_0_REGION_2)] = 1 + self.wait_control.ws0_non_seq
+        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.GAMEPAK_1_REGION_1)] = 1 + self.wait_control.ws1_non_seq
+        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.GAMEPAK_1_REGION_2)] = 1 + self.wait_control.ws1_non_seq
+        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.GAMEPAK_2_REGION_1)] = 1 + self.wait_control.ws2_non_seq
+        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.GAMEPAK_2_REGION_2)] = 1 + self.wait_control.ws2_non_seq
+        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.SRAM_REGION)]        = 1 + self.wait_control.sram
 
-        self.access_time_16[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.GAMEPAK_0_REGION_1)] = 1 + self.wait_control.ws0_seq
-        self.access_time_16[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.GAMEPAK_0_REGION_2)] = 1 + self.wait_control.ws0_seq
-        self.access_time_16[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.GAMEPAK_1_REGION_1)] = 1 + self.wait_control.ws1_seq
-        self.access_time_16[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.GAMEPAK_1_REGION_2)] = 1 + self.wait_control.ws1_seq
-        self.access_time_16[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.GAMEPAK_2_REGION_1)] = 1 + self.wait_control.ws2_seq
-        self.access_time_16[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.GAMEPAK_2_REGION_2)] = 1 + self.wait_control.ws2_seq
-        self.access_time_16[int(MemoryAccess.SEQUENTIAL), int(MemoryRegion.SRAM_REGION)]        = 1 + self.wait_control.sram
+        self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.GAMEPAK_0_REGION_1)] = 1 + self.wait_control.ws0_seq
+        self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.GAMEPAK_0_REGION_2)] = 1 + self.wait_control.ws0_seq
+        self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.GAMEPAK_1_REGION_1)] = 1 + self.wait_control.ws1_seq
+        self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.GAMEPAK_1_REGION_2)] = 1 + self.wait_control.ws1_seq
+        self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.GAMEPAK_2_REGION_1)] = 1 + self.wait_control.ws2_seq
+        self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.GAMEPAK_2_REGION_2)] = 1 + self.wait_control.ws2_seq
+        self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.SRAM_REGION)]        = 1 + self.wait_control.sram
         # fmt: on
 
         for region in range(MemoryRegion.GAMEPAK_0_REGION_1, MemoryRegion.SRAM_REGION + 1):
-            self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL), int(region)] = (
-                self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL), int(region)]
-                + self.access_time_16[int(MemoryAccess.SEQUENTIAL), int(region)]
+            self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL)][int(region)] = (
+                self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(region)]
+                + self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(region)]
             )
-            self.access_time_32[int(MemoryAccess.SEQUENTIAL), int(region)] = (
-                self.access_time_16[int(MemoryAccess.SEQUENTIAL), int(region)] * 2
+            self.access_time_32[int(MemoryAccess.SEQUENTIAL)][int(region)] = (
+                self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(region)] * 2
             )
 
     def _idle_for_access(self, address: int, size: int, access_type: MemoryAccess):
         region = (address >> 24) & 0xF
 
         cycles = (
-            self.access_time_32[int(access_type), int(region)]
+            self.access_time_32[int(access_type)][int(region)]
             if size == 4
-            else self.access_time_16[int(access_type), int(region)]
+            else self.access_time_16[int(access_type)][int(region)]
         )
 
         self.scheduler.idle(cycles)

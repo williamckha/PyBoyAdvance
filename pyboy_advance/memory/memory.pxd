@@ -1,3 +1,5 @@
+cimport cython
+
 from libc.stdint cimport uint8_t, uint32_t
 from cpython.array cimport array
 
@@ -29,10 +31,8 @@ cdef class Memory:
     cdef GamePak gamepak
     cdef uint32_t bios_last_opcode
     cdef WaitstateControlRegister wait_control
-    cdef array access_time_32_raw
-    cdef array access_time_16_raw
-    cdef uint32_t[:, :] access_time_32
-    cdef uint32_t[:, :] access_time_16
+    cdef int[2][16] access_time_32
+    cdef int[2][16] access_time_16
 
     cdef uint32_t read_32(self, uint32_t, int) noexcept
     cdef uint32_t read_32_ror(self, uint32_t, int) noexcept
@@ -53,6 +53,8 @@ cdef class Memory:
     cdef uint32_t _read_unused_memory(self) noexcept
     cdef void _init_access_times(self) noexcept
     cdef void update_waitstates(self) noexcept
+
+    @cython.locals(cycles=int)
     cdef void _idle_for_access(self, uint32_t, int, int) noexcept
 
 cdef class WaitstateControlRegister:

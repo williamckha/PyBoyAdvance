@@ -9,7 +9,6 @@ if TYPE_CHECKING:
 from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.memory.constants import IOAddress
 from pyboy_advance.memory.dma import DMAController
-from pyboy_advance.ppu.constants import WindowIndex
 from pyboy_advance.ppu.ppu import PPU
 from pyboy_advance.utils import get_bit
 # endif

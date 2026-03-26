@@ -1,6 +1,7 @@
 cimport cython
 
 from libc.stdint cimport uint32_t
+from cpython.array cimport array
 
 from pyboy_advance.cpu.constants cimport CPUMode, CPUState, BankIndex
 from pyboy_advance.utils cimport get_bit, set_bit

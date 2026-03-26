@@ -1,8 +1,8 @@
+# ifndef CYTHON
 from __future__ import annotations
 
 from array import array
 
-# ifndef CYTHON
 from pyboy_advance.cpu.constants import CPUMode, CPUState, BankIndex
 from pyboy_advance.utils import get_bit, set_bit, bint
 # endif
@@ -123,7 +123,9 @@ class Registers:
             return BankIndex.BANK_ABORT
         elif mode == CPUMode.UNDEFINED:
             return BankIndex.BANK_UNDEFINED
-        return BankIndex.BANK_SYSTEM_USER
+        # ifndef CYTHON
+        raise ValueError("Invalid CPU mode")
+        # endif
 
     def get_banked_spsr(self, bank_index: BankIndex) -> ProgramStatusRegister:
         if bank_index == BankIndex.BANK_SYSTEM_USER:
@@ -138,7 +140,9 @@ class Registers:
             return self.banked_spsr_abort
         elif bank_index == BankIndex.BANK_UNDEFINED:
             return self.banked_spsr_undefined
-        return None
+        # ifndef CYTHON
+        raise ValueError("Invalid bank index")
+        # endif
 
 
 class ProgramStatusRegister:

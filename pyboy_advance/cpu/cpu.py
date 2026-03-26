@@ -1,5 +1,3 @@
-import logging
-
 # ifndef CYTHON
 from pyboy_advance.constants import PowerDownMode
 from pyboy_advance.cpu.arm.decode import arm_decoder
@@ -26,8 +24,6 @@ from pyboy_advance.utils import (
     bint,
 )
 # endif
-
-logger = logging.getLogger(__name__)
 
 
 class CPU:
