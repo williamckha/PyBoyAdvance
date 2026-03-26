@@ -387,8 +387,8 @@ class Memory:
 
         """
         # fmt: off
-        self.access_time_32 = [[1] * 16 for _ in range(2)]
-        self.access_time_16 = [[1] * 16 for _ in range(2)]
+        self.access_time_32 = [[1] * 16 for _ in range(len(MemoryAccess))]
+        self.access_time_16 = [[1] * 16 for _ in range(len(MemoryAccess))]
 
         self.access_time_32[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.EWRAM_REGION)]  = 6
         self.access_time_32[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.EWRAM_REGION)]      = 6

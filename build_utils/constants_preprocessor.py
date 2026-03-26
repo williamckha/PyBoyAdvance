@@ -2,6 +2,7 @@ import ast
 import os
 import re
 from dataclasses import dataclass
+from collections import Counter
 
 
 @dataclass
@@ -40,7 +41,7 @@ def preprocess_constants(file_paths: list[str | os.PathLike]) -> list[str | os.P
         else:
             preprocessed.append(file_path)
 
-    replace_constant_names(preprocessed, constants)
+    insert_replacements(preprocessed, constants)
 
     return preprocessed
 
@@ -143,11 +144,13 @@ def generate_constants_pxd_pyx(
     return pyx_path
 
 
-def replace_constant_names(
+def insert_replacements(
     file_paths: list[str | os.PathLike],
     constants: dict[tuple[str | None, str], Constant],
 ):
-    replacements = {}
+    replacements: dict[str, str] = {}
+    enum_lens = Counter()
+
     for constant in constants.values():
         if constant.replacement_name:
             if constant.scope:
@@ -157,7 +160,12 @@ def replace_constant_names(
                 pattern = "[^.]" + constant.name
                 replacements[pattern] = constant.replacement_name
 
-    print(replacements)
+        if constant.scope:
+            enum_lens[constant.scope] += 1
+
+    for enum_name, enum_len in enum_lens.items():
+        pattern = f"len\\({enum_name}\\)"
+        replacements[pattern] = str(enum_len)
 
     for file_path in file_paths:
         with open(file_path, "r", encoding="utf-8") as f:
