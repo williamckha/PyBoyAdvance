@@ -1,27 +1,9 @@
-from enum import IntFlag, auto
-
 # ifndef CYTHON
-from pyboy_advance.constants import Interrupt
+from pyboy_advance.app.constants import WindowEvent
+from pyboy_advance.constants import Interrupt, Key
 from pyboy_advance.interrupt_controller import InterruptController
 from pyboy_advance.utils import bint, get_bit, get_bits
 # endif
-
-from pyboy_advance.app.window import WindowEvent
-
-
-class Key(IntFlag):
-    # fmt: off
-    BUTTON_A        = auto()
-    BUTTON_B        = auto()
-    BUTTON_SELECT   = auto()
-    BUTTON_START    = auto()
-    DPAD_RIGHT      = auto()
-    DPAD_LEFT       = auto()
-    DPAD_UP         = auto()
-    DPAD_DOWN       = auto()
-    SHOULDER_RIGHT  = auto()
-    SHOULDER_LEFT   = auto()
-    # fmt: on
 
 
 class Keypad:
@@ -29,9 +11,7 @@ class Keypad:
         self.interrupt_controller = interrupt_controller
 
         # Initialize all keys to "released" state (inputs are active low)
-        self.key_input = 0
-        for key in Key:
-            self.key_input |= key
+        self.key_input = 0b1111111111
 
         self.key_control = KeypadInterruptControlRegister()
 
@@ -88,8 +68,10 @@ class Keypad:
             self.release_key(Key.SHOULDER_RIGHT)
         elif event == WindowEvent.RELEASE_SHOULDER_LEFT:
             self.release_key(Key.SHOULDER_LEFT)
+        # ifndef CYTHON
         else:
             raise ValueError(f"WindowEvent {event.name} is not a key event")
+        # endif
 
     def _evaluate_irq_condition(self) -> bool:
         if self.key_control.irq_if_all:

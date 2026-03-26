@@ -1,6 +1,11 @@
+cimport cython
+
+from pyboy_advance.app.constants cimport WindowEvent
+from pyboy_advance.app.window cimport Window
 from pyboy_advance.cpu.constants cimport ExceptionVector, BankIndex
 from pyboy_advance.cpu.cpu cimport CPU
 from pyboy_advance.interrupt_controller cimport InterruptController
+from pyboy_advance.keypad cimport Keypad
 from pyboy_advance.memory.dma cimport DMAController
 from pyboy_advance.memory.gamepak cimport GamePak
 from pyboy_advance.memory.io cimport IO
@@ -17,9 +22,12 @@ cdef class PyBoyAdvance:
     cdef InterruptController interrupt_controller
     cdef DMAController dma_controller
     cdef PPU ppu
-    cdef object keypad
+    cdef Keypad keypad
     cdef readonly CPU cpu
 
     cpdef void step(self)
+
     cpdef void frame(self)
+
+    @cython.locals(window=Window, event=int)
     cpdef void run(self)

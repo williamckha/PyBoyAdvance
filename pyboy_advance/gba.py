@@ -1,9 +1,12 @@
 # ifndef CYTHON
+from pyboy_advance.app.constants import WindowEvent
+from pyboy_advance.app.window import Window
 from pyboy_advance.cpu.constants import ExceptionVector, BankIndex
 from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.cpu.arm.decode import arm_decoder
 from pyboy_advance.cpu.thumb.decode import thumb_decoder
 from pyboy_advance.interrupt_controller import InterruptController
+from pyboy_advance.keypad import Keypad
 from pyboy_advance.memory.dma import DMAController
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
@@ -13,9 +16,6 @@ from pyboy_advance.scheduler import Scheduler
 # endif
 
 import os
-
-from pyboy_advance.keypad import Keypad
-from pyboy_advance.app.window import Window, WindowEvent
 
 
 class PyBoyAdvance:

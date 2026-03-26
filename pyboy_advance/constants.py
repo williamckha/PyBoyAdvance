@@ -31,3 +31,18 @@ class EventTrigger(IntEnum):
     TRIG_IMMEDIATELY = 0
     TRIG_VBLANK = 1
     TRIG_HBLANK = 2
+
+
+class Key(IntFlag):
+    # fmt: off
+    BUTTON_A        = 1 << 0
+    BUTTON_B        = 1 << 1
+    BUTTON_SELECT   = 1 << 2
+    BUTTON_START    = 1 << 3
+    DPAD_RIGHT      = 1 << 4
+    DPAD_LEFT       = 1 << 5
+    DPAD_UP         = 1 << 6
+    DPAD_DOWN       = 1 << 7
+    SHOULDER_RIGHT  = 1 << 8
+    SHOULDER_LEFT   = 1 << 9
+    # fmt: on
