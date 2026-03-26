@@ -107,15 +107,15 @@ class DMAChannel:
 
             if self._control_reg.start_timing == DMAStartTiming.IMMEDIATELY:
                 self._event = self.scheduler.schedule(
-                    self.activate, self.TRANSFER_DELAY, EventTrigger.TRIG_IMMEDIATELY
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.IMMEDIATELY
                 )
             elif self._control_reg.start_timing == DMAStartTiming.VBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, self.TRANSFER_DELAY, EventTrigger.TRIG_VBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.VBLANK
                 )
             elif self._control_reg.start_timing == DMAStartTiming.HBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, self.TRANSFER_DELAY, EventTrigger.TRIG_HBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.HBLANK
                 )
 
         elif old_enable and not self._control_reg.transfer_enabled:  # DMA cancelled
@@ -212,11 +212,11 @@ class DMAChannel:
 
             if self._control_reg.start_timing == DMAStartTiming.VBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, self.TRANSFER_DELAY, EventTrigger.TRIG_VBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.VBLANK
                 )
             elif self._control_reg.start_timing == DMAStartTiming.HBLANK:
                 self._event = self.scheduler.schedule(
-                    self.activate, self.TRANSFER_DELAY, EventTrigger.TRIG_HBLANK
+                    self.activate, self.TRANSFER_DELAY, EventTrigger.HBLANK
                 )
         else:
             self._control_reg.transfer_enabled = False

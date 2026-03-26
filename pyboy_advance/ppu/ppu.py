@@ -76,7 +76,7 @@ class PPU:
         self.scheduler.schedule(
             self.hblank_start,
             CYCLES_HDRAW,
-            EventTrigger.TRIG_IMMEDIATELY,
+            EventTrigger.IMMEDIATELY,
         )
 
     @property
@@ -96,7 +96,7 @@ class PPU:
 
             self._merge_layers()
 
-            self.scheduler.trigger(EventTrigger.TRIG_HBLANK)
+            self.scheduler.trigger(EventTrigger.HBLANK)
 
         if self.display_status.hblank_irq:
             self.interrupt_controller.signal(Interrupt.HBLANK)
@@ -104,7 +104,7 @@ class PPU:
         self.scheduler.schedule(
             self.hblank_end,
             CYCLES_HBLANK,
-            EventTrigger.TRIG_IMMEDIATELY,
+            EventTrigger.IMMEDIATELY,
         )
 
     def hblank_end(self):
@@ -130,7 +130,7 @@ class PPU:
             if self.display_status.vblank_irq:
                 self.interrupt_controller.signal(Interrupt.VBLANK)
 
-            self.scheduler.trigger(EventTrigger.TRIG_VBLANK)
+            self.scheduler.trigger(EventTrigger.VBLANK)
 
         if self.display_status.vcount_irq and self.display_status.vcount_trigger_status:
             self.interrupt_controller.signal(Interrupt.VCOUNT)
@@ -138,7 +138,7 @@ class PPU:
         self.scheduler.schedule(
             self.hblank_start,
             CYCLES_HDRAW,
-            EventTrigger.TRIG_IMMEDIATELY,
+            EventTrigger.IMMEDIATELY,
         )
 
     def _init_layers(self):

@@ -43,14 +43,14 @@ class ShiftType(IntEnum):
 
 
 class ExceptionVector(IntEnum):
-    EV_RESET = 0x00
-    EV_UNDEFINED_INSTRUCTION = 0x04
-    EV_SWI = 0x08
-    EV_PREFETCH_ABORT = 0x0C
-    EV_DATA_ABORT = 0x10
-    EV_ADDRESS_EXCEEDS_26_BITS = 0x14
-    EV_IRQ = 0x18
-    EV_FIQ = 0x1C
+    RESET = 0x00
+    UNDEFINED_INSTRUCTION = 0x04
+    SWI = 0x08
+    PREFETCH_ABORT = 0x0C
+    DATA_ABORT = 0x10
+    ADDRESS_EXCEEDS_26_BITS = 0x14
+    IRQ = 0x18
+    FIQ = 0x1C
 
 
 class BankIndex(IntEnum):

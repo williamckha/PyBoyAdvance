@@ -4,8 +4,7 @@ import re
 
 def preprocess_cython_guards(file_paths: list[str | os.PathLike]) -> list[str | os.PathLike]:
     """
-    Remove code blocks guarded by '# ifndef CYTHON' ... '# endif' from the
-    provided files.
+    Remove code blocks guarded by '# ifndef CYTHON' ... '# endif'.
     """
     start_re = re.compile(r"^\s*#\s*ifndef\s+CYTHON\b", flags=re.IGNORECASE)
     end_re = re.compile(r"^\s*#\s*endif\b", flags=re.IGNORECASE)

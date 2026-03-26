@@ -5,9 +5,11 @@ from os import PathLike
 
 def preprocess_properties(file_paths: list[str | PathLike]) -> list[str | PathLike]:
     """
-    Preprocessor that converts @property and @property.setter decorators
-    to explicit getter and setter methods, and replaces all property usages with
-    method calls.
+    Convert methods decorated with @property and @property.setter to explicit getter
+    and setter methods, and replace all property usages with method calls.
+
+    Cython does not optimize @property/@property.setter to pure C, which is why
+    this transformation is necessary.
     """
     file_asts = {}
     for file_path in file_paths:

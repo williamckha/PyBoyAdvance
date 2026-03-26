@@ -13,4 +13,4 @@ from pyboy_advance.cpu.constants import ExceptionVector
 def thumb_software_interrupt(cpu: CPU, instr: int):
     """Execute a THUMB.17 instruction (software interrupt)"""
 
-    cpu.interrupt(ExceptionVector.EV_SWI)
+    cpu.interrupt(ExceptionVector.SWI)

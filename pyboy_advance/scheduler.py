@@ -37,7 +37,7 @@ class Scheduler:
         trigger: EventTrigger,
     ) -> Event:
         event = Event(callback, delay, 0, False)
-        if trigger == EventTrigger.TRIG_IMMEDIATELY:
+        if trigger == EventTrigger.IMMEDIATELY:
             event.time = self.cycles + delay
             heapq.heappush(self.events, event)
         else:

@@ -13,4 +13,4 @@ from pyboy_advance.cpu.constants import ExceptionVector
 def arm_software_interrupt(cpu: CPU, instr: int):
     """Execute a Software Interrupt instruction (SWI)"""
 
-    cpu.interrupt(ExceptionVector.EV_SWI)
+    cpu.interrupt(ExceptionVector.SWI)

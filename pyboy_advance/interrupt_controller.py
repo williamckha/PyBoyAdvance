@@ -61,7 +61,7 @@ class InterruptController:
         self.scheduler.schedule(
             self._write_interrupt_registers,
             self.WRITE_INTERRUPT_REGISTERS_DELAY,
-            EventTrigger.TRIG_IMMEDIATELY,
+            EventTrigger.IMMEDIATELY,
         )
 
     def _write_interrupt_registers(self):
@@ -80,13 +80,13 @@ class InterruptController:
                 self.scheduler.schedule(
                     self._set_irq_line,
                     self.UPDATE_IRQ_LINE_DELAY,
-                    EventTrigger.TRIG_IMMEDIATELY,
+                    EventTrigger.IMMEDIATELY,
                 )
             else:
                 self.scheduler.schedule(
                     self._reset_irq_line,
                     self.UPDATE_IRQ_LINE_DELAY,
-                    EventTrigger.TRIG_IMMEDIATELY,
+                    EventTrigger.IMMEDIATELY,
                 )
 
     def _set_irq_line(self):

@@ -28,9 +28,9 @@ class PowerDownMode(IntEnum):
 
 
 class EventTrigger(IntEnum):
-    TRIG_IMMEDIATELY = 0
-    TRIG_VBLANK = 1
-    TRIG_HBLANK = 2
+    IMMEDIATELY = 0
+    VBLANK = 1
+    HBLANK = 2
 
 
 class Key(IntFlag):

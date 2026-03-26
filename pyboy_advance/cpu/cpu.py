@@ -68,7 +68,7 @@ class CPU:
         irq_line = self.memory.io.interrupt_controller.irq_line
 
         if irq_line and not self.regs.cpsr.irq_disable:
-            self.interrupt(ExceptionVector.EV_IRQ)
+            self.interrupt(ExceptionVector.IRQ)
 
         power_down_mode = self.memory.io.interrupt_controller.power_down_mode
 
@@ -129,21 +129,21 @@ class CPU:
         self.regs.switch_mode(new_mode)
 
     def interrupt(self, vector: ExceptionVector):
-        if vector == ExceptionVector.EV_RESET:
+        if vector == ExceptionVector.RESET:
             new_mode = CPUMode.SWI
-        elif vector == ExceptionVector.EV_UNDEFINED_INSTRUCTION:
+        elif vector == ExceptionVector.UNDEFINED_INSTRUCTION:
             new_mode = CPUMode.UNDEFINED
-        elif vector == ExceptionVector.EV_SWI:
+        elif vector == ExceptionVector.SWI:
             new_mode = CPUMode.SWI
-        elif vector == ExceptionVector.EV_PREFETCH_ABORT:
+        elif vector == ExceptionVector.PREFETCH_ABORT:
             new_mode = CPUMode.ABORT
-        elif vector == ExceptionVector.EV_DATA_ABORT:
+        elif vector == ExceptionVector.DATA_ABORT:
             new_mode = CPUMode.ABORT
-        elif vector == ExceptionVector.EV_ADDRESS_EXCEEDS_26_BITS:
+        elif vector == ExceptionVector.ADDRESS_EXCEEDS_26_BITS:
             new_mode = CPUMode.SWI
-        elif vector == ExceptionVector.EV_IRQ:
+        elif vector == ExceptionVector.IRQ:
             new_mode = CPUMode.IRQ
-        elif vector == ExceptionVector.EV_FIQ:
+        elif vector == ExceptionVector.FIQ:
             new_mode = CPUMode.FIQ
         else:
             return
@@ -152,14 +152,14 @@ class CPU:
         self.switch_mode(new_mode)
         self.regs.spsr.reg = cpsr_reg
 
-        if vector == ExceptionVector.EV_SWI or vector == ExceptionVector.EV_UNDEFINED_INSTRUCTION:
+        if vector == ExceptionVector.SWI or vector == ExceptionVector.UNDEFINED_INSTRUCTION:
             self.regs.lr = add_32(self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else -2)
-        elif vector != ExceptionVector.EV_RESET:
+        elif vector != ExceptionVector.RESET:
             self.regs.lr = add_32(self.regs.pc, -4 if self.regs.cpsr.state == CPUState.ARM else 0)
 
         self.regs.cpsr.state = CPUState.ARM
         self.regs.cpsr.irq_disable = True
-        if vector in [ExceptionVector.EV_RESET, ExceptionVector.EV_FIQ]:
+        if vector in [ExceptionVector.RESET, ExceptionVector.FIQ]:
             self.regs.cpsr.fiq_disable = True
 
         self.regs.pc = vector
