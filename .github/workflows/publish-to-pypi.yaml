@@ -41,22 +41,21 @@ jobs:
           path: dist/*.tar.gz
 
   build_wheels:
-    name: Build wheels for ${{ matrix.python-version }} ${{ matrix.os }}
+    name: Build wheels for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, windows-11-arm, macos-latest, macos-15-intel]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.x"
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.0

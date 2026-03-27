@@ -50,6 +50,9 @@ include = ["pyboy_advance**"]
     "**/*.pxd",
 ]
 
+[tool.cibuildwheel]
+skip = ["cp38-*", "cp39-*"]
+
 [project.scripts]
 pyboy_advance = "pyboy_advance.__main__:main"
 
