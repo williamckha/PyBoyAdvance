@@ -41,9 +41,10 @@ jobs:
           path: dist/*.tar.gz
 
   build_wheels:
-    name: Build wheels • ${{ matrix.os }}
+    name: Build wheels for ${{ matrix.python-version }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-latest]
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
@@ -51,8 +52,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-        with:
-          persist-credentials: false
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
@@ -68,9 +67,6 @@ jobs:
           name: dist-wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
 
-      - name: Publish distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-
   publish:
     name: Publish to PyPI
     needs: [build_sdist, build_wheels]
@@ -79,7 +75,7 @@ jobs:
       name: pypi
       url: https://pypi.org/p/pyboy-advance
     permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
+      id-token: write  # Mandatory for trusted publishing
 
     if: |
       github.event_name == 'release' ||
@@ -91,7 +87,7 @@ jobs:
         with:
           pattern: dist-*
           path: dist/
-          merge-multiple: true   # flatten all sub-folders into dist/
+          merge-multiple: true  # Flatten all sub-folders into dist/
 
       - name: List distributions
         run: ls -lh dist/
