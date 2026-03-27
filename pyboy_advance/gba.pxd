@@ -25,9 +25,9 @@ cdef class PyBoyAdvance:
     cdef Keypad keypad
     cdef readonly CPU cpu
 
-    cpdef void step(self)
+    cpdef void step(self) noexcept
 
-    cpdef void frame(self)
+    cpdef void frame(self) noexcept
 
     @cython.locals(window=Window, event=int)
-    cpdef void run(self)
+    cpdef void run(self) noexcept

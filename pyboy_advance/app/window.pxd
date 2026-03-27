@@ -10,7 +10,7 @@ cdef class Window:
     cdef object _sdl_renderer
     cdef object _sdl_texture_buffer
 
-    cdef bint get_fullscreen(self)
-    cdef void set_fullscreen(self, bint)
-    cdef list get_events(self)
-    cdef void render(self, c_void_p)
+    cdef bint get_fullscreen(self) noexcept
+    cdef void set_fullscreen(self, bint) noexcept
+    cdef list get_events(self) noexcept
+    cdef void render(self, c_void_p) noexcept

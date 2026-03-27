@@ -27,21 +27,21 @@ cdef class Object:
     cdef uint32_t attr_1
     cdef uint32_t attr_2
 
-    cdef uint32_t get_x(self)
-    cdef uint32_t get_y(self)
-    cdef bint get_affine(self)
-    cdef bint get_double_size(self)
-    cdef bint get_disabled(self)
-    cdef int get_mode(self)
-    cdef bint get_mosaic(self)
-    cdef bint get_colour_256(self)
-    cdef int get_shape(self)
-    cdef bint get_flip_horizontal(self)
-    cdef bint get_flip_vertical(self)
-    cdef (uint32_t, uint32_t) get_size(self)
-    cdef uint32_t get_tile_index(self)
-    cdef uint32_t get_priority(self)
-    cdef uint32_t get_palette_num(self)
+    cdef uint32_t get_x(self) noexcept
+    cdef uint32_t get_y(self) noexcept
+    cdef bint get_affine(self) noexcept
+    cdef bint get_double_size(self) noexcept
+    cdef bint get_disabled(self) noexcept
+    cdef int get_mode(self) noexcept
+    cdef bint get_mosaic(self) noexcept
+    cdef bint get_colour_256(self) noexcept
+    cdef int get_shape(self) noexcept
+    cdef bint get_flip_horizontal(self) noexcept
+    cdef bint get_flip_vertical(self) noexcept
+    cdef (uint32_t, uint32_t) get_size(self) noexcept
+    cdef uint32_t get_tile_index(self) noexcept
+    cdef uint32_t get_priority(self) noexcept
+    cdef uint32_t get_palette_num(self) noexcept
 
 cdef class PPU:
     cdef Scheduler scheduler
@@ -75,18 +75,18 @@ cdef class PPU:
     cdef object front_buffer_ptr
     cdef object back_buffer_ptr
 
-    cdef void hblank_start(self)
-    cdef void hblank_end(self)
-    cdef void _init_layers(self)
-    cdef void _render_backgrounds(self)
-    cdef void _render_background_text(self, int)
-    cdef void _render_background_affine(self, int)
-    cdef void _render_background_bitmap(self, bint, bint)
-    cdef void _render_objects(self)
-    cdef void _render_object(self, Object)
-    cdef void _merge_layers(self)
-    cdef void _merge_layer(self, uint16_t[:], int)
-    cdef void _calc_window_masks(self)
-    cdef WindowControlRegister _get_window_for_pixel(self, uint32_t)
-    cdef uint32_t _get_palette_index(self, uint32_t, uint32_t, uint32_t, uint32_t, bint, uint32_t)
-    cdef BackgroundControlRegister _get_bg_control(self, int)
+    cdef void hblank_start(self) noexcept
+    cdef void hblank_end(self) noexcept
+    cdef void _init_layers(self) noexcept
+    cdef void _render_backgrounds(self) noexcept
+    cdef void _render_background_text(self, int) noexcept
+    cdef void _render_background_affine(self, int) noexcept
+    cdef void _render_background_bitmap(self, bint, bint) noexcept
+    cdef void _render_objects(self) noexcept
+    cdef void _render_object(self, Object) noexcept
+    cdef void _merge_layers(self) noexcept
+    cdef void _merge_layer(self, uint16_t[:], int) noexcept
+    cdef void _calc_window_masks(self) noexcept
+    cdef WindowControlRegister _get_window_for_pixel(self, uint32_t) noexcept
+    cdef uint32_t _get_palette_index(self, uint32_t, uint32_t, uint32_t, uint32_t, bint, uint32_t) noexcept
+    cdef BackgroundControlRegister _get_bg_control(self, int) noexcept

@@ -14,15 +14,15 @@ cdef class Scheduler:
     cdef dict inactive_events
 
     @cython.locals(event=Event)
-    cdef Event schedule(self, object, int, int)
+    cdef Event schedule(self, object, int, int) noexcept
 
     @cython.locals(event=Event)
-    cdef void trigger(self, int)
+    cdef void trigger(self, int) noexcept
 
-    cdef void idle(self, int)
-
-    @cython.locals(event=Event)
-    cdef void idle_until_next_event(self)
+    cdef void idle(self, int) noexcept
 
     @cython.locals(event=Event)
-    cdef void process_events(self)
+    cdef void idle_until_next_event(self) noexcept
+
+    @cython.locals(event=Event)
+    cdef void process_events(self) noexcept
