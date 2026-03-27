@@ -1,1 +1,2 @@
+exclude **/*.c **/*.h
 recursive-include build_utils *.py
