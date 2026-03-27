@@ -51,7 +51,10 @@ include = ["pyboy_advance**"]
 ]
 
 [tool.cibuildwheel]
-skip = ["cp38-*", "cp39-*"]
+skip = ["cp38-*", "cp39-*", "*-win32", "*-manylinux_i686"]
+test-requires = "pytest"
+test-command = "pytest tests"
+test-sources = ["tests", "external"]
 
 [project.scripts]
 pyboy_advance = "pyboy_advance.__main__:main"
