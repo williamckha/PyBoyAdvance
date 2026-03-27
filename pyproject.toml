@@ -2,17 +2,18 @@
 requires = [
     "setuptools",
     "wheel",
-    "cython; platform_python_implementation == 'CPython'",
+    "cython>=3.2; platform_python_implementation == 'CPython'",
     "numpy",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyboy-advance"
-version = "0.0.2"
+version = "1.0.0"
 authors = [{ name = "William Ha" }]
 description = "Game Boy Advance emulator written in Python"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
 keywords = [
     "gameboy",
@@ -20,9 +21,11 @@ keywords = [
     "game boy advance",
     "gameboy advance",
     "emulator",
+    "cython",
     "pypy"
 ]
 classifiers = [
+    "Programming Language :: Cython",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Operating System :: OS Independent",
@@ -34,8 +37,18 @@ dependencies = [
     "pysdl2-dll"
 ]
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 include = ["pyboy_advance**"]
+
+[tool.setuptools.package-data]
+"*" = [
+    "**/*.pxi",
+    "**/*.pyx",
+    "**/*.pxd",
+]
 
 [project.scripts]
 pyboy_advance = "pyboy_advance.__main__:main"

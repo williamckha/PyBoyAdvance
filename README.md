@@ -4,27 +4,17 @@
 
 ---
 
-PyBoy Advance is a Game Boy Advance emulator written in Python.
-
-There are already plenty of fantastic GBA emulators out in the wild,
-most written in languages far better suited than Python for emulator development.
-This project is not meant to compete with those emulators nor match their
-capabilities. In fact, PyBoy Advance is rather crap (and slow!) by comparison. I work on this project purely for fun, 
-with my end goal being to offer a highly readable implementation of a GBA emulator for educational purposes.
+PyBoy Advance is a Game Boy Advance emulator written in Python, with [Cython](https://cython.org/) declarations for compiling to C.
 
 >[!WARNING]
-> This is experimental software and under heavy development. Some GBA hardware features are not yet implemented and many games do not function properly. 
+> This is experimental software and under development. Some GBA hardware features are not yet implemented and many games do not function properly. 
 
 ## Getting started
-
-PyBoy Advance is written in pure Python and technically can be run with the standard CPython interpreter, but
-performance will be unacceptably slow. Instead, you will need to run PyBoy Advance with [PyPy](https://pypy.org/),
-a fast implementation of Python (see [Downloading and Installing PyPy](https://doc.pypy.org/en/stable/install.html)).
 
 Install PyBoy Advance with `pip`:
 
 ```bash
-$ pypy -m pip install pyboy-advance
+$ pip install pyboy-advance
 ```
 
 You will need to provide a Game Boy Advance BIOS. Normatt's open source BIOS is supported and
@@ -45,6 +35,13 @@ emulator = PyBoyAdvance(rom="game_rom.gba", bios="/path/to/bios.bin")
 emulator.run()
 ```
 
+## Performance
+
+PyBoy Advance is written in "pure" Python and can technically be run with [PyPy](https://pypy.org/) or even CPython (though games 
+will be virtually unplayable with the latter). To achieve practical performance, we use [Cython](https://cython.org/) 
+to statically type our Python code and generate efficient C code from it. This allows us to build PyBoy Advance as a 
+Python C extension module, significantly improving execution speed.
+
 ## Screenshots
 
 <p align="center">
@@ -53,6 +50,7 @@ emulator.run()
 
 ## Acknowledgements
 
+- [Cython](https://cython.org/) compiler for Python. Thanks to the [development team and contributors](https://cython.org/#community)!
 - [GBATEK](https://problemkaputt.de/gbatek.htm) by Martin Korth, the king of GBA hardware documentation
 - [ARM7TDMI Technical Reference Manual](https://developer.arm.com/documentation/ddi0210/c/)
 - [CowBite Virtual Hardware Specifications](https://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpec.htm) by Tom Happ
@@ -63,5 +61,4 @@ emulator.run()
     - [Hades](https://github.com/hades-emu/Hades) by Arignir
     - [RustBoyAdvance-NG](https://github.com/michelhe/rustboyadvance-ng/) by Michel Heily
 - [GBA Tests](https://github.com/jsmolka/gba-tests) by Julian Smolka
-- [PyBoy](https://github.com/Baekalfen/PyBoy) by Mads Ynddal (Baekalfen), a sister project (Game Boy emulator written in
-  Python)
+- [PyBoy](https://github.com/Baekalfen/PyBoy) by Mads Ynddal (Baekalfen), the original inspiration for this project!
