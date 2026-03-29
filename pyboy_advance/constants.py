@@ -1,6 +1,10 @@
 from enum import IntFlag, IntEnum
 
 
+CLOCK_SPEED_HZ = 16777216
+NANOSECONDS_PER_SECOND = 1000000000
+
+
 class Interrupt(IntFlag):
     # fmt: off
     VBLANK      = 1 << 0

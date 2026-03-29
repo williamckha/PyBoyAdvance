@@ -1,6 +1,9 @@
 # ifndef CYTHON
+from time import perf_counter_ns
+
 from pyboy_advance.app.constants import WindowEvent
 from pyboy_advance.app.window import Window
+from pyboy_advance.constants import CLOCK_SPEED_HZ, NANOSECONDS_PER_SECOND, EventTrigger
 from pyboy_advance.cpu.constants import ExceptionVector, BankIndex
 from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.cpu.arm.decode import arm_decoder
@@ -11,12 +14,15 @@ from pyboy_advance.memory.dma import DMAController
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
 from pyboy_advance.memory.memory import Memory
+from pyboy_advance.ppu.constants import CYCLES_FRAME
 from pyboy_advance.ppu.ppu import PPU
 from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.timer import Timers
 # endif
 
 import os
+
+from time import sleep
 
 
 class PyBoyAdvance:
@@ -25,6 +31,7 @@ class PyBoyAdvance:
         gamepak: GamePak | str | os.PathLike,
         bios: str | os.PathLike | None = None,
         skip_bios: bool = False,
+        emulation_speed: float = 0,
     ):
         self.gamepak = (
             GamePak.from_file(gamepak) if isinstance(gamepak, (str, os.PathLike)) else gamepak
@@ -57,6 +64,13 @@ class PyBoyAdvance:
         self.cpu.arm_decoder = arm_decoder
         self.cpu.thumb_decoder = thumb_decoder
 
+        self._time_per_frame = 0
+        self._last_frame_time = 0
+        self._accumulated_time = 0
+
+        self.set_emulation_speed(emulation_speed)
+        self.scheduler.schedule(self._frame_limiter, CYCLES_FRAME, EventTrigger.IMMEDIATELY)
+
         if skip_bios:
             self.cpu.regs.banked_sp[int(BankIndex.BANK_SYSTEM_USER)] = 0x03007F00
             self.cpu.regs.banked_sp[int(BankIndex.BANK_FIQ)] = 0x03007F00
@@ -77,7 +91,7 @@ class PyBoyAdvance:
             self.cpu.step()
 
     def frame(self):
-        end_time = self.scheduler.cycles + 280896
+        end_time = self.scheduler.cycles + CYCLES_FRAME
         while self.scheduler.cycles < end_time:
             self.step()
 
@@ -98,3 +112,32 @@ class PyBoyAdvance:
                         self.keypad.process_window_event(event)
 
                 window.render(self.ppu.frame_buffer_ptr)
+
+    def set_emulation_speed(self, speed: float):
+        if speed < 0:
+            raise ValueError("Emulation speed must be 0 or greater")
+
+        self._time_per_frame = (
+            int((1 / (speed * CLOCK_SPEED_HZ / CYCLES_FRAME)) * NANOSECONDS_PER_SECOND)
+            if speed > 0
+            else 0
+        )
+
+        self._last_frame_time = perf_counter_ns()
+        self._accumulated_time = 0
+
+    def _frame_limiter(self):
+        self.scheduler.schedule(self._frame_limiter, CYCLES_FRAME, EventTrigger.IMMEDIATELY)
+
+        if self._time_per_frame == 0:
+            return
+
+        now = perf_counter_ns()
+        self._accumulated_time += now - self._last_frame_time
+        self._last_frame_time = now
+
+        if self._accumulated_time < self._time_per_frame:
+            delay = (self._time_per_frame - self._accumulated_time) / float(NANOSECONDS_PER_SECOND)
+            sleep(delay)
+
+        self._accumulated_time -= self._time_per_frame
