@@ -13,6 +13,7 @@ from pyboy_advance.memory.io import IO
 from pyboy_advance.memory.memory import Memory
 from pyboy_advance.ppu.ppu import PPU
 from pyboy_advance.scheduler import Scheduler
+from pyboy_advance.timer import Timers
 # endif
 
 import os
@@ -40,12 +41,14 @@ class PyBoyAdvance:
 
         self.interrupt_controller = InterruptController(self.scheduler)
         self.dma_controller = DMAController(self.scheduler, self.memory)
+        self.timers = Timers(self.scheduler, self.interrupt_controller)
         self.ppu = PPU(self.scheduler, self.interrupt_controller)
         self.keypad = Keypad(self.interrupt_controller)
         self.memory.io = IO(
             self.memory,
             self.interrupt_controller,
             self.dma_controller,
+            self.timers,
             self.ppu,
             self.keypad,
         )
@@ -72,7 +75,6 @@ class PyBoyAdvance:
             self.dma_controller.perform_transfers()
         else:
             self.cpu.step()
-        self.scheduler.process_events()
 
     def frame(self):
         end_time = self.scheduler.cycles + 280896

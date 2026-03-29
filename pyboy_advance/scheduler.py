@@ -57,6 +57,7 @@ class Scheduler:
 
     def idle(self, cycles: int):
         self.cycles += cycles
+        self.process_events()
 
     def idle_until_next_event(self):
         if self.events:
@@ -72,6 +73,12 @@ class Scheduler:
             if self.cycles >= event.time:
                 heapq.heappop(self.events)
                 if not event.cancelled:
+                    # Rollback the cycle counter for the duration of the callback
+                    delay = self.cycles - event.time
+                    self.cycles -= delay
+
                     event.callback()
+
+                    self.cycles += delay
             else:
                 break

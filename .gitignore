@@ -13,7 +13,7 @@ __pycache__/
 .python-version
 env/
 venv/
-.venv/
+.venv*/
 build/
 cython_debug/
 develop-eggs/

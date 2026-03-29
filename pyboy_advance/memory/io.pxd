@@ -9,12 +9,14 @@ from pyboy_advance.memory.dma cimport DMAController
 from pyboy_advance.memory.memory cimport Memory
 from pyboy_advance.ppu.constants cimport WindowIndex
 from pyboy_advance.ppu.ppu cimport PPU
+from pyboy_advance.timer cimport Timers
 from pyboy_advance.utils cimport get_bit
 
 cdef class IO:
     cdef Memory memory
     cdef InterruptController interrupt_controller
     cdef DMAController dma_controller
+    cdef Timers timers
     cdef PPU ppu
     cdef Keypad keypad
     cdef uint32_t reg_soundbias

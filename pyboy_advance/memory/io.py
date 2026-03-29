@@ -11,6 +11,7 @@ from pyboy_advance.keypad import Keypad
 from pyboy_advance.memory.constants import IOAddress
 from pyboy_advance.memory.dma import DMAController
 from pyboy_advance.ppu.ppu import PPU
+from pyboy_advance.timer import Timers
 from pyboy_advance.utils import get_bit
 # endif
 
@@ -21,12 +22,14 @@ class IO:
         memory: Memory,
         interrupt_controller: InterruptController,
         dma_controller: DMAController,
+        timers: Timers,
         ppu: PPU,
         keypad: Keypad,
     ):
         self.memory = memory
         self.interrupt_controller = interrupt_controller
         self.dma_controller = dma_controller
+        self.timers = timers
         self.ppu = ppu
         self.keypad = keypad
         self.reg_soundbias = 0
@@ -78,6 +81,24 @@ class IO:
             return self.dma_controller.channel_2.control_reg
         elif address == IOAddress.REG_DMA3CNT_H:
             return self.dma_controller.channel_3.control_reg
+
+        # Timer Registers
+        elif address == IOAddress.REG_TM0CNT_L:
+            return self.timers.timer_0.counter
+        elif address == IOAddress.REG_TM0CNT_H:
+            return self.timers.timer_0.control_reg
+        elif address == IOAddress.REG_TM1CNT_L:
+            return self.timers.timer_1.counter
+        elif address == IOAddress.REG_TM1CNT_H:
+            return self.timers.timer_1.control_reg
+        elif address == IOAddress.REG_TM2CNT_L:
+            return self.timers.timer_2.counter
+        elif address == IOAddress.REG_TM2CNT_H:
+            return self.timers.timer_2.control_reg
+        elif address == IOAddress.REG_TM3CNT_L:
+            return self.timers.timer_3.counter
+        elif address == IOAddress.REG_TM3CNT_H:
+            return self.timers.timer_3.control_reg
 
         # Keypad Registers
         elif address == IOAddress.REG_KEYINPUT:
@@ -250,6 +271,24 @@ class IO:
             self.dma_controller.channel_3.count = value
         elif address == IOAddress.REG_DMA3CNT_H:
             self.dma_controller.channel_3.control_reg = value
+
+        # Timer Registers
+        elif address == IOAddress.REG_TM0CNT_L:
+            self.timers.timer_0.counter = value
+        elif address == IOAddress.REG_TM0CNT_H:
+            self.timers.timer_0.control_reg = value
+        elif address == IOAddress.REG_TM1CNT_L:
+            self.timers.timer_1.counter = value
+        elif address == IOAddress.REG_TM1CNT_H:
+            self.timers.timer_1.control_reg = value
+        elif address == IOAddress.REG_TM2CNT_L:
+            self.timers.timer_2.counter = value
+        elif address == IOAddress.REG_TM2CNT_H:
+            self.timers.timer_2.control_reg = value
+        elif address == IOAddress.REG_TM3CNT_L:
+            self.timers.timer_3.counter = value
+        elif address == IOAddress.REG_TM3CNT_H:
+            self.timers.timer_3.control_reg = value
 
         # Keypad Registers
         elif address == IOAddress.REG_KEYCNT:
