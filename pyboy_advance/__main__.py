@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from pyboy_advance.gba import PyBoyAdvance
+from pyboy_advance import PyBoyAdvance
 
 
 def main():

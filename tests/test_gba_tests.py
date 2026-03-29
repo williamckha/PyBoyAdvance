@@ -1,4 +1,4 @@
-from pyboy_advance.gba import PyBoyAdvance
+from pyboy_advance import PyBoyAdvance
 
 import pytest
 
