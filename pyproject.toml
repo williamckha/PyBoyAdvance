@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyboy-advance"
-version = "1.0.0"
+version = "1.0.1"
 authors = [{ name = "William Ha" }]
 description = "Game Boy Advance emulator written in Python"
 readme = "README.md"
@@ -37,6 +37,13 @@ dependencies = [
     "pysdl2-dll"
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-check",
+    "pillow",
+]
+
 [tool.setuptools]
 include-package-data = true
 
@@ -52,9 +59,9 @@ include = ["pyboy_advance**"]
 
 [tool.cibuildwheel]
 skip = ["cp38-*", "cp39-*", "*-win32", "*-manylinux_i686", "*-musllinux_*"]
-test-requires = "pytest"
+test-extras = ["test"]
 test-command = "pytest tests"
-test-sources = ["tests", "external"]
+test-sources = ["tests"]
 
 [project.scripts]
 pyboy_advance = "pyboy_advance.__main__:main"
