@@ -18,7 +18,7 @@ def preprocess_constants(file_paths: list[str | os.PathLike]) -> list[str | os.P
     Generate constants.pxd and constants.pyx files for constants.py files containing
     enums and global constants.
 
-    IntEnum/IntFlag/Enum definitions are converted to named cdef enum definitions.
+    IntEnum/IntFlag/Enum definitions are converted to named cpdef enum definitions.
     Global constants are placed in an anonymous cdef enum.
 
     Name mangling is applied to avoid name conflicts (in C, all enum members share
@@ -61,12 +61,12 @@ def generate_constants_pxd_pyx(
 
     for node in tree.body:
         if isinstance(node, ast.ClassDef):
-            # Convert IntEnum/IntFlag/Enum classes to cdef enum definitions
+            # Convert IntEnum/IntFlag/Enum classes to cpdef enum definitions
             bases = [base.id for base in node.bases if isinstance(base, ast.Name)]
             if not any(base in ("IntEnum", "IntFlag", "Enum") for base in bases):
                 continue
 
-            pxd_lines.append(f"cdef enum {node.name}:")
+            pxd_lines.append(f"cpdef enum {node.name}:")
 
             for item in node.body:
                 if isinstance(item, ast.Assign):

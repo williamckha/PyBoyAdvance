@@ -1,6 +1,7 @@
 import ast
 from dataclasses import dataclass
 from os import PathLike
+from pathlib import Path
 
 
 def preprocess_properties(file_paths: list[str | PathLike]) -> list[str | PathLike]:
@@ -11,16 +12,17 @@ def preprocess_properties(file_paths: list[str | PathLike]) -> list[str | PathLi
     Cython does not optimize @property/@property.setter to pure C, which is why
     this transformation is necessary.
     """
-    file_asts = {}
+    file_asts: dict[Path, ast.Module] = {}
     for file_path in file_paths:
         with open(file_path, "r", encoding="utf-8") as f:
             source_code = f.read()
-            file_asts[file_path] = ast.parse(source_code)
+            file_asts[Path(file_path)] = ast.parse(source_code)
 
     collector = PropertyCollector()
-    for tree in file_asts.values():
-        collector.current_class = None
-        collector.visit(tree)
+    for file, tree in file_asts.items():
+        if "api" not in file.parts:
+            collector.current_class = None
+            collector.visit(tree)
 
     for file, tree in file_asts.items():
         transformer = PropertyTransformer(collector.class_properties)

@@ -3,9 +3,10 @@ cimport cython
 from libc.stdint cimport int64_t
 from cpython.time cimport perf_counter_ns
 
+from pyboy_advance.api.screen cimport Screen
 from pyboy_advance.app.constants cimport WindowEvent
 from pyboy_advance.app.window cimport Window
-from pyboy_advance.constants cimport CLOCK_SPEED_HZ, NANOSECONDS_PER_SECOND, EventTrigger
+from pyboy_advance.constants cimport CLOCK_SPEED_HZ, NANOSECONDS_PER_SECOND, EventTrigger, Key
 from pyboy_advance.cpu.constants cimport ExceptionVector, BankIndex
 from pyboy_advance.cpu.cpu cimport CPU
 from pyboy_advance.cpu.arm.decode cimport arm_decoder
@@ -32,16 +33,21 @@ cdef class PyBoyAdvance:
     cdef Keypad keypad
     cdef readonly CPU cpu
 
+    cdef readonly Screen screen
+
     cdef int64_t _time_per_frame
     cdef int64_t _last_frame_time
     cdef int64_t _accumulated_time
 
-    cpdef void step(self) noexcept
+    cpdef void step(self, int count=*) noexcept
 
-    cpdef void frame(self) noexcept
+    cpdef void frame(self, int count=*) noexcept
 
     @cython.locals(window=Window, event=int)
     cpdef void run(self) noexcept
+
+    cpdef void press_key(self, int) noexcept
+    cpdef void release_key(self, int) noexcept
 
     cpdef void set_emulation_speed(self, float speed)
 

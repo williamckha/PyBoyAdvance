@@ -1,9 +1,10 @@
 # ifndef CYTHON
 from time import perf_counter_ns
 
+from pyboy_advance.api.screen import Screen
 from pyboy_advance.app.constants import WindowEvent
 from pyboy_advance.app.window import Window
-from pyboy_advance.constants import CLOCK_SPEED_HZ, NANOSECONDS_PER_SECOND, EventTrigger
+from pyboy_advance.constants import CLOCK_SPEED_HZ, NANOSECONDS_PER_SECOND, EventTrigger, Key
 from pyboy_advance.cpu.constants import ExceptionVector, BankIndex
 from pyboy_advance.cpu.cpu import CPU
 from pyboy_advance.cpu.arm.decode import arm_decoder
@@ -28,14 +29,12 @@ from time import sleep
 class PyBoyAdvance:
     def __init__(
         self,
-        gamepak: GamePak | str | os.PathLike,
+        rom: GamePak | str | os.PathLike,
         bios: str | os.PathLike | None = None,
         skip_bios: bool = False,
         emulation_speed: float = 0,
     ):
-        self.gamepak = (
-            GamePak.from_file(gamepak) if isinstance(gamepak, (str, os.PathLike)) else gamepak
-        )
+        self.gamepak = GamePak.from_file(rom) if isinstance(rom, (str, os.PathLike)) else rom
 
         if bios:
             with open(bios, "rb") as bios_file:
@@ -84,16 +83,19 @@ class PyBoyAdvance:
         else:
             self.cpu.interrupt(ExceptionVector.RESET)
 
-    def step(self):
+        self.screen = Screen(self.ppu)
+
+    def step(self, count: int = 1):
         if self.dma_controller.active:
             self.dma_controller.perform_transfers()
         else:
             self.cpu.step()
 
-    def frame(self):
-        end_time = self.scheduler.cycles + CYCLES_FRAME
-        while self.scheduler.cycles < end_time:
-            self.step()
+    def frame(self, count: int = 1):
+        for _ in range(count):
+            end_time = self.scheduler.cycles + CYCLES_FRAME
+            while self.scheduler.cycles < end_time:
+                self.step()
 
     def run(self):
         with Window() as window:
@@ -112,6 +114,12 @@ class PyBoyAdvance:
                         self.keypad.process_window_event(event)
 
                 window.render(self.ppu.frame_buffer_ptr)
+
+    def press_key(self, key: Key):
+        self.keypad.press_key(key)
+
+    def release_key(self, key: Key):
+        self.keypad.release_key(key)
 
     def set_emulation_speed(self, speed: float):
         if speed < 0:
