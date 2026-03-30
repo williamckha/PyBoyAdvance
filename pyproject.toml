@@ -32,7 +32,6 @@ classifiers = [
     "Topic :: System :: Emulators",
 ]
 dependencies = [
-    "numpy",
     "pysdl2",
     "pysdl2-dll"
 ]
@@ -42,6 +41,7 @@ test = [
     "pytest",
     "pytest-check",
     "pillow",
+    "numpy",
 ]
 
 [tool.setuptools]
