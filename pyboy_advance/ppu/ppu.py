@@ -36,6 +36,8 @@ class PPU:
         self.scheduler = scheduler
         self.interrupt_controller = interrupt_controller
 
+        self.rendering_enabled = True
+
         self.display_control = DisplayControlRegister()
         self.display_status = DisplayStatusRegister()
         self.vcount = 0
@@ -87,14 +89,15 @@ class PPU:
         self.display_status.hblank_status = True
 
         if self.vcount < DISPLAY_HEIGHT:
-            self._init_layers()
-            self._calc_window_masks()
+            if self.rendering_enabled:
+                self._init_layers()
+                self._calc_window_masks()
 
-            if not self.display_control.force_blank:
-                self._render_backgrounds()
-                self._render_objects()
+                if not self.display_control.force_blank:
+                    self._render_backgrounds()
+                    self._render_objects()
 
-            self._merge_layers()
+                self._merge_layers()
 
             self.scheduler.trigger(EventTrigger.HBLANK)
 

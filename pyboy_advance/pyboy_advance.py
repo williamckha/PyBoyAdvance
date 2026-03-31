@@ -70,6 +70,8 @@ class PyBoyAdvance:
         self.set_emulation_speed(emulation_speed)
         self.scheduler.schedule(self._frame_limiter, CYCLES_FRAME, EventTrigger.IMMEDIATELY)
 
+        self._frame_overshoot = 0
+
         if skip_bios:
             self.cpu.regs.banked_sp[int(BankIndex.BANK_SYSTEM_USER)] = 0x03007F00
             self.cpu.regs.banked_sp[int(BankIndex.BANK_FIQ)] = 0x03007F00
@@ -85,17 +87,23 @@ class PyBoyAdvance:
 
         self.screen = Screen(self.ppu)
 
-    def step(self, count: int = 1):
+    def step(self):
         if self.dma_controller.active:
             self.dma_controller.perform_transfers()
         else:
             self.cpu.step()
 
-    def frame(self, count: int = 1):
-        for _ in range(count):
-            end_time = self.scheduler.cycles + CYCLES_FRAME
+    def frame(self, count: int = 1, render: bool = True):
+        self.ppu.rendering_enabled = False
+
+        for frame_num in range(count):
+            if frame_num == count - 1 and render:
+                self.ppu.rendering_enabled = True
+
+            end_time = self.scheduler.cycles + CYCLES_FRAME - self._frame_overshoot
             while self.scheduler.cycles < end_time:
                 self.step()
+            self._frame_overshoot = self.scheduler.cycles - end_time
 
     def run(self):
         with Window() as window:

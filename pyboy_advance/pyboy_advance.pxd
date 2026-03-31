@@ -38,10 +38,11 @@ cdef class PyBoyAdvance:
     cdef int64_t _time_per_frame
     cdef int64_t _last_frame_time
     cdef int64_t _accumulated_time
+    cdef int _frame_overshoot
 
-    cpdef void step(self, int count=*) noexcept
+    cpdef void step(self) noexcept
 
-    cpdef void frame(self, int count=*) noexcept
+    cpdef void frame(self, int count=*, bool render=*) noexcept
 
     @cython.locals(window=Window, event=int)
     cpdef void run(self) noexcept

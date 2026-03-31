@@ -46,6 +46,7 @@ cdef class Object:
 cdef class PPU:
     cdef Scheduler scheduler
     cdef InterruptController interrupt_controller
+    cdef bool rendering_enabled
     cdef DisplayControlRegister display_control
     cdef DisplayStatusRegister display_status
     cdef uint32_t vcount
