@@ -186,13 +186,13 @@ def arm_alu_adc(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
 def arm_alu_sbc(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
     mask = 0xFFFFFFFF
     borrow = 1 - cpu.regs.cpsr.carry_flag  # Carry = no borrow, so subtract 0
-    result = op1 - op2 - borrow
-    cpu.regs.set(rd, result & mask)
+    result = (op1 - op2 - borrow) & mask
+    cpu.regs.set(rd, result)
     if set_cond_codes and rd != cpu.regs.PC:
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
-        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
+        cpu.regs.cpsr.sign_flag = sign_32(result)
+        cpu.regs.cpsr.zero_flag = result == 0
         cpu.regs.cpsr.carry_flag = op1 >= (op2 + borrow)
-        cpu.regs.cpsr.overflow_flag = sign_32((op1 ^ op2) & (op1 ^ cpu.regs.get(rd)))
+        cpu.regs.cpsr.overflow_flag = sign_32((op1 ^ op2) & (op1 ^ result))
 
 
 def arm_alu_rsc(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
@@ -216,33 +216,36 @@ def arm_alu_cmn(cpu: CPU, op1: int, op2: int):
 
 
 def arm_alu_orr(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint, shift_carry: bint):
-    cpu.regs.set(rd, op1 | op2)
+    result = op1 | op2
+    cpu.regs.set(rd, result)
     if set_cond_codes and rd != cpu.regs.PC:
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
-        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
+        cpu.regs.cpsr.sign_flag = sign_32(result)
+        cpu.regs.cpsr.zero_flag = result == 0
         cpu.regs.cpsr.carry_flag = shift_carry
 
 
 def arm_alu_mov(cpu: CPU, op2: int, rd: int, set_cond_codes: bint, shift_carry: bint):
     cpu.regs.set(rd, op2)
     if set_cond_codes and rd != cpu.regs.PC:
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
-        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
+        cpu.regs.cpsr.sign_flag = sign_32(op2)
+        cpu.regs.cpsr.zero_flag = op2 == 0
         cpu.regs.cpsr.carry_flag = shift_carry
 
 
 def arm_alu_bic(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint, shift_carry: bint):
-    cpu.regs.set(rd, op1 & ~op2)
+    result = op1 & ~op2
+    cpu.regs.set(rd, result)
     if set_cond_codes and rd != cpu.regs.PC:
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
-        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
+        cpu.regs.cpsr.sign_flag = sign_32(result)
+        cpu.regs.cpsr.zero_flag = result == 0
         cpu.regs.cpsr.carry_flag = shift_carry
 
 
 def arm_alu_mvn(cpu: CPU, op2: int, rd: int, set_cond_codes: bint, shift_carry: bint):
     mask = 0xFFFFFFFF
-    cpu.regs.set(rd, ~op2 & mask)
+    result = ~op2 & mask
+    cpu.regs.set(rd, result)
     if set_cond_codes and rd != cpu.regs.PC:
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
-        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
+        cpu.regs.cpsr.sign_flag = sign_32(result)
+        cpu.regs.cpsr.zero_flag = result == 0
         cpu.regs.cpsr.carry_flag = shift_carry

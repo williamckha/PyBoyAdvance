@@ -166,35 +166,44 @@ class CPU:
         self.flush_pipeline()
 
     def check_condition(self, cond: Condition | int) -> bint:
-        cpsr = self.regs.cpsr
         if cond == Condition.EQ:
-            return cpsr.zero_flag
+            return self.regs.cpsr.zero_flag
         elif cond == Condition.NE:
-            return not cpsr.zero_flag
+            return not self.regs.cpsr.zero_flag
         elif cond == Condition.HS:
-            return cpsr.carry_flag
+            return self.regs.cpsr.carry_flag
         elif cond == Condition.LO:
-            return not cpsr.carry_flag
+            return not self.regs.cpsr.carry_flag
         elif cond == Condition.MI:
-            return cpsr.sign_flag
+            return self.regs.cpsr.sign_flag
         elif cond == Condition.PL:
-            return not cpsr.sign_flag
+            return not self.regs.cpsr.sign_flag
         elif cond == Condition.VS:
-            return cpsr.overflow_flag
+            return self.regs.cpsr.overflow_flag
         elif cond == Condition.VC:
-            return not cpsr.overflow_flag
+            return not self.regs.cpsr.overflow_flag
         elif cond == Condition.HI:
-            return cpsr.carry_flag and not cpsr.zero_flag
+            return self.regs.cpsr.carry_flag and not self.regs.cpsr.zero_flag
         elif cond == Condition.LS:
-            return not cpsr.carry_flag or cpsr.zero_flag
+            return not self.regs.cpsr.carry_flag or self.regs.cpsr.zero_flag
         elif cond == Condition.GE:
-            return cpsr.sign_flag == cpsr.overflow_flag
+            return self.regs.cpsr.sign_flag == self.regs.cpsr.overflow_flag
         elif cond == Condition.LT:
-            return cpsr.sign_flag != cpsr.overflow_flag
+            return self.regs.cpsr.sign_flag != self.regs.cpsr.overflow_flag
         elif cond == Condition.GT:
-            return not cpsr.zero_flag and cpsr.sign_flag == cpsr.overflow_flag
+            # fmt: off
+            return (
+                not self.regs.cpsr.zero_flag
+                and self.regs.cpsr.sign_flag == self.regs.cpsr.overflow_flag
+            )
+            # fmt: on
         elif cond == Condition.LE:
-            return cpsr.zero_flag or cpsr.sign_flag != cpsr.overflow_flag
+            # fmt: off
+            return (
+                self.regs.cpsr.zero_flag
+                or self.regs.cpsr.sign_flag != self.regs.cpsr.overflow_flag
+            )
+            # fmt: on
         elif cond == Condition.AL:
             return True
         else:

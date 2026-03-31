@@ -46,8 +46,8 @@ def thumb_move_shifted_register(cpu: CPU, instr: int):
     result, carry = cpu.compute_shift(cpu.regs.get(rs), opcode, offset, True)
 
     cpu.regs.set(rd, result)
-    cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
-    cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
+    cpu.regs.cpsr.sign_flag = sign_32(result)
+    cpu.regs.cpsr.zero_flag = result == 0
     cpu.regs.cpsr.carry_flag = carry
 
     cpu.advance_pc_thumb()
@@ -152,8 +152,8 @@ def thumb_alu_shift(cpu: CPU, value: int, shift: int, rd: int, shift_type: Shift
     result, carry = cpu.compute_shift(value, shift_type, shift, False)
 
     cpu.regs.set(rd, result)
-    cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
-    cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
+    cpu.regs.cpsr.sign_flag = sign_32(result)
+    cpu.regs.cpsr.zero_flag = result == 0
     cpu.regs.cpsr.carry_flag = carry
 
     cpu.scheduler.idle(1)
@@ -161,9 +161,12 @@ def thumb_alu_shift(cpu: CPU, value: int, shift: int, rd: int, shift_type: Shift
 
 def thumb_alu_multiply(cpu: CPU, op1: int, op2: int, rd: int):
     mask = 0xFFFFFFFF
-    cpu.regs.set(rd, (op1 * op2) & mask)
-    cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
-    cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
+    result = (op1 * op2) & mask
+
+    cpu.regs.set(rd, result)
+    cpu.regs.cpsr.sign_flag = sign_32(result)
+    cpu.regs.cpsr.zero_flag = result == 0
+
     arm_multiply_idle(cpu, op1, True)
 
 
