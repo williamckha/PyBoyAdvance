@@ -22,7 +22,8 @@ from pyboy_advance.cpu.arm.alu import (
     arm_alu_eor,
 )
 from pyboy_advance.cpu.arm.mul import arm_multiply_idle
-from pyboy_advance.cpu.constants import CPUState, ShiftType
+from pyboy_advance.cpu.constants import ShiftType
+from pyboy_advance.cpu.thumb.constants import ThumbALUOpcode
 from pyboy_advance.memory.constants import MemoryAccess
 from pyboy_advance.utils import (
     get_bits,
@@ -31,27 +32,6 @@ from pyboy_advance.utils import (
     add_32,
 )
 # endif
-
-from enum import IntEnum
-
-
-class ThumbALUOpcode(IntEnum):
-    AND = 0x0
-    EOR = 0x1
-    LSL = 0x2
-    LSR = 0x3
-    ASR = 0x4
-    ADC = 0x5
-    SBC = 0x6
-    ROR = 0x7
-    TST = 0x8
-    NEG = 0x9
-    CMP = 0xA
-    CMN = 0xB
-    ORR = 0xC
-    MUL = 0xD
-    BIC = 0xE
-    MVN = 0xF
 
 
 def thumb_move_shifted_register(cpu: CPU, instr: int):
@@ -129,34 +109,23 @@ def thumb_alu(cpu: CPU, instr: int):
     op1 = cpu.regs.get(rd)
     op2 = cpu.regs.get(rs)
 
-    def execute_shift(shift_type: ShiftType):
-        shift = op2 & 0xFF
-        result, carry = cpu.compute_shift(op1, shift_type, shift, False)
-
-        cpu.regs.set(rd, result)
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
-        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
-        cpu.regs.cpsr.carry_flag = carry
-
-        cpu.scheduler.idle(1)
-
     opcode = get_bits(instr, 6, 9)
     if opcode == ThumbALUOpcode.AND:
         arm_alu_and(cpu, op1, op2, rd, True, cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.EOR:
         arm_alu_eor(cpu, op1, op2, rd, True, cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.LSL:
-        execute_shift(ShiftType.LSL)
+        thumb_alu_shift(cpu, op1, op2, rd, ShiftType.LSL)
     elif opcode == ThumbALUOpcode.LSR:
-        execute_shift(ShiftType.LSR)
+        thumb_alu_shift(cpu, op1, op2, rd, ShiftType.LSR)
     elif opcode == ThumbALUOpcode.ASR:
-        execute_shift(ShiftType.ASR)
+        thumb_alu_shift(cpu, op1, op2, rd, ShiftType.ASR)
     elif opcode == ThumbALUOpcode.ADC:
         arm_alu_adc(cpu, op1, op2, rd, True)
     elif opcode == ThumbALUOpcode.SBC:
         arm_alu_sbc(cpu, op1, op2, rd, True)
     elif opcode == ThumbALUOpcode.ROR:
-        execute_shift(ShiftType.ROR)
+        thumb_alu_shift(cpu, op1, op2, rd, ShiftType.ROR)
     elif opcode == ThumbALUOpcode.TST:
         arm_alu_tst(cpu, op1, op2, cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.NEG:
@@ -168,10 +137,7 @@ def thumb_alu(cpu: CPU, instr: int):
     elif opcode == ThumbALUOpcode.ORR:
         arm_alu_orr(cpu, op1, op2, rd, True, cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.MUL:
-        cpu.regs.set(rd, (op1 * op2) & 0xFFFFFFFF)
-        cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
-        cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
-        arm_multiply_idle(cpu, op1, True)
+        thumb_alu_multiply(cpu, op1, op2, rd)
     elif opcode == ThumbALUOpcode.BIC:
         arm_alu_bic(cpu, op1, op2, rd, True, cpu.regs.cpsr.carry_flag)
     elif opcode == ThumbALUOpcode.MVN:
@@ -179,6 +145,26 @@ def thumb_alu(cpu: CPU, instr: int):
 
     cpu.advance_pc_thumb()
     cpu.next_fetch_access = MemoryAccess.SEQUENTIAL
+
+
+def thumb_alu_shift(cpu: CPU, value: int, shift: int, rd: int, shift_type: ShiftType):
+    shift &= 0xFF
+    result, carry = cpu.compute_shift(value, shift_type, shift, False)
+
+    cpu.regs.set(rd, result)
+    cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
+    cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
+    cpu.regs.cpsr.carry_flag = carry
+
+    cpu.scheduler.idle(1)
+
+
+def thumb_alu_multiply(cpu: CPU, op1: int, op2: int, rd: int):
+    mask = 0xFFFFFFFF
+    cpu.regs.set(rd, (op1 * op2) & mask)
+    cpu.regs.cpsr.sign_flag = sign_32(cpu.regs.get(rd))
+    cpu.regs.cpsr.zero_flag = cpu.regs.get(rd) == 0
+    arm_multiply_idle(cpu, op1, True)
 
 
 def thumb_high_reg_branch_exchange(cpu: CPU, instr: int):

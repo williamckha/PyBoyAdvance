@@ -154,10 +154,10 @@ def insert_replacements(
     for constant in constants.values():
         if constant.replacement_name:
             if constant.scope:
-                pattern = constant.scope + "\\." + constant.name
-                replacements[pattern] = constant.scope + "." + constant.replacement_name
+                pattern = rf"\b{constant.scope}\.{constant.name}\b"
+                replacements[pattern] = f"{constant.scope}.{constant.replacement_name}"
             else:
-                pattern = "[^.]" + constant.name
+                pattern = rf"[^.]{constant.name}\b"
                 replacements[pattern] = constant.replacement_name
 
         if constant.scope:
