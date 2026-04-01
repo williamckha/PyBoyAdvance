@@ -1,7 +1,7 @@
 # ifndef CYTHON
 from __future__ import annotations
 
-from pyboy_advance.ppu.constants import LayerType, WindowIndex, VideoMode
+from pyboy_advance.ppu.constants import LayerType, WindowIndex, VideoMode, BlendMode
 from pyboy_advance.utils import get_bits, get_bit, set_bit, bint
 # endif
 
@@ -145,3 +145,40 @@ class WindowControlRegister:
     @property
     def enable_blending(self) -> bint:
         return get_bit(self.reg, 5)
+
+
+class BlendControlRegister:
+    def __init__(self):
+        self.reg = 0
+
+    def blend_source(self, layer_type: LayerType | int) -> bint:
+        return get_bit(self.reg, layer_type)
+
+    def blend_target(self, layer_type: LayerType | int) -> bint:
+        return get_bit(self.reg, 8 + layer_type)
+
+    @property
+    def blend_mode(self) -> BlendMode | int:
+        return get_bits(self.reg, 6, 7)
+
+
+class BlendAlphaRegister:
+    def __init__(self):
+        self.reg = 0
+
+    @property
+    def coefficient_source(self) -> int:
+        return get_bits(self.reg, 0, 4)
+
+    @property
+    def coefficient_target(self) -> int:
+        return get_bits(self.reg, 8, 12)
+
+
+class BlendBrightnessRegister:
+    def __init__(self):
+        self.reg = 0
+
+    @property
+    def brightness(self) -> int:
+        return get_bits(self.reg, 0, 4)

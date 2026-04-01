@@ -12,6 +12,9 @@ from pyboy_advance.ppu.registers import (
     DisplayStatusRegister,
     BackgroundControlRegister,
     WindowControlRegister,
+    BlendControlRegister,
+    BlendAlphaRegister,
+    BlendBrightnessRegister,
 )
 from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import (
@@ -64,11 +67,20 @@ class PPU:
         self.window_mask_1 = array("H", [0] * DISPLAY_WIDTH)
         self.window_mask_obj = array("H", [0] * DISPLAY_WIDTH)
 
+        self.blend_control = BlendControlRegister()
+        self.blend_alpha = BlendAlphaRegister()
+        self.blend_brightness = BlendBrightnessRegister()
+
+        self.blend_mask_obj = [[False] * DISPLAY_WIDTH for _ in range(NUM_PRIORITIES)]
+
         self.memory = VideoMemory(self.display_control)
 
         self.bg_scanline = [array("H", [0] * DISPLAY_WIDTH) for _ in range(NUM_BACKGROUNDS)]
         self.obj_scanline = [array("H", [0] * DISPLAY_WIDTH) for _ in range(NUM_PRIORITIES)]
+
         self.scanline = array("H", [0] * DISPLAY_WIDTH)
+        self.scanline_top_colour = array("H", [0] * DISPLAY_WIDTH)
+        self.scanline_top_layer = array("I", [LayerType.BACKDROP] * DISPLAY_WIDTH)
 
         self.front_buffer = array("H", [0] * (DISPLAY_WIDTH * DISPLAY_HEIGHT))
         self.back_buffer = array("H", [0] * (DISPLAY_WIDTH * DISPLAY_HEIGHT))
@@ -148,6 +160,8 @@ class PPU:
         backdrop_colour = 0 if self.display_control.force_blank else self.memory.read_16_palram(0)
         for x in range(DISPLAY_WIDTH):
             self.scanline[x] = backdrop_colour
+            self.scanline_top_colour[x] = backdrop_colour
+            self.scanline_top_layer[x] = LayerType.BACKDROP
 
         for scanline in self.bg_scanline:
             for x in range(DISPLAY_WIDTH):
@@ -156,6 +170,10 @@ class PPU:
         for scanline in self.obj_scanline:
             for x in range(DISPLAY_WIDTH):
                 scanline[x] = TRANSPARENT_COLOUR
+
+        for blend_mask in self.blend_mask_obj:
+            for x in range(DISPLAY_WIDTH):
+                blend_mask[x] = False
 
     def _render_backgrounds(self):
         video_mode = self.display_control.video_mode
@@ -350,6 +368,7 @@ class PPU:
                         OBJ_PALETTE_OFFSET + palette_index * COLOUR_SIZE
                     )
                     self.obj_scanline[obj.priority][win_x] = colour
+                    self.blend_mask_obj[obj.priority][win_x] = obj.mode == ObjectMode.BLEND
 
     def _merge_layers(self):
         for priority in range(NUM_PRIORITIES - 1, -1, -1):
@@ -358,30 +377,72 @@ class PPU:
                     self.display_control.display_bg(bg_num)
                     and self._get_bg_control(bg_num).priority == priority
                 ):
-                    self._merge_layer(self.bg_scanline[bg_num], bg_num)
+                    self._merge_layer(self.bg_scanline[bg_num], bg_num, priority)
 
             if self.display_control.display_obj:
-                self._merge_layer(self.obj_scanline[priority], LayerType.OBJ)
+                self._merge_layer(self.obj_scanline[priority], LayerType.OBJ, priority)
 
         for x in range(DISPLAY_WIDTH):
             self.back_buffer[DISPLAY_WIDTH * self.vcount + x] = self.scanline[x]
 
-    def _merge_layer(self, scanline, layer_type: LayerType | int):
+    def _merge_layer(
+        self,
+        layer_scanline,
+        layer_type: LayerType | int,
+        priority: int,
+    ):
         windowing_enabled = (
             self.display_control.display_window(WindowIndex.WIN_0)
             or self.display_control.display_window(WindowIndex.WIN_1)
             or self.display_control.display_window(WindowIndex.WIN_OBJ)
         )
 
+        blend_mode = (
+            self.blend_control.blend_mode
+            if self.blend_control.blend_source(layer_type)
+            else BlendMode.OFF
+        )
+
+        coefficient_source = self.blend_alpha.coefficient_source
+        coefficient_target = self.blend_alpha.coefficient_target
+        brightness = self.blend_brightness.brightness
+
         for x in range(DISPLAY_WIDTH):
+            pixel_blend_mode = blend_mode
+
             if windowing_enabled:
                 window_control = self._get_window_for_pixel(x)
                 if not window_control.display_layer(layer_type):
                     continue
+                if not window_control.enable_blending:
+                    pixel_blend_mode = BlendMode.OFF
 
-            colour = scanline[x]
-            if colour != TRANSPARENT_COLOUR:
+            if layer_type == LayerType.OBJ and self.blend_mask_obj[priority][x]:
+                pixel_blend_mode = BlendMode.ALPHA
+
+            colour = layer_scanline[x]
+            if colour == TRANSPARENT_COLOUR:
+                continue
+
+            if pixel_blend_mode == BlendMode.OFF:
                 self.scanline[x] = colour
+            elif pixel_blend_mode == BlendMode.ALPHA:
+                if self.blend_control.blend_target(self.scanline_top_layer[x]):
+                    self.scanline[x] = blend_colours(
+                        colour,
+                        self.scanline_top_colour[x],
+                        coefficient_source,
+                        coefficient_target,
+                    )
+                else:
+                    self.scanline[x] = colour
+            elif pixel_blend_mode == BlendMode.LIGHTEN:
+                self.scanline[x] = colour
+            elif pixel_blend_mode == BlendMode.DARKEN:
+                self.scanline[x] = colour
+
+            self.scanline_top_colour[x] = colour
+            self.scanline_top_layer[x] = layer_type
 
     def _calc_window_masks(self):
         for window in (WindowIndex.WIN_0, WindowIndex.WIN_1):
@@ -544,3 +605,24 @@ class Object:
     @property
     def palette_num(self) -> int:
         return get_bits(self.attr_2, 12, 15)
+
+
+def get_rgb_channels(colour: int) -> tuple[int, int, int]:
+    r = colour & 0x1F
+    g = (colour >> 5) & 0x1F
+    b = (colour >> 10) & 0x1F
+    return r, g, b
+
+
+def blend_colours(
+    colour_a: int,
+    colour_b: int,
+    coefficient_a: int,
+    coefficient_b: int,
+) -> int:
+    r_a, g_a, b_a = get_rgb_channels(colour_a)
+    r_b, g_b, b_b = get_rgb_channels(colour_b)
+    r = min(31, (r_a * coefficient_a + r_b * coefficient_b) >> 4)
+    g = min(31, (g_a * coefficient_a + g_b * coefficient_b) >> 4)
+    b = min(31, (b_a * coefficient_a + b_b * coefficient_b) >> 4)
+    return r | (g << 5) | (b << 10)

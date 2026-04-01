@@ -109,6 +109,11 @@ class IOAddress(IntEnum):
     REG_WININ = 0x04000048
     REG_WINOUT = 0x0400004A
 
+    # Special Effects Registers
+    REG_BLDCNT = 0x04000050
+    REG_BLDALPHA = 0x04000052
+    REG_BLDY = 0x04000054
+
     # Sound Control Registers
     REG_SOUNDBIAS = 0x04000088
     REG_FIFO_A = 0x040000A0

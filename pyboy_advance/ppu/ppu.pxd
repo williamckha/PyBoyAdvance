@@ -10,6 +10,9 @@ from pyboy_advance.ppu.registers cimport (
     DisplayStatusRegister,
     BackgroundControlRegister,
     WindowControlRegister,
+    BlendControlRegister,
+    BlendAlphaRegister,
+    BlendBrightnessRegister,
 )
 from pyboy_advance.scheduler cimport Scheduler
 from pyboy_advance.utils cimport (
@@ -67,10 +70,16 @@ cdef class PPU:
     cdef uint16_t[:] window_mask_0
     cdef uint16_t[:] window_mask_1
     cdef uint16_t[:] window_mask_obj
+    cdef BlendControlRegister blend_control
+    cdef BlendAlphaRegister blend_alpha
+    cdef BlendBrightnessRegister blend_brightness
+    cdef bint[4][240] blend_mask_obj
     cdef VideoMemory memory
     cdef uint16_t[4][240] bg_scanline
     cdef uint16_t[4][240] obj_scanline
     cdef uint16_t[240] scanline
+    cdef uint16_t[240] scanline_top_colour
+    cdef uint32_t[240] scanline_top_layer
     cdef object front_buffer
     cdef object back_buffer
     cdef object front_buffer_ptr
@@ -86,8 +95,11 @@ cdef class PPU:
     cdef void _render_objects(self) noexcept
     cdef void _render_object(self, Object) noexcept
     cdef void _merge_layers(self) noexcept
-    cdef void _merge_layer(self, uint16_t[:], int) noexcept
+    cdef void _merge_layer(self, uint16_t[:], int, int) noexcept
     cdef void _calc_window_masks(self) noexcept
     cdef WindowControlRegister _get_window_for_pixel(self, uint32_t) noexcept
     cdef uint32_t _get_palette_index(self, uint32_t, uint32_t, uint32_t, uint32_t, bint, uint32_t) noexcept
     cdef BackgroundControlRegister _get_bg_control(self, int) noexcept
+
+cdef (uint8_t, uint8_t, uint8_t) get_rgb_channels(uint16_t) noexcept
+cdef uint16_t blend_colours(uint16_t, uint16_t, uint32_t, uint32_t) noexcept

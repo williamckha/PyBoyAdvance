@@ -48,3 +48,21 @@ cdef class WindowControlRegister:
 
     cdef bint display_layer(self, int) noexcept
     cdef bint get_enable_blending(self) noexcept
+
+cdef class BlendControlRegister:
+    cdef uint32_t reg
+
+    cdef bint blend_source(self, int) noexcept
+    cdef bint blend_target(self, int) noexcept
+    cdef int get_blend_mode(self) noexcept
+
+cdef class BlendAlphaRegister:
+    cdef uint32_t reg
+
+    cdef uint32_t get_coefficient_source(self) noexcept
+    cdef uint32_t get_coefficient_target(self) noexcept
+
+cdef class BlendBrightnessRegister:
+    cdef uint32_t reg
+
+    cdef uint32_t get_brightness(self) noexcept

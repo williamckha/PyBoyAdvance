@@ -68,6 +68,12 @@ class IO:
             win_out |= self.ppu.window_control_obj.reg << 8
             return win_out
 
+        # Special Effects Registers
+        elif address == IOAddress.REG_BLDCNT:
+            return self.ppu.blend_control.reg
+        elif address == IOAddress.REG_BLDALPHA:
+            return self.ppu.blend_alpha.reg
+
         # Sound Control Registers
         elif address == IOAddress.REG_SOUNDBIAS:
             return self.reg_soundbias
@@ -183,6 +189,14 @@ class IO:
         elif address == IOAddress.REG_WINOUT:
             self.ppu.window_control_out.reg = value & 0x3F
             self.ppu.window_control_obj.reg = (value >> 8) & 0x3F
+
+        # Special Effects Registers
+        elif address == IOAddress.REG_BLDCNT:
+            self.ppu.blend_control.reg = value
+        elif address == IOAddress.REG_BLDALPHA:
+            self.ppu.blend_alpha.reg = value
+        elif address == IOAddress.REG_BLDY:
+            self.ppu.blend_brightness.reg = value
 
         # Sound Control Registers
         elif address == IOAddress.REG_SOUNDBIAS:

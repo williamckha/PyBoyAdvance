@@ -51,6 +51,7 @@ class LayerType(IntEnum):
     BG_2 = 2
     BG_3 = 3
     OBJ = 4
+    BACKDROP = 5
 
 
 class WindowIndex(IntEnum):
@@ -79,3 +80,10 @@ class ObjectShape(IntEnum):
     SQUARE = 0
     HORIZONTAL = 1
     VERTICAL = 2
+
+
+class BlendMode(IntEnum):
+    OFF = 0
+    ALPHA = 1
+    LIGHTEN = 2
+    DARKEN = 3
