@@ -1,4 +1,6 @@
+import functools
 import io
+import time
 import urllib.request
 import numpy as np
 from pathlib import Path
@@ -19,7 +21,11 @@ def pytest_configure(config):
 def pyboy_advance_factory(tmp_path_factory):
     roms_directory = tmp_path_factory.mktemp("roms")
 
-    def download_file(file_name: str, file_url: str) -> Path:
+    @functools.cache
+    def download_file(file_url: str) -> Path:
+        out_file_name = str(time.time_ns()) + ".gba"
+        out_file_path = roms_directory / out_file_name
+
         with urllib.request.urlopen(file_url) as response:
             if file_url.endswith(".zip"):
                 with ZipFile(io.BytesIO(response.read()), "r") as zip_file:
@@ -28,22 +34,21 @@ def pyboy_advance_factory(tmp_path_factory):
                     if len(files) != 1:
                         raise ValueError("ZIP does not contain exactly one file")
 
-                    extracted_path = Path(zip_file.extract(files[0], roms_directory))
-                    extracted_path.rename(file_name)
-                    return extracted_path
+                    with zip_file.open(files[0]) as zip_inner_file:
+                        with open(out_file_path, "wb") as out_file:
+                            out_file.write(zip_inner_file.read())
             else:
-                out_file_path = roms_directory / file_name
                 with open(out_file_path, "wb") as out_file:
                     out_file.write(response.read())
-                return out_file_path
+
+        return out_file_path
 
     bios = download_file(
-        "gba_bios.bin",
-        "https://raw.githubusercontent.com/Nebuleon/ReGBA/master/bios/gba_bios.bin",
+        "https://raw.githubusercontent.com/Nebuleon/ReGBA/master/bios/gba_bios.bin"
     )
 
-    def make_pyboy_advance(rom_name: str, rom_url: str):
-        rom = download_file(rom_name + ".gba", rom_url)
+    def make_pyboy_advance(rom_url: str):
+        rom = download_file(rom_url)
         return PyBoyAdvance(rom, bios=bios, skip_bios=True)
 
     return make_pyboy_advance
@@ -51,14 +56,11 @@ def pyboy_advance_factory(tmp_path_factory):
 
 @pytest.fixture
 def emulator(request, pyboy_advance_factory):
-    test_name = request.node.originalname.removeprefix("test_")
-
     marker = request.node.get_closest_marker("rom_url")
     if not marker:
         pytest.fail("Please use the rom_url marker to specify a test ROM")
     rom_url = marker.args[0]
-
-    return pyboy_advance_factory(test_name, rom_url)
+    return pyboy_advance_factory(rom_url)
 
 
 @pytest.fixture
