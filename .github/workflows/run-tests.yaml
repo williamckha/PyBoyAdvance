@@ -28,8 +28,26 @@ jobs:
           pip install -e .[test]
 
       - name: Run tests
+        env:
+          PYTEST_ARTIFACTS_DIR: ${{ github.workspace }}/test-artifacts/cython
         run: |
           pytest tests
+
+      - name: Zip test artifacts
+        if: always()
+        run: |
+          mkdir -p test-artifacts/cython
+          if [ -z "$(find test-artifacts/cython -type f)" ]; then
+            echo "No test artifacts were generated." > test-artifacts/cython/README.txt
+          fi
+          (cd test-artifacts/cython && zip -r "$GITHUB_WORKSPACE/test-artifacts-cython.zip" .)
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-cython
+          path: test-artifacts-cython.zip
 
   test-pypy:
     name: Run Tests (PyPy)
@@ -56,5 +74,23 @@ jobs:
           pip uninstall -y pyboy-advance
 
       - name: Run tests
+        env:
+          PYTEST_ARTIFACTS_DIR: ${{ github.workspace }}/test-artifacts/pypy
         run: |
           pytest tests
+
+      - name: Zip test artifacts
+        if: always()
+        run: |
+          mkdir -p test-artifacts/pypy
+          if [ -z "$(find test-artifacts/pypy -type f)" ]; then
+            echo "No test artifacts were generated." > test-artifacts/pypy/README.txt
+          fi
+          (cd test-artifacts/pypy && zip -r "$GITHUB_WORKSPACE/test-artifacts-pypy.zip" .)
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-pypy
+          path: test-artifacts-pypy.zip

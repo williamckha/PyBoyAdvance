@@ -1,5 +1,6 @@
 import functools
 import io
+import os
 import time
 import urllib.request
 import numpy as np
@@ -65,6 +66,8 @@ def emulator(request, pyboy_advance_factory):
 
 @pytest.fixture
 def assert_expected_image(request, check):
+    artifacts_dir = Path(os.environ.get("PYTEST_ARTIFACTS_DIR", "test_artifacts"))
+
     def _assert_expected_image(img: PIL.Image.Image, expected_img_name: str = None):
         if not expected_img_name:
             test_name = request.node.originalname.removeprefix("test_")
@@ -81,6 +84,12 @@ def assert_expected_image(request, check):
             return
 
         diff = PIL.ImageChops.difference(img, expected_img)
-        assert not diff.getbbox(), "Image did not match expected image"
+        if diff.getbbox():
+            artifacts_dir.mkdir(parents=True, exist_ok=True)
+            test_id = request.node.nodeid.replace("/", "__").replace("::", "__")
+            actual_img_file = artifacts_dir / f"{test_id}__actual.png"
+            img.save(actual_img_file)
+
+            assert False, f"Image did not match expected image (actual saved at: {actual_img_file})"
 
     return _assert_expected_image
