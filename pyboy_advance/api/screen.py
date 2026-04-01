@@ -4,8 +4,16 @@ from pyboy_advance.ppu.ppu import PPU
 # endif
 
 import ctypes
-import numpy as np
-import PIL.Image
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+try:
+    import PIL.Image as PILImage
+except ImportError:
+    PILImage = None
 
 
 class Screen:
@@ -17,7 +25,7 @@ class Screen:
         self.ppu = ppu
 
     @property
-    def ndarray(self) -> np.ndarray:
+    def ndarray(self) -> "np.ndarray":
         """
         Get the current frame buffer in a NumPy ``ndarray``.
 
@@ -40,10 +48,10 @@ class Screen:
         return np.stack([r, g, b], axis=-1)
 
     @property
-    def image(self) -> PIL.Image.Image:
+    def image(self) -> "PILImage.Image":
         """
         Get a PIL Image of the current frame buffer.
 
         :return: RGB image of (240, 160) pixels
         """
-        return PIL.Image.fromarray(self.ndarray, "RGB")
+        return PILImage.fromarray(self.ndarray, "RGB")
