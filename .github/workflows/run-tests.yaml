@@ -29,7 +29,7 @@ jobs:
 
       - name: Run tests
         env:
-          PYTEST_ARTIFACTS_DIR: ${{ github.workspace }}/test-artifacts-cython
+          PYTEST_ARTIFACTS_DIR: "${{ github.workspace }}/test-artifacts-cython"
         run: |
           pytest tests
 
@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-artifacts-cython
-          path: ${{ github.workspace }}/test-artifacts-cython
+          path: "${{ github.workspace }}/test-artifacts-cython"
 
   test-pypy:
     name: Run Tests (PyPy)
@@ -66,7 +66,7 @@ jobs:
 
       - name: Run tests
         env:
-          PYTEST_ARTIFACTS_DIR: ${{ github.workspace }}/test-artifacts-pypy
+          PYTEST_ARTIFACTS_DIR: "${{ github.workspace }}/test-artifacts-pypy"
         run: |
           pytest tests
 
