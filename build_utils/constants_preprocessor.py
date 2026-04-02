@@ -15,8 +15,7 @@ class Constant:
 
 def preprocess_constants(file_paths: list[str | os.PathLike]) -> list[str | os.PathLike]:
     """
-    Generate constants.pxd and constants.pyx files for constants.py files containing
-    enums and global constants.
+    Generate .pxd files for constants.py files containing enums and global constants.
 
     IntEnum/IntFlag/Enum definitions are converted to named cpdef enum definitions.
     Global constants are placed in an anonymous cdef enum.
@@ -24,7 +23,6 @@ def preprocess_constants(file_paths: list[str | os.PathLike]) -> list[str | os.P
     Name mangling is applied to avoid name conflicts (in C, all enum members share
     the same namespace).
     """
-    preprocessed = []
     constants: dict[tuple[str | None, str], Constant] = {}
     constant_names: set[str] = set()
 
@@ -32,25 +30,22 @@ def preprocess_constants(file_paths: list[str | os.PathLike]) -> list[str | os.P
         file_name = os.path.basename(file_path)
         base, ext = os.path.splitext(file_name)
         if "constants" in base:
-            generated_pyx_file = generate_constants_pxd_pyx(
+            generate_constants_pxd(
                 file_path,
                 constants,
                 constant_names,
             )
-            preprocessed.append(generated_pyx_file)
-        else:
-            preprocessed.append(file_path)
 
-    insert_replacements(preprocessed, constants)
+    insert_replacements(file_paths, constants)
 
-    return preprocessed
+    return file_paths
 
 
-def generate_constants_pxd_pyx(
+def generate_constants_pxd(
     py_file_path: str | os.PathLike,
     constants: dict[tuple[str | None, str], Constant],
     constant_names: set[str],
-) -> str | os.PathLike:
+):
     with open(py_file_path, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -137,11 +132,9 @@ def generate_constants_pxd_pyx(
     with open(pxd_path, "w", encoding="utf-8") as f:
         f.write("\n".join(pxd_lines) + "\n")
 
-    pyx_path = base + ".pyx"
-    with open(pyx_path, "w", encoding="utf-8") as f:
-        f.write("")
-
-    return pyx_path
+    # Erase the contents of the .py file
+    with open(py_file_path, "w", encoding="utf-8"):
+        pass
 
 
 def insert_replacements(

@@ -1,3 +1,4 @@
+import filecmp
 import sys
 from pathlib import Path
 
@@ -75,13 +76,27 @@ class BuildExt(_build_ext):
 
         preprocessed_files = []
         for src_file in py_pxd_files:
-            build_file = src_file.replace(".py", ".build.py")
-            shutil.copy(src_file, build_file)
-            preprocessed_files.append(build_file)
+            preprocessed_file = src_file.replace(".py", ".preprocessed.py")
+            shutil.copy(src_file, preprocessed_file)
+            preprocessed_files.append(preprocessed_file)
 
         preprocessed_files = preprocess_cython_guards(preprocessed_files)
         preprocessed_files = preprocess_properties(preprocessed_files)
         preprocessed_files = preprocess_constants(preprocessed_files)
+
+        build_files = []
+        for preprocessed_file in preprocessed_files:
+            build_file = preprocessed_file.replace(".preprocessed.py", ".build.py")
+            build_files.append(build_file)
+
+            # Only replace the .build.py file if there are changes to avoid updating
+            # its last modified timestamp
+            if not os.path.isfile(build_file) or (
+                not filecmp.cmp(preprocessed_file, build_file, shallow=False)
+            ):
+                shutil.copy(preprocessed_file, build_file)
+
+            os.remove(preprocessed_file)
 
         cythonize_files = map(
             lambda src: Extension(
@@ -91,7 +106,7 @@ class BuildExt(_build_ext):
                 extra_link_args=[] if DEBUG else ["-s", "-w"],
                 include_dirs=[np.get_include()],
             ),
-            preprocessed_files,
+            build_files,
         )
         self.distribution.ext_modules = cythonize(
             [*cythonize_files],
