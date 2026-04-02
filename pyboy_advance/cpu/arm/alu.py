@@ -140,14 +140,13 @@ def arm_alu_sub(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
 
 def arm_alu_sub_impl(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint) -> int:
     mask = 0xFFFFFFFF
-    result = op1 - op2
-    truncated_result = result & mask
+    result = (op1 - op2) & mask
     if set_cond_codes and rd != cpu.regs.PC:
-        cpu.regs.cpsr.sign_flag = sign_32(truncated_result)
-        cpu.regs.cpsr.zero_flag = truncated_result == 0
+        cpu.regs.cpsr.sign_flag = sign_32(result)
+        cpu.regs.cpsr.zero_flag = result == 0
         cpu.regs.cpsr.carry_flag = op1 >= op2  # Carry = no borrow
-        cpu.regs.cpsr.overflow_flag = sign_32((op1 ^ op2) & (op1 ^ truncated_result))
-    return truncated_result
+        cpu.regs.cpsr.overflow_flag = sign_32((op1 ^ op2) & (op1 ^ result))
+    return result
 
 
 def arm_alu_rsb(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
@@ -185,13 +184,16 @@ def arm_alu_adc(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
 
 def arm_alu_sbc(cpu: CPU, op1: int, op2: int, rd: int, set_cond_codes: bint):
     mask = 0xFFFFFFFF
-    borrow = 1 - cpu.regs.cpsr.carry_flag  # Carry = no borrow, so subtract 0
-    result = (op1 - op2 - borrow) & mask
+    borrow_in = 1 - cpu.regs.cpsr.carry_flag  # Carry = no borrow, so subtract 0
+    temp = (op1 - op2) & mask
+    borrow_1 = op1 < op2
+    result = (temp - borrow_in) & mask
+    borrow_2 = temp < borrow_in
     cpu.regs.set(rd, result)
     if set_cond_codes and rd != cpu.regs.PC:
         cpu.regs.cpsr.sign_flag = sign_32(result)
         cpu.regs.cpsr.zero_flag = result == 0
-        cpu.regs.cpsr.carry_flag = op1 >= (op2 + borrow)
+        cpu.regs.cpsr.carry_flag = not (borrow_1 or borrow_2)
         cpu.regs.cpsr.overflow_flag = sign_32((op1 ^ op2) & (op1 ^ result))
 
 
