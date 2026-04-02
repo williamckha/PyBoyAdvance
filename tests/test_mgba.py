@@ -86,7 +86,6 @@ def test_mgba_multiply_long(emulator, assert_expected_image):
     assert_expected_image(emulator.screen.image)
 
 
-@pytest.mark.skip
 @pytest.mark.rom_url("https://s3.amazonaws.com/mgba/suite-latest.zip")
 def test_mgba_bios(emulator, assert_expected_image):
     emulator.frame(20)

@@ -1,6 +1,8 @@
-name: Publish Python distribution to PyPI
+name: PyBoy Advance CI/CD
 
 on:
+  push:
+  pull_request:
   release:
     types: [ published ]
   workflow_dispatch:
@@ -52,6 +54,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Get BIOS
+        shell: bash
+        env:
+          BIOS_DATA: ${{ secrets.BIOS_DATA }}
+          BIOS_KEY: ${{ secrets.BIOS_KEY }}
+        run: |
+          echo "$BIOS_DATA" |
+               base64 -d |
+               gpg -d --batch --pinentry-mode loopback --passphrase "$BIOS_KEY" -o "$GITHUB_WORKSPACE/tests/bios.bin"
+          
+          # Clear secrets to not leak them to later steps
+          unset BIOS_DATA BIOS_KEY
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -64,6 +79,8 @@ jobs:
             PYTEST_ARTIFACTS_DIR="${{ github.workspace }}/test-artifacts-${{ matrix.os }}"
           CIBW_TEST_ENVIRONMENT_WINDOWS: >
             PYTEST_ARTIFACTS_DIR="%GITHUB_WORKSPACE%\\test-artifacts-${{ matrix.os }}"
+          CIBW_TEST_COMMAND: >
+            pytest --bios=tests/bios.bin tests
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

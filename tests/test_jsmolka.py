@@ -7,7 +7,6 @@ def test_jsmolka_arm(emulator, assert_expected_image):
     assert_expected_image(emulator.screen.image)
 
 
-@pytest.mark.skip
 @pytest.mark.rom_url("https://raw.githubusercontent.com/jsmolka/gba-tests/master/bios/bios.gba")
 def test_jsmolka_bios(emulator, assert_expected_image):
     emulator.frame(20)

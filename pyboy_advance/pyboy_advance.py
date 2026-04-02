@@ -73,6 +73,7 @@ class PyBoyAdvance:
         self._frame_overshoot = 0
 
         if skip_bios:
+            self.memory.bios_last_opcode = 0xE129F000
             self.cpu.regs.banked_sp[int(BankIndex.BANK_SYSTEM_USER)] = 0x03007F00
             self.cpu.regs.banked_sp[int(BankIndex.BANK_FIQ)] = 0x03007F00
             self.cpu.regs.banked_sp[int(BankIndex.BANK_IRQ)] = 0x03007FA0

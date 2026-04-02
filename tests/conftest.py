@@ -18,8 +18,20 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "rom_url: specify URL of test ROM to download")
 
 
+def pytest_addoption(parser):
+    parser.addoption("--bios", action="store")
+
+
 @pytest.fixture(scope="session")
-def pyboy_advance_factory(tmp_path_factory):
+def bios(pytestconfig):
+    bios_path = pytestconfig.getoption("bios")
+    if not bios_path:
+        pytest.fail("Please provide a BIOS to use with the --bios option")
+    return bios_path
+
+
+@pytest.fixture(scope="session")
+def pyboy_advance_factory(tmp_path_factory, bios):
     roms_directory = tmp_path_factory.mktemp("roms")
 
     @functools.cache
@@ -43,10 +55,6 @@ def pyboy_advance_factory(tmp_path_factory):
                     out_file.write(response.read())
 
         return out_file_path
-
-    bios = download_file(
-        "https://raw.githubusercontent.com/Nebuleon/ReGBA/master/bios/gba_bios.bin"
-    )
 
     def make_pyboy_advance(rom_url: str):
         rom = download_file(rom_url)
