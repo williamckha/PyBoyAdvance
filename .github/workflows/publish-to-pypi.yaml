@@ -60,7 +60,10 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.4.0
         env:
-          CIBW_ENVIRONMENT: PYTEST_ARTIFACTS_DIR="${{ github.workspace }}/test-artifacts-${{ matrix.os }}"
+          CIBW_TEST_ENVIRONMENT: >
+            PYTEST_ARTIFACTS_DIR="${{ github.workspace }}/test-artifacts-${{ matrix.os }}"
+          CIBW_TEST_ENVIRONMENT_WINDOWS: >
+            PYTEST_ARTIFACTS_DIR="%GITHUB_WORKSPACE%\\test-artifacts-${{ matrix.os }}"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -73,7 +76,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-artifacts-${{ matrix.os }}
-          path: "${{ github.workspace }}/test-artifacts-${{ matrix.os }}"
+          path: ${{ github.workspace }}/test-artifacts-${{ matrix.os }}
 
   publish:
     name: Publish to PyPI

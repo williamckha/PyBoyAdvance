@@ -66,8 +66,6 @@ def emulator(request, pyboy_advance_factory):
 
 @pytest.fixture
 def assert_expected_image(request, check):
-    artifacts_dir = Path(os.environ.get("PYTEST_ARTIFACTS_DIR", "test_artifacts"))
-
     def _assert_expected_image(img: PIL.Image.Image, expected_img_name: str = None):
         if not expected_img_name:
             test_name = request.node.originalname.removeprefix("test_")
@@ -85,9 +83,12 @@ def assert_expected_image(request, check):
 
         diff = PIL.ImageChops.difference(img, expected_img)
         if diff.getbbox():
-            artifacts_dir.mkdir(parents=True, exist_ok=True)
+            artifacts_dir = os.environ.get("PYTEST_ARTIFACTS_DIR", "test_artifacts")
+            artifacts_dir_path = Path(os.path.expandvars(artifacts_dir))
+            artifacts_dir_path.mkdir(parents=True, exist_ok=True)
+
             test_id = request.node.nodeid.replace("/", "__").replace("::", "__")
-            actual_img_file = artifacts_dir / f"{test_id}__actual.png"
+            actual_img_file = artifacts_dir_path / f"{test_id}__actual.png"
             img.save(actual_img_file)
 
             assert False, f"Image did not match expected image (actual saved at: {actual_img_file})"
