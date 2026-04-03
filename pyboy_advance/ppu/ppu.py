@@ -335,7 +335,7 @@ class PPU:
         tile_row_len = obj_w // TILE_WIDTH if self.display_control.obj_vram_dimension else 32
 
         offset_y = self.vcount - obj_y
-        rel_y = obj_y - offset_y - 1 if obj_flip_v else offset_y
+        rel_y = obj_h - offset_y - 1 if obj_flip_v else offset_y
 
         for offset_x in range(0, obj_w):
             win_x = add_32(obj_x, offset_x)
