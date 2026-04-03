@@ -110,6 +110,7 @@ class IOAddress(IntEnum):
     REG_WINOUT = 0x0400004A
 
     # Special Effects Registers
+    REG_MOSAIC = 0x0400004C
     REG_BLDCNT = 0x04000050
     REG_BLDALPHA = 0x04000052
     REG_BLDY = 0x04000054

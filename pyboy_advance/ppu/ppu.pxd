@@ -13,6 +13,7 @@ from pyboy_advance.ppu.registers cimport (
     BlendControlRegister,
     BlendAlphaRegister,
     BlendBrightnessRegister,
+    MosaicControlRegister,
 )
 from pyboy_advance.scheduler cimport Scheduler
 from pyboy_advance.utils cimport (
@@ -70,6 +71,7 @@ cdef class PPU:
     cdef uint16_t[:] window_mask_0
     cdef uint16_t[:] window_mask_1
     cdef uint16_t[:] window_mask_obj
+    cdef MosaicControlRegister mosaic_control
     cdef BlendControlRegister blend_control
     cdef BlendAlphaRegister blend_alpha
     cdef BlendBrightnessRegister blend_brightness

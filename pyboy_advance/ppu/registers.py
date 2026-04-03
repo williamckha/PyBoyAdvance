@@ -147,6 +147,27 @@ class WindowControlRegister:
         return get_bit(self.reg, 5)
 
 
+class MosaicControlRegister:
+    def __init__(self):
+        self.reg = 0
+
+    @property
+    def stretch_bg_horizontal(self) -> int:
+        return get_bits(self.reg, 0, 3)
+
+    @property
+    def stretch_bg_vertical(self) -> int:
+        return get_bits(self.reg, 4, 7)
+
+    @property
+    def stretch_obj_horizontal(self) -> int:
+        return get_bits(self.reg, 8, 11)
+
+    @property
+    def stretch_obj_vertical(self) -> int:
+        return get_bits(self.reg, 12, 15)
+
+
 class BlendControlRegister:
     def __init__(self):
         self.reg = 0

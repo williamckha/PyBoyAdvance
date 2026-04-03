@@ -191,6 +191,8 @@ class IO:
             self.ppu.window_control_obj.reg = (value >> 8) & 0x3F
 
         # Special Effects Registers
+        elif address == IOAddress.REG_MOSAIC:
+            self.ppu.mosaic_control.reg = value
         elif address == IOAddress.REG_BLDCNT:
             self.ppu.blend_control.reg = value
         elif address == IOAddress.REG_BLDALPHA:

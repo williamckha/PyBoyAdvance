@@ -49,6 +49,14 @@ cdef class WindowControlRegister:
     cdef bint display_layer(self, int) noexcept
     cdef bint get_enable_blending(self) noexcept
 
+cdef class MosaicControlRegister:
+    cdef uint32_t reg
+
+    cdef uint32_t get_stretch_bg_horizontal(self) noexcept
+    cdef uint32_t get_stretch_bg_vertical(self) noexcept
+    cdef uint32_t get_stretch_obj_horizontal(self) noexcept
+    cdef uint32_t get_stretch_obj_vertical(self) noexcept
+
 cdef class BlendControlRegister:
     cdef uint32_t reg
 

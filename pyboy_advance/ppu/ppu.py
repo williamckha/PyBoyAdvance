@@ -15,6 +15,7 @@ from pyboy_advance.ppu.registers import (
     BlendControlRegister,
     BlendAlphaRegister,
     BlendBrightnessRegister,
+    MosaicControlRegister,
 )
 from pyboy_advance.scheduler import Scheduler
 from pyboy_advance.utils import (
@@ -67,6 +68,7 @@ class PPU:
         self.window_mask_1 = array("H", [0] * DISPLAY_WIDTH)
         self.window_mask_obj = array("H", [0] * DISPLAY_WIDTH)
 
+        self.mosaic_control = MosaicControlRegister()
         self.blend_control = BlendControlRegister()
         self.blend_alpha = BlendAlphaRegister()
         self.blend_brightness = BlendBrightnessRegister()
@@ -207,11 +209,21 @@ class PPU:
         bg_control = self._get_bg_control(bg_num)
 
         rel_y = self.vcount + self.bg_offset_v[bg_num]
+
+        if bg_control.mosaic:
+            mosaic_pixel_h = self.mosaic_control.stretch_bg_vertical + 1
+            rel_y = rel_y // mosaic_pixel_h * mosaic_pixel_h
+
         tile_y = rel_y // TILE_HEIGHT
         pixel_y = rel_y % TILE_HEIGHT
 
         for x in range(DISPLAY_WIDTH):
             rel_x = x + self.bg_offset_h[bg_num]
+
+            if bg_control.mosaic:
+                mosaic_pixel_w = self.mosaic_control.stretch_bg_horizontal + 1
+                rel_x = rel_x // mosaic_pixel_w * mosaic_pixel_w
+
             tile_x = rel_x // TILE_WIDTH
             pixel_x = rel_x % TILE_WIDTH
 
@@ -282,6 +294,9 @@ class PPU:
         display_width = SMALL_DISPLAY_WIDTH if small else DISPLAY_WIDTH
         display_height = SMALL_DISPLAY_HEIGHT if small else DISPLAY_HEIGHT
 
+        if self.vcount >= display_height:
+            return
+
         if paletted:
             for x in range(display_width):
                 palette_index = self.memory.read_8_vram(
@@ -332,24 +347,43 @@ class PPU:
         if self.vcount < obj_y or self.vcount >= obj_y + obj_h:
             return
 
-        tile_row_len = obj_w // TILE_WIDTH if self.display_control.obj_vram_dimension else 32
+        obj_w_tiles = obj_w // TILE_WIDTH
+        obj_h_tiles = obj_h // TILE_HEIGHT
+        tile_row_len = obj_w_tiles if self.display_control.obj_vram_dimension else 32
 
         offset_y = self.vcount - obj_y
-        rel_y = obj_h - offset_y - 1 if obj_flip_v else offset_y
 
         for offset_x in range(0, obj_w):
             win_x = add_32(obj_x, offset_x)
             if sign_32(win_x) or win_x >= DISPLAY_WIDTH:
                 continue
 
-            rel_x = obj_w - offset_x - 1 if obj_flip_h else offset_x
+            rel_x = offset_x
+            rel_y = offset_y
+
+            if obj.mosaic:
+                mosaic_pixel_w = self.mosaic_control.stretch_obj_horizontal + 1
+                mosaic_pixel_h = self.mosaic_control.stretch_obj_vertical + 1
+                rel_x = (obj_x + rel_x) // mosaic_pixel_w * mosaic_pixel_w - obj_x
+                rel_y = (obj_y + rel_y) // mosaic_pixel_h * mosaic_pixel_h - obj_y
 
             tile_x = rel_x // TILE_WIDTH
             tile_y = rel_y // TILE_HEIGHT
-            tile_index = obj.tile_index + tile_y * tile_row_len + tile_x
-
             pixel_x = rel_x % TILE_WIDTH
             pixel_y = rel_y % TILE_HEIGHT
+
+            if rel_x < 0 or tile_x >= obj_w_tiles or rel_y < 0 or tile_y >= obj_h_tiles:
+                continue
+
+            if obj_flip_h:
+                tile_x = obj_w_tiles - tile_x - 1
+                pixel_x ^= 0b111
+
+            if obj_flip_v:
+                tile_y = obj_h_tiles - tile_y - 1
+                pixel_y ^= 0b111
+
+            tile_index = obj.tile_index + tile_y * tile_row_len + tile_x
 
             palette_index = self._get_palette_index(
                 OBJ_TILE_SET_OFFSET,

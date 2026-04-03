@@ -145,7 +145,7 @@ def prep_pxd_py_files():
             if ext == "py" and f not in ignore_py_files:
                 yield os.path.join(root, f)
             if ext == "pxd":
-                py_file = os.path.join(root, base) + ".py"
+                py_file = os.path.join(root, base) + ".build.py"
                 if os.path.isfile(py_file):
                     if os.path.getmtime(os.path.join(root, f)) > os.path.getmtime(py_file):
                         os.utime(py_file)
