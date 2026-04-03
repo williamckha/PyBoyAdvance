@@ -103,3 +103,5 @@ cdef class PPU:
 
 cdef (uint8_t, uint8_t, uint8_t) get_rgb_channels(uint16_t) noexcept
 cdef uint16_t blend_colours(uint16_t, uint16_t, uint32_t, uint32_t) noexcept
+cdef uint16_t lighten_colour(uint16_t, uint32_t) noexcept
+cdef uint16_t darken_colour(uint16_t, uint32_t) noexcept

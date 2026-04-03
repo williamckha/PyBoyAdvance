@@ -405,7 +405,7 @@ class PPU:
 
         coefficient_source = self.blend_alpha.coefficient_source
         coefficient_target = self.blend_alpha.coefficient_target
-        brightness = self.blend_brightness.brightness
+        brightness_amount = self.blend_brightness.amount
 
         for x in range(DISPLAY_WIDTH):
             pixel_blend_mode = blend_mode
@@ -437,9 +437,9 @@ class PPU:
                 else:
                     self.scanline[x] = colour
             elif pixel_blend_mode == BlendMode.LIGHTEN:
-                self.scanline[x] = colour
+                self.scanline[x] = lighten_colour(colour, brightness_amount)
             elif pixel_blend_mode == BlendMode.DARKEN:
-                self.scanline[x] = colour
+                self.scanline[x] = darken_colour(colour, brightness_amount)
 
             self.scanline_top_colour[x] = colour
             self.scanline_top_layer[x] = layer_type
@@ -625,4 +625,20 @@ def blend_colours(
     r = min(31, (r_a * coefficient_a + r_b * coefficient_b) >> 4)
     g = min(31, (g_a * coefficient_a + g_b * coefficient_b) >> 4)
     b = min(31, (b_a * coefficient_a + b_b * coefficient_b) >> 4)
+    return r | (g << 5) | (b << 10)
+
+
+def lighten_colour(colour: int, amount: int) -> int:
+    r, g, b = get_rgb_channels(colour)
+    r = r + (((31 - r) * amount) >> 4)
+    g = g + (((31 - g) * amount) >> 4)
+    b = b + (((31 - b) * amount) >> 4)
+    return r | (g << 5) | (b << 10)
+
+
+def darken_colour(colour: int, amount: int) -> int:
+    r, g, b = get_rgb_channels(colour)
+    r = r - ((r * amount) >> 4)
+    g = g - ((g * amount) >> 4)
+    b = b - ((b * amount) >> 4)
     return r | (g << 5) | (b << 10)

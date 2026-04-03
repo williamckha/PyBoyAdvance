@@ -65,4 +65,4 @@ cdef class BlendAlphaRegister:
 cdef class BlendBrightnessRegister:
     cdef uint32_t reg
 
-    cdef uint32_t get_brightness(self) noexcept
+    cdef uint32_t get_amount(self) noexcept

@@ -180,5 +180,5 @@ class BlendBrightnessRegister:
         self.reg = 0
 
     @property
-    def brightness(self) -> int:
+    def amount(self) -> int:
         return get_bits(self.reg, 0, 4)
