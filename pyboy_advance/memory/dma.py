@@ -88,7 +88,11 @@ class DMAChannel:
     @control_reg.setter
     def control_reg(self, value: int) -> None:
         old_enable = self._control_reg.transfer_enabled
-        self._control_reg.reg = value
+        self._control_reg.reg = value & 0xFFE0
+
+        # GamePak DQR flag (bit 11) only allowed for DMA3
+        if self.channel_id != 3:
+            self._control_reg.reg = set_bit(self._control_reg.reg, 11, False)
 
         if not old_enable and self._control_reg.transfer_enabled:  # DMA enabled
             self.fifo = (

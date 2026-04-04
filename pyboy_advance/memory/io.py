@@ -79,12 +79,20 @@ class IO:
             return self.reg_soundbias
 
         # DMA Control Registers
+        elif address == IOAddress.REG_DMA0CNT_L:
+            return 0
         elif address == IOAddress.REG_DMA0CNT_H:
             return self.dma_controller.channel_0.control_reg
+        elif address == IOAddress.REG_DMA1CNT_L:
+            return 0
         elif address == IOAddress.REG_DMA1CNT_H:
             return self.dma_controller.channel_1.control_reg
+        elif address == IOAddress.REG_DMA2CNT_L:
+            return 0
         elif address == IOAddress.REG_DMA2CNT_H:
             return self.dma_controller.channel_2.control_reg
+        elif address == IOAddress.REG_DMA3CNT_L:
+            return 0
         elif address == IOAddress.REG_DMA3CNT_H:
             return self.dma_controller.channel_3.control_reg
 
@@ -123,7 +131,7 @@ class IO:
             return self.interrupt_controller.interrupt_master_enable
 
         else:
-            return 0
+            return (self.memory.read_unused_memory() >> ((address & 0b11) * 8)) & 0xFFFF
 
     def read_8(self, address: int) -> int:
         value = self.read_16(address & ~1)
@@ -144,9 +152,9 @@ class IO:
 
         # Background Control Registers
         elif address == IOAddress.REG_BG0CNT:
-            self.ppu.bg_control_0.reg = value
+            self.ppu.bg_control_0.reg = value & 0xDFFF
         elif address == IOAddress.REG_BG1CNT:
-            self.ppu.bg_control_1.reg = value
+            self.ppu.bg_control_1.reg = value & 0xDFFF
         elif address == IOAddress.REG_BG2CNT:
             self.ppu.bg_control_2.reg = value
         elif address == IOAddress.REG_BG3CNT:
@@ -154,21 +162,21 @@ class IO:
 
         # Background Offset Registers
         elif address == IOAddress.REG_BG0HOFS:
-            self.ppu.bg_offset_h[0] = value & 0x3FF
+            self.ppu.bg_offset_h[0] = value & 0x1FF
         elif address == IOAddress.REG_BG0VOFS:
-            self.ppu.bg_offset_v[0] = value & 0x3FF
+            self.ppu.bg_offset_v[0] = value & 0x1FF
         elif address == IOAddress.REG_BG1HOFS:
-            self.ppu.bg_offset_h[1] = value & 0x3FF
+            self.ppu.bg_offset_h[1] = value & 0x1FF
         elif address == IOAddress.REG_BG1VOFS:
-            self.ppu.bg_offset_v[1] = value & 0x3FF
+            self.ppu.bg_offset_v[1] = value & 0x1FF
         elif address == IOAddress.REG_BG2HOFS:
-            self.ppu.bg_offset_h[2] = value & 0x3FF
+            self.ppu.bg_offset_h[2] = value & 0x1FF
         elif address == IOAddress.REG_BG2VOFS:
-            self.ppu.bg_offset_v[2] = value & 0x3FF
+            self.ppu.bg_offset_v[2] = value & 0x1FF
         elif address == IOAddress.REG_BG3HOFS:
-            self.ppu.bg_offset_h[3] = value & 0x3FF
+            self.ppu.bg_offset_h[3] = value & 0x1FF
         elif address == IOAddress.REG_BG3VOFS:
-            self.ppu.bg_offset_v[3] = value & 0x3FF
+            self.ppu.bg_offset_v[3] = value & 0x1FF
 
         # Window Registers
         elif address == IOAddress.REG_WIN0H:
@@ -194,9 +202,9 @@ class IO:
         elif address == IOAddress.REG_MOSAIC:
             self.ppu.mosaic_control.reg = value
         elif address == IOAddress.REG_BLDCNT:
-            self.ppu.blend_control.reg = value
+            self.ppu.blend_control.reg = value & 0x3FFF
         elif address == IOAddress.REG_BLDALPHA:
-            self.ppu.blend_alpha.reg = value
+            self.ppu.blend_alpha.reg = value & 0x1F1F
         elif address == IOAddress.REG_BLDY:
             self.ppu.blend_brightness.reg = value
 

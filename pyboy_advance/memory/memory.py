@@ -104,7 +104,7 @@ class Memory:
                         self.bios, address & MemoryRegion.BIOS_MASK
                     )
                 return self.bios_last_opcode
-            return self._read_unused_memory()
+            return self.read_unused_memory()
 
         elif region == MemoryRegion.EWRAM_REGION:
             return array_read_32(self.ewram, address & MemoryRegion.EWRAM_MASK)
@@ -132,7 +132,7 @@ class Memory:
             return 0
 
         else:
-            return self._read_unused_memory()
+            return self.read_unused_memory()
 
     def _read_16_internal(self, address: int, access_type: MemoryAccess) -> int:
         self._idle_for_access(address, 2, access_type)
@@ -147,7 +147,7 @@ class Memory:
                         self.bios, address & ~0b11 & MemoryRegion.BIOS_MASK
                     )
                 return (self.bios_last_opcode >> ((address & 0b11) * 8)) & 0xFFFF
-            return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFFFF
+            return (self.read_unused_memory() >> ((address & 0b11) * 8)) & 0xFFFF
 
         elif region == MemoryRegion.EWRAM_REGION:
             return array_read_16(self.ewram, address & MemoryRegion.EWRAM_MASK)
@@ -175,7 +175,7 @@ class Memory:
             return 0
 
         else:
-            return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFFFF
+            return (self.read_unused_memory() >> ((address & 0b11) * 8)) & 0xFFFF
 
     def _read_8_internal(self, address: int, access_type: MemoryAccess) -> int:
         self._idle_for_access(address, 1, access_type)
@@ -189,7 +189,7 @@ class Memory:
                         self.bios, address & ~0b11 & MemoryRegion.BIOS_MASK
                     )
                 return (self.bios_last_opcode >> ((address & 0b11) * 8)) & 0xFF
-            return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFF
+            return (self.read_unused_memory() >> ((address & 0b11) * 8)) & 0xFF
 
         elif region == MemoryRegion.EWRAM_REGION:
             return self.ewram[address & MemoryRegion.EWRAM_MASK]
@@ -217,7 +217,7 @@ class Memory:
             return 0
 
         else:
-            return (self._read_unused_memory() >> ((address & 0b11) * 8)) & 0xFF
+            return (self.read_unused_memory() >> ((address & 0b11) * 8)) & 0xFF
 
     def _write_32_internal(self, address: int, value: int, access_type: MemoryAccess):
         self._idle_for_access(address, 4, access_type)
@@ -332,7 +332,7 @@ class Memory:
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
 
-    def _read_unused_memory(self) -> int:
+    def read_unused_memory(self) -> int:
         """
         Reading from unused memory returns the last prefetched instruction.
         https://problemkaputt.de/gbatek.htm#gbaunpredictablethings

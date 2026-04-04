@@ -50,7 +50,7 @@ cdef class Memory:
     cdef void _write_32_internal(self, uint32_t, uint32_t, int) noexcept
     cdef void _write_16_internal(self, uint32_t, uint32_t, int) noexcept
     cdef void _write_8_internal(self, uint32_t, uint32_t, int) noexcept
-    cdef uint32_t _read_unused_memory(self) noexcept
+    cdef uint32_t read_unused_memory(self) noexcept
     cdef void _init_access_times(self) noexcept
     cdef void update_waitstates(self) noexcept
 
