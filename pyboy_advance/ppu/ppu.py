@@ -333,7 +333,7 @@ class PPU:
         # making the OBJ section smaller), attempts to use tiles 0-511 are ignored
         video_mode = self.display_control.video_mode
         bitmapped = video_mode in [VideoMode.MODE_3, VideoMode.MODE_4, VideoMode.MODE_5]
-        if bitmapped and obj.tile_index < 512:
+        if bitmapped and obj.tile_num < 512:
             return
 
         obj_x = extend_sign_9(obj.x)
@@ -349,7 +349,15 @@ class PPU:
 
         obj_w_tiles = obj_w // TILE_WIDTH
         obj_h_tiles = obj_h // TILE_HEIGHT
-        tile_row_len = obj_w_tiles if self.display_control.obj_vram_dimension else 32
+
+        # Tile stride depends on mapping mode:
+        # 1D mapping: tiles are laid out linearly, so row length = object width in tiles
+        # 2D mapping: tiles are arranged in a fixed grid 32 tiles wide
+        tile_row_len = (
+            obj_w_tiles  # 1D mapping
+            if self.display_control.obj_vram_dimension
+            else 32  # 2D mapping
+        )
 
         offset_y = self.vcount - obj_y
 
@@ -383,11 +391,14 @@ class PPU:
                 tile_y = obj_h_tiles - tile_y - 1
                 pixel_y ^= 0b111
 
-            tile_index = obj.tile_index + tile_y * tile_row_len + tile_x
+            # For 256-colour objects, only each second tile may be used.
+            # Hence, the even-numbered tiles effectively map to tiles 1, 2, 3, ...
+            tile_num = obj.tile_num // 2 if obj.colour_256 else obj.tile_num
+            tile_num += tile_y * tile_row_len + tile_x
 
             palette_index = self._get_palette_index(
                 OBJ_TILE_SET_OFFSET,
-                tile_index,
+                tile_num,
                 pixel_x,
                 pixel_y,
                 obj.colour_256,
@@ -520,7 +531,7 @@ class PPU:
     def _get_palette_index(
         self,
         tile_base_address: int,
-        tile_index: int,
+        tile_num: int,
         pixel_x: int,
         pixel_y: int,
         colour_256: bint,
@@ -529,14 +540,14 @@ class PPU:
         if colour_256:
             # 256-colour object; one byte per pixel, one palette with 256 colours
             pixel_address = tile_base_address
-            pixel_address += tile_index * TILE_SIZE + pixel_y * TILE_WIDTH + pixel_x
+            pixel_address += tile_num * TILE_SIZE + pixel_y * TILE_WIDTH + pixel_x
             palette_index = self.memory.read_8_vram(pixel_address)
         else:
             # 16-colour object; each byte represents two pixels
 
             # Lower 4 bits are for the left pixel and upper 4 bits are for the right pixel
             pixel_address = tile_base_address
-            pixel_address += (tile_index * TILE_SIZE + pixel_y * TILE_WIDTH + pixel_x) // 2
+            pixel_address += (tile_num * TILE_SIZE + pixel_y * TILE_WIDTH + pixel_x) // 2
             palette_index = (self.memory.read_8_vram(pixel_address) >> ((pixel_x % 2) * 4)) & 0xF
 
             if palette_index == 0:
@@ -629,7 +640,7 @@ class Object:
         return self.SIZES[self.shape][size]
 
     @property
-    def tile_index(self) -> int:
+    def tile_num(self) -> int:
         return get_bits(self.attr_2, 0, 9)
 
     @property

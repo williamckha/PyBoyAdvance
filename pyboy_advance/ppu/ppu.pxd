@@ -43,7 +43,7 @@ cdef class Object:
     cdef bint get_flip_horizontal(self) noexcept
     cdef bint get_flip_vertical(self) noexcept
     cdef (uint32_t, uint32_t) get_size(self) noexcept
-    cdef uint32_t get_tile_index(self) noexcept
+    cdef uint32_t get_tile_num(self) noexcept
     cdef uint32_t get_priority(self) noexcept
     cdef uint32_t get_palette_num(self) noexcept
 
