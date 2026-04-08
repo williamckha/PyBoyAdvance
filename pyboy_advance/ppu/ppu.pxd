@@ -1,4 +1,6 @@
-from libc.stdint cimport uint8_t, uint16_t, uint32_t
+cimport cython
+
+from libc.stdint cimport uint8_t, uint16_t, uint32_t, int16_t
 from cpython.array cimport array
 
 from pyboy_advance.constants cimport Interrupt, EventTrigger
@@ -43,6 +45,7 @@ cdef class Object:
     cdef bint get_flip_horizontal(self) noexcept
     cdef bint get_flip_vertical(self) noexcept
     cdef (uint32_t, uint32_t) get_size(self) noexcept
+    cdef uint32_t get_affine_params_index(self) noexcept
     cdef uint32_t get_tile_num(self) noexcept
     cdef uint32_t get_priority(self) noexcept
     cdef uint32_t get_palette_num(self) noexcept
@@ -95,9 +98,15 @@ cdef class PPU:
     cdef void _render_background_affine(self, int) noexcept
     cdef void _render_background_bitmap(self, bint, bint) noexcept
     cdef void _render_objects(self) noexcept
+
+    @cython.locals(pa=int16_t, pb=int16_t, pc=int16_t, pd=int16_t)
     cdef void _render_object(self, Object) noexcept
+
     cdef void _merge_layers(self) noexcept
+
+    @cython.locals(windowing_enabled=bint)
     cdef void _merge_layer(self, uint16_t[:], int, int) noexcept
+
     cdef void _calc_window_masks(self) noexcept
     cdef WindowControlRegister _get_window_for_pixel(self, uint32_t) noexcept
     cdef uint32_t _get_palette_index(self, uint32_t, uint32_t, uint32_t, uint32_t, bint, uint32_t) noexcept

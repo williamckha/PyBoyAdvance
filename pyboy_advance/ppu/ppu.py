@@ -23,6 +23,7 @@ from pyboy_advance.utils import (
     get_bits,
     bint,
     sign_32,
+    sign_16,
     add_32,
     extend_sign_9,
 )
@@ -336,16 +337,30 @@ class PPU:
         if bitmapped and obj.tile_num < 512:
             return
 
-        obj_x = extend_sign_9(obj.x)
-        obj_y = obj.y
+        # Store object attributes in local variables to avoid repeated bit operations
+        obj_x, obj_y = obj.x, obj.y
         obj_w, obj_h = obj.size
         obj_flip_h, obj_flip_v = obj.flip_horizontal, obj.flip_vertical
+        obj_colour_256 = obj.colour_256
+        obj_palette_num = obj.palette_num
+        obj_mode = obj.mode
+        obj_priority = obj.priority
+        obj_mosaic = obj.mosaic
 
-        if obj_y + obj_h > 256:
+        obj_display_w, obj_display_h = obj_w, obj_h
+        if obj.double_size:
+            obj_display_w *= 2
+            obj_display_h *= 2
+
+        if obj_y + obj_display_h > 256:
             obj_y -= 256
 
-        if self.vcount < obj_y or self.vcount >= obj_y + obj_h:
+        if self.vcount < obj_y or self.vcount >= obj_y + obj_display_h:
             return
+
+        # For 256-colour objects, only each second tile may be used.
+        # Hence, the even-numbered tiles effectively map to tiles 1, 2, 3, ...
+        obj_tile_num = obj.tile_num // 2 if obj_colour_256 else obj.tile_num
 
         obj_w_tiles = obj_w // TILE_WIDTH
         obj_h_tiles = obj_h // TILE_HEIGHT
@@ -361,15 +376,46 @@ class PPU:
 
         offset_y = self.vcount - obj_y
 
-        for offset_x in range(0, obj_w):
-            win_x = add_32(obj_x, offset_x)
-            if sign_32(win_x) or win_x >= DISPLAY_WIDTH:
+        if obj.affine:
+            affine_params_index = obj.affine_params_index
+            pa = self.memory.read_16_oam(affine_params_index * 32 + 0x6)
+            pb = self.memory.read_16_oam(affine_params_index * 32 + 0xE)
+            pc = self.memory.read_16_oam(affine_params_index * 32 + 0x16)
+            pd = self.memory.read_16_oam(affine_params_index * 32 + 0x1E)
+            # ifndef CYTHON
+            # Convert to signed Python integers
+            pa -= 0x10000 * sign_16(pa)
+            pb -= 0x10000 * sign_16(pb)
+            pc -= 0x10000 * sign_16(pc)
+            pd -= 0x10000 * sign_16(pd)
+            # endif
+        else:
+            # Identity matrix
+            pa = 0x100
+            pb = 0
+            pc = 0
+            pd = 0x100
+
+        px = (
+            pa * -(obj_display_w // 2)
+            + pb * (offset_y - (obj_display_h // 2))
+            + ((obj_w // 2) << 8)
+        )
+        py = (
+            pc * -(obj_display_w // 2)
+            + pd * (offset_y - (obj_display_h // 2))
+            + ((obj_h // 2) << 8)
+        )
+
+        for offset_x in range(0, obj_display_w):
+            x = add_32(obj_x, offset_x)
+            if sign_32(x) or x >= DISPLAY_WIDTH:
                 continue
 
-            rel_x = offset_x
-            rel_y = offset_y
+            rel_x = (px + pa * offset_x) >> 8
+            rel_y = (py + pc * offset_x) >> 8
 
-            if obj.mosaic:
+            if obj_mosaic:
                 mosaic_pixel_w = self.mosaic_control.stretch_obj_horizontal + 1
                 mosaic_pixel_h = self.mosaic_control.stretch_obj_vertical + 1
                 rel_x = (obj_x + rel_x) // mosaic_pixel_w * mosaic_pixel_w - obj_x
@@ -391,31 +437,29 @@ class PPU:
                 tile_y = obj_h_tiles - tile_y - 1
                 pixel_y ^= 0b111
 
-            # For 256-colour objects, only each second tile may be used.
-            # Hence, the even-numbered tiles effectively map to tiles 1, 2, 3, ...
-            tile_num = obj.tile_num // 2 if obj.colour_256 else obj.tile_num
-            tile_num += tile_y * tile_row_len + tile_x
-
             palette_index = self._get_palette_index(
                 OBJ_TILE_SET_OFFSET,
-                tile_num,
+                obj_tile_num + tile_y * tile_row_len + tile_x,
                 pixel_x,
                 pixel_y,
-                obj.colour_256,
-                obj.palette_num,
+                obj_colour_256,
+                obj_palette_num,
             )
 
             if palette_index:
-                if obj.mode == ObjectMode.WINDOW:
-                    self.window_mask_obj[win_x] = 1
+                if obj_mode == ObjectMode.WINDOW:
+                    self.window_mask_obj[x] = 1
                 else:
                     colour = self.memory.read_16_palram(
                         OBJ_PALETTE_OFFSET + palette_index * COLOUR_SIZE
                     )
-                    self.obj_scanline[obj.priority][win_x] = colour
-                    self.blend_mask_obj[obj.priority][win_x] = obj.mode == ObjectMode.BLEND
+                    self.obj_scanline[obj_priority][x] = colour
+                    self.blend_mask_obj[obj_priority][x] = obj_mode == ObjectMode.BLEND
 
     def _merge_layers(self):
+        if self.blend_control.blend_mode in [BlendMode.LIGHTEN, BlendMode.DARKEN]:
+            self._merge_layer(self.scanline, LayerType.BACKDROP, NUM_PRIORITIES - 1)
+
         for priority in range(NUM_PRIORITIES - 1, -1, -1):
             for bg_num in range(NUM_BACKGROUNDS - 1, -1, -1):
                 if (
@@ -436,7 +480,7 @@ class PPU:
         layer_type: LayerType | int,
         priority: int,
     ):
-        windowing_enabled = (
+        windowing_enabled = layer_type != LayerType.BACKDROP and (
             self.display_control.display_window(WindowIndex.WIN_0)
             or self.display_control.display_window(WindowIndex.WIN_1)
             or self.display_control.display_window(WindowIndex.WIN_OBJ)
@@ -592,7 +636,7 @@ class Object:
 
     @property
     def x(self) -> int:
-        return get_bits(self.attr_1, 0, 8)
+        return extend_sign_9(get_bits(self.attr_1, 0, 8))
 
     @property
     def y(self) -> int:
@@ -604,7 +648,7 @@ class Object:
 
     @property
     def double_size(self) -> bint:
-        return get_bit(self.attr_0, 9)
+        return get_bit(self.attr_0, 9) & self.affine
 
     @property
     def disabled(self) -> bint:
@@ -638,6 +682,10 @@ class Object:
     def size(self) -> tuple[int, int]:
         size = get_bits(self.attr_1, 14, 15)
         return self.SIZES[self.shape][size]
+
+    @property
+    def affine_params_index(self) -> int:
+        return get_bits(self.attr_1, 9, 13)
 
     @property
     def tile_num(self) -> int:
