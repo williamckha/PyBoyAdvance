@@ -78,6 +78,16 @@ class MemoryRegion(IntEnum):
     SRAM_MASK = SRAM_END - SRAM_START
     SRAM_SIZE = SRAM_END - SRAM_START + 1
 
+    SRAM_MIRROR_START = 0x0F000000
+    SRAM_MIRROR_END = 0x0F007FFF
+    SRAM_MIRROR_REGION = SRAM_MIRROR_START >> 24
+
+    FLASH_START = 0x0E000000
+    FLASH_END = 0x0E00FFFF
+    FLASH_MASK = FLASH_END - FLASH_START
+    FLASH_64_SIZE = FLASH_END - FLASH_START + 1
+    FLASH_128_SIZE = FLASH_64_SIZE * 2
+
 
 class IOAddress(IntEnum):
     # Display Control Registers
@@ -187,3 +197,47 @@ class DMAStartTiming(IntEnum):
     VBLANK = 1
     HBLANK = 2
     SPECIAL = 3
+
+
+class BackupStorageType(IntEnum):
+    NONE = 0
+    SRAM = 1
+    FLASH_64 = 2
+    FLASH_128 = 3
+    EEPROM = 4
+
+
+class FlashCommand(IntEnum):
+    UNLOCK_1 = 0xAA
+    UNLOCK_2 = 0x55
+    ENTER_IDENTIFICATION_MODE = 0x90
+    EXIT_IDENTIFICATION_MODE = 0xF0
+    PREPARE_ERASE = 0x80
+    ERASE_CHIP = 0x10
+    ERASE_SECTOR = 0x30
+    PREPARE_WRITE = 0xA0
+    SET_BANK = 0xB0
+
+
+class FlashCommandAddress(IntEnum):
+    ADDRESS_1 = 0x00005555
+    ADDRESS_2 = 0x00002AAA
+
+
+class FlashState(IntEnum):
+    READY = 0
+    UNLOCK_1 = 1
+    UNLOCK_2 = 2
+    ERASE = 3
+    WRITE = 4
+    BANK = 5
+
+
+class FlashManufacturerID(IntEnum):
+    PANASONIC = 0x32
+    SANYO = 0x62
+
+
+class FlashDeviceID(IntEnum):
+    PANASONIC = 0x1B
+    SANYO = 0x13

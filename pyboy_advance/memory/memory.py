@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from pyboy_advance.cpu.cpu import CPU
 
 from pyboy_advance.cpu.constants import CPUState
+from pyboy_advance.memory.backup import BackupStorage
 from pyboy_advance.memory.constants import MemoryRegion, MemoryAccess
 from pyboy_advance.memory.gamepak import GamePak
 from pyboy_advance.memory.io import IO
@@ -44,6 +45,7 @@ class Memory:
 
         # External Memory (Game Pak)
         self.gamepak = gamepak
+        self.backup_storage = BackupStorage(gamepak.backup_storage_type)
 
         # If the program counter is not in the BIOS region, reading
         # BIOS will return the most recently fetched BIOS opcode,
@@ -94,6 +96,7 @@ class Memory:
     def _read_32_internal(self, address: int, access_type: MemoryAccess) -> int:
         self._idle_for_access(address, 4, access_type)
 
+        unaligned_address = address
         address = address & ~0b11  # Align address to 4-byte boundary
         region = address >> 24
 
@@ -127,9 +130,8 @@ class Memory:
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
             return self.gamepak.read_32(address)
 
-        elif region == MemoryRegion.SRAM_REGION:
-            print(f"Attempt to read SRAM: {address:#010x}")
-            return 0
+        elif region == MemoryRegion.SRAM_REGION or region == MemoryRegion.SRAM_MIRROR_REGION:
+            return self.backup_storage.read_8(unaligned_address) * 0x01010101
 
         else:
             return self.read_unused_memory()
@@ -137,6 +139,7 @@ class Memory:
     def _read_16_internal(self, address: int, access_type: MemoryAccess) -> int:
         self._idle_for_access(address, 2, access_type)
 
+        unaligned_address = address
         address = address & ~0b1  # Align address to 2-byte boundary
         region = address >> 24
 
@@ -170,9 +173,8 @@ class Memory:
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
             return self.gamepak.read_16(address)
 
-        elif region == MemoryRegion.SRAM_REGION:
-            print(f"Attempt to read SRAM: {address:#010x}")
-            return 0
+        elif region == MemoryRegion.SRAM_REGION or region == MemoryRegion.SRAM_MIRROR_REGION:
+            return self.backup_storage.read_8(unaligned_address) * 0x0101
 
         else:
             return (self.read_unused_memory() >> ((address & 0b11) * 8)) & 0xFFFF
@@ -212,9 +214,8 @@ class Memory:
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
             return self.gamepak.read_8(address)
 
-        elif region == MemoryRegion.SRAM_REGION:
-            print(f"Attempt to read SRAM: {address:#010x}")
-            return 0
+        elif region == MemoryRegion.SRAM_REGION or region == MemoryRegion.SRAM_MIRROR_REGION:
+            return self.backup_storage.read_8(address)
 
         else:
             return (self.read_unused_memory() >> ((address & 0b11) * 8)) & 0xFF
@@ -222,6 +223,7 @@ class Memory:
     def _write_32_internal(self, address: int, value: int, access_type: MemoryAccess):
         self._idle_for_access(address, 4, access_type)
 
+        unaligned_address = address
         address = address & ~0b11  # Align address to 4-byte boundary
         region = address >> 24
 
@@ -250,8 +252,10 @@ class Memory:
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
             print(f"Attempt to write to SRAM: {address:#010x}")
 
-        elif region == MemoryRegion.SRAM_REGION:
-            print(f"Attempt to write to SRAM: {address:#010x}")
+        elif region == MemoryRegion.SRAM_REGION or region == MemoryRegion.SRAM_MIRROR_REGION:
+            self.backup_storage.write_8(
+                unaligned_address, (value >> ((unaligned_address & 0b11) * 8)) & 0xFF
+            )
 
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
@@ -259,6 +263,7 @@ class Memory:
     def _write_16_internal(self, address: int, value: int, access_type: MemoryAccess):
         self._idle_for_access(address, 2, access_type)
 
+        unaligned_address = address
         address = address & ~0b1  # Align address to 2-byte boundary
         value = value & 0xFFFF
         region = address >> 24
@@ -288,8 +293,10 @@ class Memory:
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
             print(f"Attempt to write to SRAM: {address:#010x}")
 
-        elif region == MemoryRegion.SRAM_REGION:
-            print(f"Attempt to write to SRAM: {address:#010x}")
+        elif region == MemoryRegion.SRAM_REGION or region == MemoryRegion.SRAM_MIRROR_REGION:
+            self.backup_storage.write_8(
+                unaligned_address, (value >> ((unaligned_address & 0b1) * 8)) & 0xFF
+            )
 
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
@@ -326,8 +333,8 @@ class Memory:
         elif MemoryRegion.GAMEPAK_REGION_START <= region <= MemoryRegion.GAMEPAK_REGION_END:
             print(f"Attempt to write to SRAM: {address:#010x}")
 
-        elif region == MemoryRegion.SRAM_REGION:
-            print(f"Attempt to write to SRAM: {address:#010x}")
+        elif region == MemoryRegion.SRAM_REGION or region == MemoryRegion.SRAM_MIRROR_REGION:
+            self.backup_storage.write_8(address, value)
 
         else:
             print(f"Attempt to write to unused memory: {address:#010x}")
@@ -415,7 +422,7 @@ class Memory:
         self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.GAMEPAK_1_REGION_2)] = 1 + self.wait_control.ws1_non_seq
         self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.GAMEPAK_2_REGION_1)] = 1 + self.wait_control.ws2_non_seq
         self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.GAMEPAK_2_REGION_2)] = 1 + self.wait_control.ws2_non_seq
-        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.SRAM_REGION)]        = 1 + self.wait_control.sram
+        self.access_time_16[int(MemoryAccess.NON_SEQUENTIAL)][int(MemoryRegion.SRAM_REGION)]        = 1 + self.wait_control.ws_sram
 
         self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.GAMEPAK_0_REGION_1)] = 1 + self.wait_control.ws0_seq
         self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.GAMEPAK_0_REGION_2)] = 1 + self.wait_control.ws0_seq
@@ -423,7 +430,7 @@ class Memory:
         self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.GAMEPAK_1_REGION_2)] = 1 + self.wait_control.ws1_seq
         self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.GAMEPAK_2_REGION_1)] = 1 + self.wait_control.ws2_seq
         self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.GAMEPAK_2_REGION_2)] = 1 + self.wait_control.ws2_seq
-        self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.SRAM_REGION)]        = 1 + self.wait_control.sram
+        self.access_time_16[int(MemoryAccess.SEQUENTIAL)][int(MemoryRegion.SRAM_REGION)]        = 1 + self.wait_control.ws_sram
         # fmt: on
 
         for region in range(MemoryRegion.GAMEPAK_0_REGION_1, MemoryRegion.SRAM_REGION + 1):
@@ -453,7 +460,7 @@ class WaitstateControlRegister:
         self.reg = 0
 
     @property
-    def sram(self):
+    def ws_sram(self):
         return self.NON_SEQUENTIAL_CYCLES[get_bits(self.reg, 0, 1)]
 
     @property

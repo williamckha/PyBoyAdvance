@@ -5,6 +5,7 @@ from cpython.array cimport array
 
 from pyboy_advance.cpu.cpu cimport CPU
 from pyboy_advance.cpu.constants cimport CPUState
+from pyboy_advance.memory.backup cimport BackupStorage
 from pyboy_advance.memory.constants cimport MemoryRegion, MemoryAccess
 from pyboy_advance.memory.gamepak cimport GamePak
 from pyboy_advance.memory.io cimport IO
@@ -29,6 +30,7 @@ cdef class Memory:
     cdef uint8_t[:] ewram
     cdef uint8_t[:] iwram
     cdef GamePak gamepak
+    cdef BackupStorage backup_storage
     cdef uint32_t bios_last_opcode
     cdef WaitstateControlRegister wait_control
     cdef int[2][16] access_time_32
@@ -61,7 +63,7 @@ cdef class WaitstateControlRegister:
     cdef int[4] NON_SEQUENTIAL_CYCLES
     cdef uint32_t reg
 
-    cdef int get_sram(self) noexcept
+    cdef int get_ws_sram(self) noexcept
     cdef int get_ws0_non_seq(self) noexcept
     cdef int get_ws0_seq(self) noexcept
     cdef int get_ws1_non_seq(self) noexcept

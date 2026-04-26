@@ -5,9 +5,11 @@ import os
 from typing import Iterable
 from array import array
 
-from pyboy_advance.memory.constants import MemoryRegion
+from pyboy_advance.memory.constants import MemoryRegion, BackupStorageType
 from pyboy_advance.utils import array_read_32, array_read_16
 # endif
+
+import re
 
 
 class GamePak:
@@ -30,3 +32,19 @@ class GamePak:
 
     def read_8(self, address: int) -> int:
         return self.rom[address & MemoryRegion.GAMEPAK_MASK]
+
+    @property
+    def backup_storage_type(self) -> BackupStorageType:
+        rom_data = bytes(self.rom).decode("ascii", errors="ignore")
+        if re.search(r"SRAM_V", rom_data):
+            return BackupStorageType.SRAM
+        elif re.search(r"FLASH_V", rom_data):
+            return BackupStorageType.FLASH_64
+        elif re.search(r"FLASH512_V", rom_data):
+            return BackupStorageType.FLASH_64
+        elif re.search(r"FLASH1M_V", rom_data):
+            return BackupStorageType.FLASH_128
+        elif re.search(r"EEPROM_V", rom_data):
+            return BackupStorageType.EEPROM
+        else:
+            return BackupStorageType.NONE

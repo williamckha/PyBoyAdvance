@@ -25,28 +25,24 @@ def test_jsmolka_nes(emulator, assert_expected_image):
     assert_expected_image(emulator.screen.image)
 
 
-@pytest.mark.skip
 @pytest.mark.rom_url("https://raw.githubusercontent.com/jsmolka/gba-tests/master/save/flash64.gba")
 def test_jsmolka_save_flash64(emulator, assert_expected_image):
-    emulator.frame(20)
+    emulator.frame(80)
     assert_expected_image(emulator.screen.image)
 
 
-@pytest.mark.skip
 @pytest.mark.rom_url("https://raw.githubusercontent.com/jsmolka/gba-tests/master/save/flash128.gba")
 def test_jsmolka_save_flash128(emulator, assert_expected_image):
-    emulator.frame(20)
+    emulator.frame(80)
     assert_expected_image(emulator.screen.image)
 
 
-@pytest.mark.skip
 @pytest.mark.rom_url("https://raw.githubusercontent.com/jsmolka/gba-tests/master/save/none.gba")
 def test_jsmolka_save_none(emulator, assert_expected_image):
     emulator.frame(20)
     assert_expected_image(emulator.screen.image)
 
 
-@pytest.mark.skip
 @pytest.mark.rom_url("https://raw.githubusercontent.com/jsmolka/gba-tests/master/save/sram.gba")
 def test_jsmolka_save_sram(emulator, assert_expected_image):
     emulator.frame(20)
